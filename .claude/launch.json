@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "edify-prototype",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/bsabii/Desktop/edify-command-centre",
+      "port": 5180,
+      "autoPort": true
+    }
+  ]
+}

@@ -1,0 +1,339 @@
+import { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
+import { SCENARIOS, JOURNAL_SEED, BRIEF, cutoffLabel, DAY } from './data.js'
+import { Sidebar, Toasts, Interrupt, SpacePage, SuppliersPage } from './components/Shell.jsx'
+import RecipesPage from './components/Recipes.jsx'
+import Home from './components/Today.jsx'
+import Chat, { matchScenario } from './components/Chat.jsx'
+import Journal from './components/Journal.jsx'
+
+let seq = 0
+const uid = (p) => `${p}${++seq}_${Date.now() % 100000}`
+const now = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+const isOrder = (t) => t.scenarioId === 'oatmilk' || t.scenarioId === 'cutoff'
+
+export default function App() {
+  const [view, setView] = useState('today')
+  const [space, setSpace] = useState(null)
+  const [threads, setThreads] = useState([])
+  const [activeId, setActiveId] = useState(null)
+  const [journal, setJournal] = useState(JOURNAL_SEED)
+  const [toasts, setToasts] = useState([])
+  const [resolved, setResolved] = useState(new Set())
+  const [watching, setWatching] = useState([])
+  const [deferred, setDeferred] = useState({})
+  const [dismissed, setDismissed] = useState(new Set())
+  const [interrupt, setInterrupt] = useState(null)
+  const [gpSeen, setGpSeen] = useState(false)
+  const interruptShown = useRef(false)
+  const resolvedRef = useRef(resolved)
+  resolvedRef.current = resolved
+
+  const toast = (title, sub, action) => {
+    const id = uid('t')
+    setToasts(ts => [...ts, { id, title, sub, action }])
+    setTimeout(() => setToasts(ts => ts.filter(t => t.id !== id)), 4000)
+  }
+  const dismissToast = (id) => setToasts(ts => ts.filter(t => t.id !== id))
+  const addJournal = (entry) => setJournal(j => [{ id: uid('j'), time: now(), ...entry }, ...j])
+  const markResolved = (scId) => setResolved(r => new Set([...r, scId === 'oatmilk' ? 'cutoff' : scId, scId]))
+  const patchThread = (id, patch) => setThreads(ts => ts.map(t => (t.id === id ? { ...t, ...patch } : t)))
+
+  // ---- Threads / cases ---------------------------------------------------
+  const openScenario = (scId, userText) => {
+    const existing = threads.find(t => t.scenarioId === scId || (isOrder({ scenarioId: scId }) && isOrder(t)))
+    if (existing && scId !== 'supplier') { setActiveId(existing.id); setView('chat'); return }
+    const sc = SCENARIOS[scId]
+    const t = { id: uid('th'), scenarioId: scId, title: sc.title, time: now(), entries: [], queue: [], started: false, userText, caseState: null }
+    setThreads(ts => [t, ...ts])
+    setActiveId(t.id)
+    setView('chat')
+  }
+  const openThread = (id) => { setActiveId(id); setView('chat') }
+  // A new topic typed inside a case starts its own case. The move itself is
+  // the message — a clean thread with her question on top and its own title.
+  // The old case keeps no scar; it lives on Home and in History as before.
+  const handleCaseSwitch = (scId, text) => {
+    openScenario(scId, text)
+    toast(SCENARIOS[scId].title, 'Opened as its own case — the one you left is unchanged')
+  }
+  const handleSend = (text) => openScenario(matchScenario(text), text)
+  const handleHomeOpen = (item) => {
+    if (item.scenario === 'gp') setGpSeen(true)  // seen once → quiet until the next recompute
+    if (item.threadId) return openThread(item.threadId)
+    if (item.send) return handleSend(item.send)
+    return openScenario(item.scenario)
+  }
+
+  const persistThread = (id) => (patch) => setThreads(ts => ts.map(t => (t.id === id ? { ...t, ...patch } : t)))
+
+  // ---- Chat events → case state / history / toasts -------------------------
+  const handleChatEvent = (action, { scenarioId, entry, payload }) => {
+    const threadId = activeId
+    const J = (kind, by, title, detail, source) => addJournal({ kind, by, title, detail, source, threadId })
+    switch (action) {
+      case 'confirm': {
+        const add = entry.data?.add ?? 20
+        setInterrupt(null)
+        markResolved(scenarioId)
+        patchThread(threadId, { caseState: 'awaiting_delivery', orderAdd: add })
+        J('action', 'you', `Saturday's Bidfood order updated — oat milk 60 → ${60 + add} L`, `+£${(add * 1.42).toFixed(2)} — proposed by Edify, confirmed by you, sent to Bidfood`, 'Case — Saturday order')
+        toast('Order updated', 'Bidfood accepted the change.')
+        break
+      }
+      case 'viewOrder':
+        setSpace('orders'); setView('space')
+        break
+      case 'decline':
+        setInterrupt(null)
+        markResolved(scenarioId)
+        // The promise to keep watching is visible, not just spoken.
+        setWatching(w => [...w, { id: 'wforecast', title: 'Saturday order — watching until it locks', sub: 'You kept 60 L — anything that changes this call comes straight back', chip: 'until 16:00', threadId }])
+        // Recorded in the thread and History, but not paraded in Done today —
+        // deciding not to change something is not a completed operation.
+        addJournal({ kind: 'action', by: 'you', quiet: true, title: "Saturday's basket kept at 60 L", detail: "Reviewed Edify's +20 L oat-milk suggestion and kept it as is — no change sent to Bidfood", source: 'Case — Saturday order', threadId })
+        toast('Kept as is', 'Saturday basket stays at 60 L — nothing sent')
+        break
+      case 'receipt': {
+        setInterrupt(null)
+        const short = payload?.shortUnits || 0
+        const diffs = payload?.diffs || 0
+        const creditPath = short > 0 ? 'hold' : 'clean'
+        patchThread(threadId, { caseState: 'awaiting_invoice', creditPath, shortValue: payload?.value || 0, shortUnits: short })
+        J('action', 'you', diffs > 0 ? `Bidfood delivery received — ${diffs} difference${diffs === 1 ? '' : 's'} recorded` : 'Bidfood delivery received — 8 items checked in', diffs > 0 ? `Delivery note #912 posted — stock updated with received quantities, differences go against the invoice` : 'Delivery note #912 posted — all quantities matched order #2231', 'Case — Saturday order')
+        toast('Delivery confirmed', diffs > 0 ? 'Stock updated — Edify will check the difference against the invoice' : '8 items checked in — stock updated')
+        break
+      }
+      case 'closeCase':
+        setInterrupt(null)
+        patchThread(threadId, { caseState: 'closed' })
+        J('action', 'you', 'Saturday order case closed — invoice #4902 posted net £1,266.16', 'Order → +20 L change → delivery (2 L short) → credit → invoice: one thread', 'Case — Saturday order')
+        toast('Case closed', 'Order, delivery and invoice settled in one decision', { label: 'Journal', fn: () => setView('journal') })
+        break
+      case 'invoiceConfirm': {
+        markResolved(scenarioId)
+        const c = payload?.choices || {}
+        const cream = c['Double cream 2 L'] || 'Request credit note'
+        const butter = c['Butter 250 g'] || 'Ask supplier to confirm'
+        const bothAccepted = /Accept/.test(cream) && /Accept/.test(butter)
+        if (bothAccepted) {
+          J('action', 'you', 'Invoice #4821 approved and passed for payment', 'Both differences accepted as charged — butter now £5.15', 'Case — Invoice #4821')
+          toast('Invoice approved', 'Passed for payment as charged')
+        } else {
+          setWatching(w => [...w, { id: 'w4821', title: 'Invoice #4821 — Bidfood', sub: 'Waiting for supplier — sent back to Bidfood', chip: 'by Fri', threadId }])
+          J('action', 'you', 'Invoice #4821 resolution confirmed — waiting for supplier', 'Credit note requested for 2 Double cream, butter price sent to Bidfood to confirm — no prices changed', 'Case — Invoice #4821')
+          toast('Sent to Bidfood', 'Invoice #4821 is now waiting for supplier')
+        }
+        break
+      }
+      case 'muffinConfirm':
+        markResolved('muffins')
+        setWatching(w => [...w, { id: 'wmuffin', title: "Monday's muffin bake — Hub kitchen", sub: 'Plan updated to 8 — watching Monday sell-through', chip: 'Mon', threadId }])
+        J('action', 'you', "Monday's muffin bake trimmed 12 → 8", 'Proposed by Edify from the GP% breakdown, confirmed by you — Hub kitchen notified, ~£3/week less waste', 'Case — Production plan')
+        toast('Plan sent to Hub kitchen', "Monday's bake is now 8 — Edify watches the sell-through")
+        break
+      case 'muffinKeep':
+        markResolved('muffins')
+        J('action', 'you', "Monday's muffin bake kept at 12", "Reviewed Edify's proposal from the GP% breakdown and kept the plan — nothing sent", 'Case — Production plan')
+        toast('Kept at 12', 'No change sent to the Hub kitchen')
+        break
+      case 'recount':
+        markResolved(scenarioId)
+        setWatching(w => [...w, { id: 'wcount', title: 'Whole milk recount — tonight', sub: 'Yesterday’s figure held as provisional', chip: 'tonight', threadId }])
+        J('action', 'you', 'Chilled recount added to tonight’s close', 'Whole milk held as provisional until recounted', 'Case — Stock count')
+        toast('Recount scheduled', 'First item on tonight’s closing checklist')
+        break
+      case 'acceptCount':
+        markResolved(scenarioId)
+        J('action', 'you', 'Whole milk count accepted as entered', '+14 L will show as an unexplained gain in this week’s difference', 'Case — Stock count')
+        break
+      case 'supplierAddConfirm': {
+        const s = entry.data.supplier
+        setWatching(w => [...w, { id: 'wsup-' + s.name, title: `${s.name} — new supplier`, sub: 'Set up and orderable — watching for the first order window', chip: 'ready', threadId }])
+        J('action', 'you', 'Supplier added to site', `${s.name} added to Fitzroy Espresso using ${s.usedBy[0]} setup — added by Priya`, 'Suppliers — Setup')
+        toast(`${s.name} added`, `Orders → ${s.orderEmail}, cut-off ${s.cutoff}`)
+        break
+      }
+      case 'supplierCreateConfirm': {
+        const s = entry.data.draft
+        setWatching(w => [...w, { id: 'wsup-' + s.name, title: `${s.name} — new supplier`, sub: 'Set up and orderable — watching for the first order window', chip: 'ready', threadId }])
+        J('action', 'you', 'Supplier created', `${s.name} created for Fitzroy Espresso — created by Priya`, 'Suppliers — Setup')
+        toast(`${s.name} created`, `Orders → ${s.orderEmail}, cut-off ${s.cutoff || '—'}`)
+        break
+      }
+      case 'supplierUpdateConfirm': {
+        const s = entry.data.supplier
+        const n = (payload?.changed || []).length
+        J('action', 'you', `${s.name} updated`, `${n} field${n === 1 ? '' : 's'} changed for Fitzroy Espresso — rest kept as-is, updated by Priya`, 'Suppliers — Update')
+        toast(`${s.name} updated`, `${n} change${n === 1 ? '' : 's'} saved`)
+        break
+      }
+      default: break
+    }
+  }
+
+  // ---- World events (demo time control) ------------------------------------
+  const orderThread = threads.find(isOrder)
+  const demoStage = !orderThread || !orderThread.caseState ? 0
+    : orderThread.caseState === 'awaiting_delivery' ? 1
+    : orderThread.caseState === 'receiving' ? 1.5
+    : orderThread.caseState === 'awaiting_invoice' ? 2
+    : orderThread.caseState === 'invoice_decision' ? 2.5
+    : 3
+
+  const fireDelivery = () => {
+    const t = orderThread
+    if (!t) return
+    patchThread(t.id, { caseState: 'receiving', pendingSteps: SCENARIOS.delivery.steps.map(s => ({ ...s, scenarioId: 'delivery' })) })
+    setInterrupt({ icon: 'truck', threadId: t.id, title: 'Bidfood delivery due now', cta: 'Receive' })
+  }
+
+  const fireInvoice = () => {
+    const t = orderThread
+    if (!t) return
+    if (t.creditPath === 'hold') {
+      patchThread(t.id, {
+        caseState: 'invoice_decision',
+        pendingSteps: [
+          { type: 'assistant', scenarioId: 'delivery', text: "**Monday, 06:40.** Bidfood's invoice **#4902** is in, billed as ordered — but delivery note #912 recorded **" + (t.shortUnits || 2) + " L** short. I drafted a credit claim of **£" + (t.shortValue || 2.84).toFixed(2) + "** for it. One click settles the whole case:" },
+          { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { value: t.shortValue || 2.84, net: 1269 - (t.shortValue || 2.84) } }
+        ]
+      })
+      setInterrupt({ icon: 'invoice', threadId: t.id, title: 'Invoice #4902 needs one decision', cta: 'Settle' })
+    } else {
+      const net = 1269
+      patchThread(t.id, {
+        caseState: 'closed',
+        pendingSteps: [{ type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood's invoice **#4902** came in overnight. I matched it against PO #2231 and delivery note #912 — **£${net.toFixed(2)}, balanced**. Posted and closed without needing you. Most mornings look like this: the only trace is one quiet line in Done.` }]
+      })
+      addJournal({ kind: 'auto', by: 'edify', title: `Invoice #4902 matched and posted — £${net.toFixed(2)}`, detail: 'Checked against the order + delivery note automatically — case closed', source: 'Edify — Invoices', threadId: t.id })
+      toast('Invoice #4902 matched & posted', 'Balanced against the delivery note — case closed quietly', { label: 'View case', fn: () => openThread(t.id) })
+    }
+  }
+
+  // The count closing is the one trust-promise the GP answer makes. This demo
+  // control pays it: the thread gets the update through the same pendingSteps
+  // channel deliveries use, and the card recomputes itself.
+  const gpThread = threads.find(t => t.scenarioId === 'gp')
+  const [countFired, setCountFired] = useState(false)
+  const fireCount = () => {
+    if (!gpThread) return
+    setCountFired(true)
+    patchThread(gpThread.id, {
+      pendingSteps: [
+        { type: 'assistant', scenarioId: 'gp', text: "**Thursday, 18:05.** Marco closed the Hub kitchen count. The unexplained **−0.7 pts** just resolved — here's the same answer, now with nothing I can't stand behind:" },
+        { type: 'card', card: 'gpBreakdown', scenarioId: 'gp', data: { countClosed: true } }
+      ]
+    })
+    addJournal({ kind: 'auto', by: 'edify', title: 'Hub kitchen count closed — GP% answer updated', detail: 'Unexplained −0.7 pts resolved: real waste −0.5, counting slip −0.2 corrected', source: 'Edify — Costing', threadId: gpThread.id })
+    toast('Count closed at Hub kitchen', 'The GP% answer updated itself — nothing unverified left', { label: 'See it', fn: () => openThread(gpThread.id) })
+  }
+
+  // ---- Proactive interrupt (cut-off) ----------------------------------------
+  // Toast rule: never announce a task the user can already see. On Home the
+  // oat-milk row (with its ticking badge) IS the announcement, so the toast
+  // arms quietly and fires only if the deadline is still live when the user
+  // is elsewhere. Opening the order case disarms it — they've seen the task.
+  const viewRef = useRef(view)
+  useEffect(() => { viewRef.current = view }, [view])
+  const cutoffToastArmed = useRef(false)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (interruptShown.current) return
+      interruptShown.current = true
+      if (!resolvedRef.current.has('cutoff')) {
+        if (viewRef.current === 'today') cutoffToastArmed.current = true
+        else setInterrupt({ icon: 'clock', scenario: 'cutoff', title: `Oat milk order locks ${cutoffLabel()}`, cta: 'Review' })
+      }
+    }, 20000)
+    return () => clearTimeout(t)
+  }, [])
+  useEffect(() => {
+    if (!cutoffToastArmed.current || view === 'today') return
+    if (resolvedRef.current.has('cutoff')) { cutoffToastArmed.current = false; return }
+    const active = threads.find(t => t.id === activeId)
+    if (view === 'chat' && active && isOrder(active)) { cutoffToastArmed.current = false; return }
+    cutoffToastArmed.current = false
+    setInterrupt({ icon: 'clock', scenario: 'cutoff', title: `Oat milk order locks ${cutoffLabel()}`, cta: 'Review' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, activeId])
+
+  // ---- Home data -----------------------------------------------------------
+  const needsItems = [
+    ...(orderThread?.caseState === 'receiving' ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery ready to check in', why: 'Order #2231 — 8 items, including 80 L oat milk.', cta: 'Receive delivery' }] : []),
+    ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `${orderThread.shortUnits || 2} L`, stakeUnit: 'short', threadId: orderThread.id, title: "Invoice #4902 doesn't match the delivery note", why: 'Edify drafted a credit claim for the gap.', cta: 'Settle & close' }] : []),
+    ...BRIEF.needsCall.filter(i => !resolved.has(i.scenario) && !deferred[i.id] && !dismissed.has(i.id))
+  ]
+
+  const deliveries = [
+    { id: 'today', name: DAY.supplier, when: DAY.nextDelivery },
+    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'sat', name: 'Saturday order — Bidfood', when: 'Sat 07:30' }] : [])
+  ]
+
+  const inProgress = [
+    { id: 'ip-today-delivery', title: 'Bidfood delivery', sub: "Edify will prompt you when it's due", chip: DAY.nextDelivery },
+    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Saturday order — Bidfood', sub: `£${(1240.6 + (orderThread.orderAdd ?? 20) * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })} confirmed — Edify is watching for delivery`, chip: 'Sat 07:30' }] : []),
+    ...(orderThread && orderThread.caseState === 'awaiting_invoice' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Waiting for invoice — Bidfood', sub: orderThread.creditPath === 'hold' ? 'Delivery received with 1 difference — Edify will check it against the invoice' : 'Delivery received — Edify will match the invoice when it arrives', chip: 'Mon 06:40' }] : []),
+    ...watching
+  ]
+
+  const doneToday = journal.filter(e => (e.kind === 'action' || e.kind === 'auto') && !e.quiet).slice(0, 5).map(e => ({ id: 'd' + e.id, title: e.title, detail: e.detail, time: e.time, by: e.by }))
+
+  const activeThread = threads.find(t => t.id === activeId)
+  const needsCount = needsItems.length
+
+  return (
+    <div className="app">
+      <Sidebar view={view} space={space} setView={setView} openSpace={(id) => { setSpace(id); setView('space') }} needsCount={needsCount} />
+      <div className="main">
+        <motion.div key={view + (view === 'chat' ? activeId : '') + (view === 'space' ? space : '')} className={view === 'journal' || view === 'space' ? 'scroll-area' : 'view-wrap'}
+          style={view !== 'journal' && view !== 'space' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : {}}
+          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+          {view === 'today' && (
+            <Home needsItems={needsItems} inProgress={inProgress} doneToday={doneToday} deliveries={deliveries}
+              onOpen={handleHomeOpen} onSend={handleSend} onSpace={(id) => { setSpace(id); setView('space') }} />
+          )}
+          {view === 'chat' && activeThread && (
+            <Chat key={activeThread.id} thread={activeThread} persist={persistThread(activeThread.id)}
+              onEvent={handleChatEvent} onBack={() => setView('today')}
+              onSwitch={handleCaseSwitch} />
+          )}
+          {view === 'journal' && <Journal entries={journal} onOpenChat={openThread} />}
+          {view === 'space' && (space === 'suppliers'
+            ? <SuppliersPage onAdd={() => handleSend('Add supplier')} />
+            : space === 'recipes'
+            ? <RecipesPage onCreate={() => handleSend('New recipe')} />
+            : <SpacePage spaceId={space} />)}
+        </motion.div>
+      </div>
+
+      <div className="demo-ctl">
+        {demoStage === 0 && <span className="demo-hint">Demo timeline — confirm Saturday's order to unlock</span>}
+        {demoStage === 1 && <button className="demo-btn" onClick={fireDelivery}>⏩ Sat 07:30 — the van arrives</button>}
+        {demoStage === 1.5 && <span className="demo-hint">Receive the delivery in its case to continue</span>}
+        {demoStage === 2 && <button className="demo-btn" onClick={fireInvoice}>⏩ Mon 06:40 — the invoice lands</button>}
+        {gpThread && !countFired && <button className="demo-btn" onClick={fireCount}>⏩ Thu 18:05 — Marco closes the count</button>}
+        {demoStage === 2.5 && <span className="demo-hint">Settle the invoice in its case to finish</span>}
+        {demoStage === 3 && <span className="demo-hint">✓ Demo complete — the whole case is one thread in Journal</span>}
+      </div>
+
+      <Toasts toasts={toasts} dismiss={dismissToast} />
+      <Interrupt data={interrupt}
+        onAction={() => { const i = interrupt; setInterrupt(null); i.threadId ? openThread(i.threadId) : openScenario(i.scenario) }}
+        onDismiss={(how) => {
+          const last = interrupt
+          setInterrupt(null)
+          if (how === 'snooze') {
+            if (last.snoozeLabel === 'Not arrived yet') {
+              toast("I'll keep watching this delivery", 'It stays on your list — open it when the van shows up')
+              return
+            }
+            toast('Snoozed', 'Comes back with a buffer before cut-off — the order stays on your list')
+            setTimeout(() => {
+              if (!resolvedRef.current.has('cutoff')) setInterrupt({ ...last })
+            }, 25000)
+          }
+        }} />
+    </div>
+  )
+}
