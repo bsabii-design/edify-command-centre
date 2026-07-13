@@ -1673,3 +1673,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ir-row.sub { border-top: none; padding: var(--sp-2) 0; }
 .ir-row.muted .ir-item { display: flex; align-items: center; gap: var(--sp-2); }
 .ir-select { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+
+/* Impact sits with the facts it is computed from; the row ends on the one
+   thing the operator owns — the resolution. */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.15fr) 48px minmax(0, 1fr); }

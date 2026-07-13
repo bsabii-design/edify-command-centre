@@ -545,7 +545,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           </div>
         </div>
         <div className="ir-grid ir-headrow">
-          <div>Item</div><div>Issue</div><div>Resolution</div><div className="ir-impact">Impact</div>
+          <div>Item</div><div>Issue</div><div className="ir-impact">Impact</div><div>Resolution</div>
         </div>
         {lines.map((l, i) => (
           <div key={i} className="ir-row">
@@ -554,6 +554,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
               <div>{l.issue}</div>
               {l.delta && <div className="ir-delta">{l.delta}</div>}
             </div>
+            <div className="ir-impact">£{l.amount.toFixed(2)}</div>
             <div className="ir-res">
               {status === 'proposed' ? (
                 <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
@@ -563,7 +564,6 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
                 </select>
               ) : resLabel(l)}
             </div>
-            <div className="ir-impact">£{l.amount.toFixed(2)}</div>
           </div>
         ))}
         {matched.length > 0 && (
@@ -578,8 +578,8 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
               {m.name}
             </div>
             <div className="ir-issue">{m.qty} {m.unit} × £{m.price.toFixed(2)}</div>
-            <div className="ir-res">Matched</div>
             <div className="ir-impact">—</div>
+            <div className="ir-res">Matched</div>
           </div>
         ))}
 
