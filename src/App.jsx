@@ -211,7 +211,7 @@ export default function App() {
     const t = orderThread
     if (!t) return
     patchThread(t.id, { caseState: 'receiving', pendingSteps: SCENARIOS.delivery.steps.map(s => ({ ...s, scenarioId: 'delivery' })) })
-    setInterrupt({ icon: 'truck', threadId: t.id, title: 'Bidfood delivery due now', cta: 'Receive' })
+    announce({ icon: 'truck', threadId: t.id, title: 'Bidfood delivery due now', cta: 'Receive' })
   }
 
   const fireInvoice = () => {
@@ -237,7 +237,7 @@ export default function App() {
           { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched } }
         ]
       })
-      setInterrupt({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`, cta: 'Review' })
+      announce({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`, cta: 'Review' })
     } else {
       const net = 1269
       patchThread(t.id, {
@@ -285,6 +285,15 @@ export default function App() {
     const active = threadsRef.current.find(t => t.id === activeIdRef.current)
     return viewRef.current === 'chat' && active && isOrder(active)
   }
+  // World events (delivery arrives, invoice lands) announce through one gate.
+  // Inside the case the update streams in place; on Home the row appears, so
+  // the toast arms quietly and fires only if the user leaves without acting.
+  const armedInterrupt = useRef(null)
+  const announce = (i) => {
+    if (lookingAtOrderCase()) return
+    if (viewRef.current === 'today') { armedInterrupt.current = i; return }
+    setInterrupt(i)
+  }
   useEffect(() => {
     const t = setTimeout(() => {
       if (interruptShown.current) return
@@ -298,13 +307,21 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => {
-    // Entering the order case dismisses a visible cutoff toast and disarms it.
+    // Entering the order case dismisses and disarms anything about it —
+    // the cutoff toast and any world-event toast tied to that thread.
     if (lookingAtOrderCase()) {
       cutoffToastArmed.current = false
-      setInterrupt(i => (i && i.scenario === 'cutoff' ? null : i))
+      armedInterrupt.current = null
+      setInterrupt(i => (i && (i.scenario === 'cutoff' || i.threadId === activeIdRef.current) ? null : i))
       return
     }
-    if (!cutoffToastArmed.current || view === 'today') return
+    if (view === 'today') return
+    if (armedInterrupt.current) {
+      setInterrupt(armedInterrupt.current)
+      armedInterrupt.current = null
+      return
+    }
+    if (!cutoffToastArmed.current) return
     if (resolvedRef.current.has('cutoff')) { cutoffToastArmed.current = false; return }
     cutoffToastArmed.current = false
     setInterrupt({ icon: 'clock', scenario: 'cutoff', title: `Oat milk order locks ${cutoffLabel()}`, cta: 'Review' })
