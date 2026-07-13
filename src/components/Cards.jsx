@@ -489,9 +489,23 @@ const PRICE_OPTIONS = [
 ]
 const resLabel = (line) => {
   const opts = line.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS
-  const label = (opts.find(o => o[0] === line.resolution) || opts[0])[1]
-  return line.resolution === 'credit' || line.resolution === 'creditDiff'
-    ? `${label} — £${line.amount.toFixed(2)}` : label
+  return (opts.find(o => o[0] === line.resolution) || opts[0])[1]
+}
+const joinAnd = (xs) => (xs.length <= 1 ? xs[0] || '' : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`)
+// The success copy reflects the resolutions actually chosen, credits grouped
+// into one sentence. It never claims the invoice is closed — it is waiting
+// on Bidfood.
+const invoiceOutcome = (lines) => {
+  const parts = []
+  const credits = lines.filter(l => l.resolution === 'credit' || l.resolution === 'creditDiff').map(l => l.name)
+  if (credits.length) parts.push(`Credit note${credits.length === 1 ? '' : 's'} requested for ${joinAnd(credits)}.`)
+  lines.forEach(l => {
+    if (l.resolution === 'confirmPrice') parts.push(`${l.name} price difference sent to Bidfood for confirmation.`)
+    if (l.resolution === 'accept' || l.resolution === 'acceptOnce') parts.push(`${l.name} difference accepted.`)
+    if (l.resolution === 'updateExpected') parts.push(`Expected price for ${l.name} updated.`)
+    if (l.resolution === 'hold' || l.resolution === 'holdLine') parts.push(`${l.name} held for supplier review.`)
+  })
+  return parts.join(' ')
 }
 
 export function InvoiceCloseCard({ entry, resolve, patch }) {
@@ -499,8 +513,13 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
   const { status = 'proposed', accepting = false } = d
   const lines = d.lines || []
   const n = lines.length
-  const totalDiff = lines.reduce((a, l) => a + l.amount, 0)
-  const received = 1269 - lines.filter(l => l.kind === 'qty').reduce((a, l) => a + l.amount, 0)
+  // One consistent sum: invoiced − expected = difference, where expected is
+  // what the invoice should say given received quantities and expected prices.
+  const qtyDiff = lines.filter(l => l.kind === 'qty').reduce((a, l) => a + l.amount, 0)
+  const priceDiff = lines.filter(l => l.kind === 'price').reduce((a, l) => a + l.amount, 0)
+  const totalDiff = qtyDiff + priceDiff
+  const invoiced = 1269
+  const expected = invoiced - totalDiff
   const setRes = (i, resolution) => patch({ lines: lines.map((l, j) => (j === i ? { ...l, resolution } : l)) })
   const matched = d.matched || []
   return (
@@ -511,36 +530,40 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
         <div className="compare-cols">
           <div className="compare-col">
             <div className="cc-head">Invoiced total</div>
-            <div className="cc-total">£1,269.00</div>
+            <div className="cc-total">£{invoiced.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
           </div>
           <div className="compare-col">
-            <div className="cc-head">Received value</div>
-            <div className="cc-total">£{received.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+            <div className="cc-head">Expected total</div>
+            <div className="cc-total">£{expected.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
           </div>
           <div className="compare-col flagged">
             <div className="cc-head">Difference</div>
             <div className="cc-total">£{totalDiff.toFixed(2)}</div>
+            {qtyDiff > 0 && priceDiff > 0 && (
+              <div className="cc-sub">£{qtyDiff.toFixed(2)} quantity · £{priceDiff.toFixed(2)} price</div>
+            )}
           </div>
         </div>
         <div className="ir-grid ir-headrow">
-          <div>Item</div><div>Issue</div><div>Resolution</div>
+          <div>Item</div><div>Issue</div><div>Resolution</div><div className="ir-impact">Impact</div>
         </div>
         {lines.map((l, i) => (
           <div key={i} className="ir-row">
             <div className="ir-item">{l.name}</div>
-            <div className="ir-issue">{l.issue}</div>
+            <div className="ir-issue">
+              <div>{l.issue}</div>
+              {l.delta && <div className="ir-delta">{l.delta}</div>}
+            </div>
             <div className="ir-res">
               {status === 'proposed' ? (
-                <span className="ir-res-edit">
-                  <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
-                    {(l.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS).map(([k, label]) => (
-                      <option key={k} value={k}>{label}</option>
-                    ))}
-                  </select>
-                  {(l.resolution === 'credit' || l.resolution === 'creditDiff') && <span className="ir-amt">£{l.amount.toFixed(2)}</span>}
-                </span>
+                <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
+                  {(l.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS).map(([k, label]) => (
+                    <option key={k} value={k}>{label}</option>
+                  ))}
+                </select>
               ) : resLabel(l)}
             </div>
+            <div className="ir-impact">£{l.amount.toFixed(2)}</div>
           </div>
         ))}
         {matched.length > 0 && (
@@ -553,6 +576,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-item">{m}</div>
             <div className="ir-issue">—</div>
             <div className="ir-res">Matched</div>
+            <div className="ir-impact">—</div>
           </div>
         ))}
 
@@ -567,7 +591,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       {status === 'proposed' && accepting && (
         <div className="ir-confirm">
           <div className="cs-title">Accept invoice as billed?</div>
-          <div className="cs-body">This will accept Bidfood invoice #4902 without requesting corrections. No credit note will be requested. Expected supplier prices will not be updated.</div>
+          <div className="cs-body">This will accept Bidfood invoice #4902 without requesting corrections. No credit notes will be requested. Expected supplier prices will not be updated.</div>
           <div className="ir-confirm-actions">
             <button className="btn btn-primary" onClick={() => resolve('invoiceAcceptAll', { totalDiff })}>Accept invoice</button>
             <button className="btn btn-secondary" onClick={() => patch({ accepting: false })}>Cancel</button>
@@ -580,9 +604,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           note="Invoice #4902 was closed." />
       ) : (
         <ConfirmStrip label="Resolutions confirmed"
-          sub={lines.map(l => l.kind === 'qty'
-            ? `Credit note requested for ${l.name}.`
-            : `${l.name} price difference sent to Bidfood for confirmation.`).join(' ')}
+          sub={invoiceOutcome(lines)}
           note="Invoice #4902 is waiting for supplier response. Stock remains based on received quantities. No supplier prices were updated." />
       ))}
     </Card>

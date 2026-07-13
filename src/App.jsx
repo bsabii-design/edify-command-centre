@@ -220,11 +220,13 @@ export default function App() {
     if (t.creditPath === 'hold') {
       const qtyLines = (t.diffLines || []).map(l => ({
         kind: 'qty', name: l.name, amount: l.value, resolution: 'credit',
-        issue: `${l.invoiced} ${l.unit} billed · ${l.received} ${l.unit} received`
+        issue: `${l.invoiced} ${l.unit} billed · ${l.received} ${l.unit} received`,
+        delta: `${l.short} ${l.unit} short`
       }))
       const lines = [...qtyLines, {
         kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
-        issue: '£5.15 invoiced · £4.85 expected'
+        issue: '£5.15 invoiced · £4.85 expected',
+        delta: '+6.2% above expected'
       }]
       const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
       const matched = ['Oatly Barista oat milk', 'Whole milk', 'Double cream', 'Butter, unsalted', 'Free-range eggs', 'Sourdough loaf, sliced', 'Hass avocado', 'Espresso blend']

@@ -1652,3 +1652,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    horizontal breathing room as its cells, so "Value" never touches "Basis". */
 .diff-table th.num:not(:last-child) { padding-right: var(--sp-2); }
 .diff-table th.num:not(:last-child) + th { padding-left: var(--sp-2); }
+
+/* Invoice table gains an Impact column. The grid stays calm — only the
+   delta line under the issue fact and the Difference value carry red. */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.1fr) minmax(0, 1.35fr) 48px; }
+.ir-impact { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-1); }
+.ir-headrow .ir-impact { font-size: 11px; color: var(--text-3); }
+.ir-row.muted .ir-impact { color: var(--text-3); }
+.ir-delta { color: var(--accent); font-size: 11px; font-weight: 500; margin-top: 1px; }
