@@ -162,6 +162,7 @@ export const SCENARIOS = {
       { type: 'card', card: 'countFix' }
     ],
     resolutions: {
+      countCorrect: (p) => [{ type: 'assistant', text: `Corrected — yesterday's closing count is now **${p?.corrected ?? 8} L**. GP% and the weekly difference recalculate from the corrected figure, and the counting-unit slip is noted for tonight's checklist so it doesn't repeat.` }],
       recount: [{ type: 'assistant', text: "Recount requested — Marco will get it as the first item on tonight's closing checklist. Until then I've marked yesterday's milk figure *provisional*, so it won't feed into stock differences or GP% calculations as fact." }],
       acceptCount: [{ type: 'assistant', text: "Understood — count accepted as entered. I'll treat the 22 L as correct, which means the difference will show **+14 L unexplained gain** this week. If that reverses at the next count, I'll flag it as a likely counting slip." }]
     }

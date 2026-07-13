@@ -496,7 +496,7 @@ const resLabel = (line) => {
 
 export function InvoiceCloseCard({ entry, resolve, patch }) {
   const d = entry.data || {}
-  const { status = 'proposed', mode = 'review', accepting = false } = d
+  const { status = 'proposed', accepting = false } = d
   const lines = d.lines || []
   const n = lines.length
   const totalDiff = lines.reduce((a, l) => a + l.amount, 0)
@@ -530,12 +530,15 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-item">{l.name}</div>
             <div className="ir-issue">{l.issue}</div>
             <div className="ir-res">
-              {status === 'proposed' && mode === 'edit' ? (
-                <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
-                  {(l.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS).map(([k, label]) => (
-                    <option key={k} value={k}>{label}</option>
-                  ))}
-                </select>
+              {status === 'proposed' ? (
+                <span className="ir-res-edit">
+                  <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
+                    {(l.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS).map(([k, label]) => (
+                      <option key={k} value={k}>{label}</option>
+                    ))}
+                  </select>
+                  {(l.resolution === 'credit' || l.resolution === 'creditDiff') && <span className="ir-amt">£{l.amount.toFixed(2)}</span>}
+                </span>
               ) : resLabel(l)}
             </div>
           </div>
@@ -552,22 +555,13 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-res">Matched</div>
           </div>
         ))}
-        {status === 'proposed' && mode === 'edit' && (
-          <div className="ir-helper">You can change how Edify handles each difference. Invoice and delivery records stay unchanged.</div>
-        )}
+
       </div>
-      {status === 'proposed' && !accepting && mode === 'review' && (
+      {status === 'proposed' && !accepting && (
         <div className="ac-footer">
           <button className="btn btn-primary" onClick={() => resolve('invoiceResolutions', { lines, totalDiff })}>Confirm {n} resolution{n === 1 ? '' : 's'}</button>
-          <button className="btn btn-secondary" onClick={() => patch({ mode: 'edit' })}>Edit resolutions</button>
           <div className="spacer" />
           <button className="done-action" onClick={() => patch({ accepting: true })}>Accept invoice as is</button>
-        </div>
-      )}
-      {status === 'proposed' && mode === 'edit' && (
-        <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => patch({ mode: 'review' })}>Save resolutions</button>
-          <button className="btn btn-secondary" onClick={() => patch({ mode: 'review' })}>Cancel</button>
         </div>
       )}
       {status === 'proposed' && accepting && (
@@ -596,44 +590,71 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
 }
 
 // ---------- Count fix --------------------------------------------------
-export function CountFixCard({ entry, resolve }) {
-  const { status = 'proposed', choice } = entry.data || {}
+export function CountFixCard({ entry, resolve, patch }) {
+  // Facts are read-only; the proposed corrected count is editable inline.
+  const { status = 'proposed', choice, corrected = 8, accepting = false } = entry.data || {}
+  const setQty = (q) => patch({ corrected: Math.max(0, Math.min(999, q)) })
   return (
     <Card>
-      <CardHead title="Whole milk — yesterday's closing count"
-        sub="Fitzroy Espresso — posted 07:20 by Aisha" status={status === 'proposed' ? 'attention' : 'applied'} />
+      <CardHead title="Whole milk count looks too high"
+        sub="Fitzroy Espresso · posted by Aisha at 07:20" />
       <div className="ac-body">
         <table className="diff-table fixed">
-          <colgroup><col style={{ width: '40%' }} /><col style={{ width: '22%' }} /><col style={{ width: '38%' }} /></colgroup>
-          <thead><tr><th>Figure</th><th className="num">Litres</th><th>Basis</th></tr></thead>
+          <colgroup><col style={{ width: '36%' }} /><col style={{ width: '20%' }} /><col style={{ width: '44%' }} /></colgroup>
+          <thead><tr><th>Figure</th><th className="num">Value</th><th>Basis</th></tr></thead>
           <tbody>
             <tr><td>Opening stock</td><td className="num">39 L</td><td className="muted">Thursday delivery + carry-over</td></tr>
-            <tr><td>Implied by POS usage</td><td className="num"><b>8 L</b></td><td className="muted">418 white-based drinks sold</td></tr>
-            <tr className="mismatch"><td><b>Counted at close</b></td><td className="num"><b>22 L</b></td><td><span className="flag">+14 L vs expected</span></td></tr>
+            <tr><td>POS recipe usage</td><td className="num">−31 L</td><td className="muted">418 milk-based drinks sold</td></tr>
+            <tr><td>Expected closing stock</td><td className="num"><b>8 L</b></td><td className="muted">Based on sales and recipes</td></tr>
+            <tr><td><b>Posted closing count</b></td><td className="num"><b>22 L</b></td><td><span className="flag">+14 L vs expected</span></td></tr>
           </tbody>
         </table>
-        <div className="uncertain-note">
-          <AlertCircle size={16} />
-          <div>
-            <div className="un-title">My best guess — you make the call</div>
-            <div className="un-body">
-              The pattern matches a 12 L crate counted as single litres. I won't correct a human count on a guess:
-              until you decide, this figure is held out of the difference and GP% as <i>provisional</i>.
-            </div>
+        <div className="card-summary">
+          <span className="cs-ico"><Eye size={16} /></span>
+          <div className="cs-copy">
+            <div className="cs-title">Likely counting issue</div>
+            <div className="cs-body">The pattern looks like a counting-unit error. Edify will not change a posted count without confirmation.</div>
           </div>
         </div>
+        <div className="prop-line">
+          <span className="prop-label">Proposed correction — use closing count:</span>
+          <span className="stepper sm">
+            <button onClick={() => setQty(corrected - 1)} aria-label="Less" disabled={status !== 'proposed'}><Minus size={16} /></button>
+            <span className="step-value">
+              <input className="step-input" value={corrected} inputMode="numeric" disabled={status !== 'proposed'}
+                onChange={e => { const v = parseInt(e.target.value.replace(/\D/g, ''), 10); setQty(isNaN(v) ? 0 : v) }} />
+              <span className="unit">L</span>
+            </span>
+            <button onClick={() => setQty(corrected + 1)} aria-label="More" disabled={status !== 'proposed'}><Plus size={16} /></button>
+          </span>
+        </div>
       </div>
-      {status === 'proposed' && (
+      {status === 'proposed' && !accepting && (
         <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('recount')}>Request recount</button>
-          <button className="btn btn-secondary" onClick={() => resolve('acceptCount')}>Accept count</button>
+          <button className="btn btn-primary" onClick={() => resolve('countCorrect', { corrected })}>Confirm correction</button>
+          <button className="btn btn-secondary" onClick={() => resolve('recount')}>Request recount</button>
           <div className="spacer" />
-          <span className="ac-hint">Undecided, the +14 L stays out of GP% as provisional</span>
+          <button className="done-action" onClick={() => patch({ accepting: true })}>Accept posted count</button>
+        </div>
+      )}
+      {status === 'proposed' && accepting && (
+        <div className="ir-confirm">
+          <div className="cs-title">Accept the posted count of 22 L?</div>
+          <div className="cs-body">This confirms yesterday's count as correct. The +14 L difference goes into GP% and variance as real.</div>
+          <div className="ir-confirm-actions">
+            <button className="btn btn-primary" onClick={() => resolve('acceptCount')}>Accept posted count</button>
+            <button className="btn btn-secondary" onClick={() => patch({ accepting: false })}>Cancel</button>
+          </div>
         </div>
       )}
       {status === 'applied' && (
-        <ConfirmStrip label={choice === 'recount' ? 'Recount requested' : 'Count accepted'}
-          sub={choice === 'recount' ? "Added to tonight's closing checklist" : 'The difference will show +14 L'} />
+        <ConfirmStrip
+          label={choice === 'recount' ? 'Recount requested' : choice === 'acceptCount' ? 'Posted count accepted' : 'Count corrected'}
+          sub={choice === 'recount'
+            ? "Added to tonight's closing checklist. The posted 22 L stays provisional until checked."
+            : choice === 'acceptCount'
+            ? 'The 22 L stands. The +14 L difference now counts in GP and variance.'
+            : `Closing count set to ${corrected} L. GP and variance now use the corrected value.`} />
       )}
     </Card>
   )

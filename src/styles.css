@@ -1640,3 +1640,15 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ir-helper { font-size: 11px; color: var(--text-3); padding: var(--sp-2) 0 var(--sp-1); }
 .ir-confirm { border-top: 1px solid var(--border); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
 .ir-confirm-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-1); }
+
+/* Editable proposal line: label + live stepper, facts stay above, locked. */
+.prop-line { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0 var(--sp-1); border-top: 1px solid var(--border); margin-top: var(--sp-2); }
+.prop-label { font-size: 13px; font-weight: 500; }
+.ir-res-edit { display: inline-flex; align-items: center; gap: var(--sp-2); width: 100%; }
+.ir-res-edit .ir-select { flex: 1; min-width: 0; }
+.ir-amt { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-2); flex-shrink: 0; }
+
+/* A right-aligned numeric header followed by another column gets the same
+   horizontal breathing room as its cells, so "Value" never touches "Basis". */
+.diff-table th.num:not(:last-child) { padding-right: var(--sp-2); }
+.diff-table th.num:not(:last-child) + th { padding-left: var(--sp-2); }

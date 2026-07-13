@@ -154,6 +154,14 @@ export default function App() {
         J('action', 'you', "Monday's muffin bake kept at 12", "Reviewed Edify's proposal from the GP% breakdown and kept the plan — nothing sent", 'Case — Production plan')
         toast('Kept at 12', 'No change sent to the Hub kitchen')
         break
+      case 'countCorrect': {
+        const v = payload?.corrected ?? 8
+        setInterrupt(null)
+        markResolved('count')
+        J('action', 'you', `Whole milk count corrected 22 → ${v} L`, `Counting-unit error confirmed — GP and variance now use the corrected value`, 'Stock counts')
+        toast('Count corrected', `Closing count set to ${v} L.`)
+        break
+      }
       case 'recount':
         markResolved(scenarioId)
         setWatching(w => [...w, { id: 'wcount', title: 'Whole milk recount — tonight', sub: 'Yesterday’s figure held as provisional', chip: 'tonight', threadId }])

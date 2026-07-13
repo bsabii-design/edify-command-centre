@@ -399,7 +399,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
     const statusByAction = {
       confirm: { status: 'applied' }, decline: { status: 'declined' }, invoiceConfirm: { status: 'applied' },
       muffinConfirm: { status: 'applied' }, muffinKeep: { status: 'declined' },
-      recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' },
+      recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' }, countCorrect: { status: 'applied', choice: 'countCorrect' },
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
       invoiceResolutions: { status: 'applied', resolution: 'sent' }, invoiceAcceptAll: { status: 'applied', resolution: 'acceptedAll' },
       supplierAddConfirm: { status: 'applied' }, supplierCreateConfirm: { status: 'applied' },
