@@ -80,13 +80,11 @@ function KeptStrip({ label }) {
 // ---------- Order diff --------------------------------------------------
 export function OrderDiffCard({ entry, patch, resolve }) {
   const { status = 'proposed', add = 20, showAll = false } = entry.data || {}
-  // The confirm is not instant: the button narrates what is happening —
-  // updating, sending, accepted — then the receipt takes over.
-  const [confirming, setConfirming] = useState(null)
+  // One label, one press: the button disables briefly while the send runs.
+  const [confirming, setConfirming] = useState(false)
   const runConfirm = () => {
-    setConfirming('Updating basket…')
-    setTimeout(() => setConfirming('Sending to Bidfood…'), 450)
-    setTimeout(() => { setConfirming(null); resolve('confirm') }, 950)
+    setConfirming(true)
+    setTimeout(() => { setConfirming(false); resolve('confirm') }, 600)
   }
   const newQty = 60 + add
   const delta = add * 1.42
@@ -172,7 +170,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
           </div>
         </div>
         <div className="ac-footer">
-          <button className="btn btn-primary" disabled={add === 0 || !!confirming} onClick={runConfirm}>{confirming || 'Update basket'}</button>
+          <button className="btn btn-primary" disabled={add === 0 || confirming} onClick={runConfirm}>Update basket</button>
           <button className="btn btn-secondary" disabled={!!confirming} onClick={() => resolve('decline')}>Keep as is</button>
         </div>
       </>)}
@@ -458,7 +456,7 @@ export function ReceivingCard({ entry, patch, resolve }) {
       {status === 'proposed' && (
         <div className="ac-footer">
           <button className="btn btn-primary" disabled={confirming}
-            onClick={() => { setConfirming(true); setTimeout(() => resolve('receipt', { shortUnits: summary.short, extraUnits: summary.extra, value: summary.value, diffs: summary.diffs, shortLines: summary.shortLines }), 700) }}>{confirming ? 'Updating stock…' : 'Confirm received'}</button>
+            onClick={() => { setConfirming(true); setTimeout(() => resolve('receipt', { shortUnits: summary.short, extraUnits: summary.extra, value: summary.value, diffs: summary.diffs, shortLines: summary.shortLines }), 600) }}>Confirm received</button>
         </div>
       )}
       {status === 'applied' && (summary.diffs > 0 ? (
