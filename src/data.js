@@ -88,7 +88,9 @@ export const SCENARIOS = {
         const n = p.diffs
         return [{ type: 'assistant', text: `Delivery confirmed — **8** items received, **${n} difference${n === 1 ? '' : 's'}** recorded. Stock is updated with what actually arrived, and I'll check the difference${n === 1 ? '' : 's'} against Bidfood's invoice when it lands. If they billed for the full order, I'll bring you a drafted credit claim.` }]
       },
-      closeCase: (p, entry) => [{ type: 'assistant', text: `Done — credit settled and the invoice posted at the net **£${(entry?.data?.net ?? 1266.16).toFixed(2)}**. The whole story — my proposal, your +20 L, the shortage at the door, the credit — is one thread, now in Journal. Case closed.` }]
+      requestCredit: (p, entry) => [{ type: 'assistant', text: `Requested — Bidfood has been asked to credit **£${(p?.value ?? 0.96).toFixed(2)}** for **${p?.units ?? 1} L** not received. Invoice #4902 now waits for their response, and stock stays based on what actually arrived. I'll match the credit note when it lands and close the case then.` }],
+      acceptDiff: (p) => [{ type: 'assistant', text: `Accepted — the **£${(p?.value ?? 0.96).toFixed(2)}** difference is written off and invoice #4902 posts at **£1,269.00**. Case closed — the whole story is one thread in Journal.` }],
+      editRequest: () => []
     }
   },
 

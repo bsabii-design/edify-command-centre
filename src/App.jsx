@@ -99,9 +99,27 @@ export default function App() {
         const short = payload?.shortUnits || 0
         const diffs = payload?.diffs || 0
         const creditPath = short > 0 ? 'hold' : 'clean'
-        patchThread(threadId, { caseState: 'awaiting_invoice', creditPath, shortValue: payload?.value || 0, shortUnits: short })
+        patchThread(threadId, { caseState: 'awaiting_invoice', creditPath, shortValue: payload?.value || 0, shortUnits: short, diffLines: payload?.shortLines || [] })
         J('action', 'you', diffs > 0 ? `Bidfood delivery received — ${diffs} difference${diffs === 1 ? '' : 's'} recorded` : 'Bidfood delivery received — 8 items checked in', diffs > 0 ? `Delivery note #912 posted — stock updated with received quantities, differences go against the invoice` : 'Delivery note #912 posted — all quantities matched order #2231', 'Case — Saturday order')
         toast('Delivery confirmed', diffs > 0 ? 'Stock updated — Edify will check the difference against the invoice' : '8 items checked in — stock updated')
+        break
+      }
+      case 'requestCredit': {
+        setInterrupt(null)
+        const v = (payload?.value ?? 0.96).toFixed(2)
+        const u = payload?.units ?? 1
+        patchThread(threadId, { caseState: 'awaiting_credit' })
+        setWatching(w => [...w, { id: 'wcredit', title: 'Invoice #4902 — waiting for supplier', sub: `Credit note for £${v} requested — Edify will match the response`, chip: 'by Wed', threadId }])
+        J('action', 'you', 'Credit note requested for invoice #4902', `£${v} requested for ${u} L not received`, 'Invoices')
+        toast('Credit note requested', `Bidfood has been asked to credit £${v}.`)
+        break
+      }
+      case 'acceptDiff': {
+        setInterrupt(null)
+        const v = (payload?.value ?? 0.96).toFixed(2)
+        patchThread(threadId, { caseState: 'closed' })
+        J('action', 'you', 'Invoice #4902 difference accepted', `£${v} written off — invoice posted at £1,269.00`, 'Invoices')
+        toast('Difference accepted', 'Invoice #4902 posted in full.')
         break
       }
       case 'closeCase':
@@ -179,6 +197,7 @@ export default function App() {
     : orderThread.caseState === 'receiving' ? 1.5
     : orderThread.caseState === 'awaiting_invoice' ? 2
     : orderThread.caseState === 'invoice_decision' ? 2.5
+    : orderThread.caseState === 'awaiting_credit' ? 2.8
     : 3
 
   const fireDelivery = () => {
@@ -192,14 +211,16 @@ export default function App() {
     const t = orderThread
     if (!t) return
     if (t.creditPath === 'hold') {
+      const u = t.shortUnits || 1
+      const v = t.shortValue || 0.96
       patchThread(t.id, {
         caseState: 'invoice_decision',
         pendingSteps: [
-          { type: 'assistant', scenarioId: 'delivery', text: "**Monday, 06:40.** Bidfood's invoice **#4902** is in, billed as ordered — but delivery note #912 recorded **" + (t.shortUnits || 2) + " L** short. I drafted a credit claim of **£" + (t.shortValue || 2.84).toFixed(2) + "** for it. One click settles the whole case:" },
-          { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { value: t.shortValue || 2.84, net: 1269 - (t.shortValue || 2.84) } }
+          { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. It matches the order, but not the delivery note: **${u} L** ${u === 1 ? 'was' : 'were'} billed but not received. I prepared a credit note request for **£${v.toFixed(2)}**. Nothing is sent until you confirm.` },
+          { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { value: v, units: u, net: 1269 - v, lines: t.diffLines || [] } }
         ]
       })
-      setInterrupt({ icon: 'invoice', threadId: t.id, title: 'Invoice #4902 needs one decision', cta: 'Settle' })
+      setInterrupt({ icon: 'invoice', threadId: t.id, title: "Invoice #4902 doesn't match the delivery note", cta: 'Review' })
     } else {
       const net = 1269
       patchThread(t.id, {
@@ -261,7 +282,7 @@ export default function App() {
   // ---- Home data -----------------------------------------------------------
   const needsItems = [
     ...(orderThread?.caseState === 'receiving' ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery ready to check in', why: 'Order #2231 — 8 items, including 80 L oat milk.', cta: 'Receive delivery' }] : []),
-    ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `${orderThread.shortUnits || 2} L`, stakeUnit: 'short', threadId: orderThread.id, title: "Invoice #4902 doesn't match the delivery note", why: 'Edify drafted a credit claim for the gap.', cta: 'Settle & close' }] : []),
+    ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `${orderThread.shortUnits || 2} L`, stakeUnit: 'short', threadId: orderThread.id, title: "Invoice #4902 doesn't match the delivery note", why: 'Edify prepared a credit note request.', cta: 'Review' }] : []),
     ...BRIEF.needsCall.filter(i => !resolved.has(i.scenario) && !deferred[i.id] && !dismissed.has(i.id))
   ]
 
@@ -313,7 +334,8 @@ export default function App() {
         {demoStage === 1.5 && <span className="demo-hint">Receive the delivery in its case to continue</span>}
         {demoStage === 2 && <button className="demo-btn" onClick={fireInvoice}>⏩ Mon 06:40 — the invoice lands</button>}
         {gpThread && !countFired && <button className="demo-btn" onClick={fireCount}>⏩ Thu 18:05 — Marco closes the count</button>}
-        {demoStage === 2.5 && <span className="demo-hint">Settle the invoice in its case to finish</span>}
+        {demoStage === 2.5 && <span className="demo-hint">Review the invoice in its case to continue</span>}
+        {demoStage === 2.8 && <span className="demo-hint">Credit note sent — the case closes when Bidfood replies</span>}
         {demoStage === 3 && <span className="demo-hint">✓ Demo complete — the whole case is one thread in Journal</span>}
       </div>
 

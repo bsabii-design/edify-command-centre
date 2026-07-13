@@ -422,13 +422,16 @@ export function ReceivingCard({ entry, patch, resolve }) {
   // Every delivered line is visible — receiving means checking all of it,
   // and a hidden row is an unreviewed row.
   const lines = [...RECEIVE_LINES, ...RECEIVE_MORE]
-  const summary = [...RECEIVE_LINES, ...RECEIVE_MORE].reduce((acc, l, i) => {
+  const summary = lines.reduce((acc, l, i) => {
     const received = rows[i]?.received ?? l.expected
     const diff = received - l.expected
-    if (diff < 0) { acc.short += -diff; acc.value += -diff * l.price; acc.diffs += 1 }
+    if (diff < 0) {
+      acc.short += -diff; acc.value += -diff * l.price; acc.diffs += 1
+      acc.shortLines.push({ name: l.name, unit: l.unit, invoiced: l.expected, received, short: -diff, value: -diff * l.price })
+    }
     if (diff > 0) { acc.extra += diff; acc.diffs += 1 }
     return acc
-  }, { short: 0, extra: 0, value: 0, diffs: 0 })
+  }, { short: 0, extra: 0, value: 0, diffs: 0, shortLines: [] })
 
   return (
     <Card>
@@ -455,7 +458,7 @@ export function ReceivingCard({ entry, patch, resolve }) {
       {status === 'proposed' && (
         <div className="ac-footer">
           <button className="btn btn-primary" disabled={confirming}
-            onClick={() => { setConfirming(true); setTimeout(() => resolve('receipt', { shortUnits: summary.short, extraUnits: summary.extra, value: summary.value, diffs: summary.diffs }), 700) }}>{confirming ? 'Updating stock…' : 'Confirm received'}</button>
+            onClick={() => { setConfirming(true); setTimeout(() => resolve('receipt', { shortUnits: summary.short, extraUnits: summary.extra, value: summary.value, diffs: summary.diffs, shortLines: summary.shortLines }), 700) }}>{confirming ? 'Updating stock…' : 'Confirm received'}</button>
         </div>
       )}
       {status === 'applied' && (summary.diffs > 0 ? (
@@ -472,33 +475,60 @@ export function ReceivingCard({ entry, patch, resolve }) {
 }
 
 // ---------- Invoice close (final decision of the Saturday case) ------------
-export function InvoiceCloseCard({ entry, resolve }) {
-  const { status = 'proposed', value = 2.84, net = 1266.16 } = entry.data || {}
+export function InvoiceCloseCard({ entry, resolve, patch }) {
+  const { status = 'proposed', value = 0.96, units = 1, net = 1268.04, lines = [], resolution } = entry.data || {}
+  const rows = lines.length ? lines : [{ name: 'Oat milk', unit: 'L', invoiced: 80, received: 80 - units, short: units, value }]
+  const n = rows.length
   return (
     <Card>
-      <CardHead title="Invoice #4902 vs what actually arrived"
-        sub="Bidfood, Mon 06:40 — checked against the order + delivery note" status={status === 'proposed' ? 'attention' : 'applied'} />
+      <CardHead title={`Bidfood invoice #4902 has ${n} delivery difference${n === 1 ? '' : 's'}`}
+        sub="Checked against order #2231 and delivery note #912" status={status === 'proposed' ? 'attention' : 'applied'} />
       <div className="ac-body">
         <div className="compare-cols">
-          <div className="compare-col flagged">
-            <div className="cc-head">Invoiced</div>
+          <div className="compare-col">
+            <div className="cc-head">Invoiced total</div>
             <div className="cc-total">£1,269.00</div>
-            <div className="cc-sub">billed as ordered</div>
           </div>
           <div className="compare-col">
-            <div className="cc-head">Received (delivery note)</div>
-            <div className="cc-total">£{net.toFixed(2)}</div>
-            <div className="cc-sub">per delivery note #912 — Edify drafted a credit of £{value.toFixed(2)} for the gap</div>
+            <div className="cc-head">Received value</div>
+            <div className="cc-total">£{net.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+          </div>
+          <div className="compare-col flagged">
+            <div className="cc-head">Difference</div>
+            <div className="cc-total">£{value.toFixed(2)}</div>
           </div>
         </div>
+        <table className="diff-table fixed">
+          <colgroup><col style={{ width: '26%' }} /><col style={{ width: '17%' }} /><col style={{ width: '17%' }} /><col style={{ width: '17%' }} /><col style={{ width: '23%' }} /></colgroup>
+          <thead><tr><th>Item</th><th className="num">Invoiced</th><th className="num">Received</th><th className="num">Difference</th><th className="num">Proposed action</th></tr></thead>
+          <tbody>
+            {rows.map((l, i) => (
+              <tr key={i} className="mismatch">
+                <td><b>{l.name}</b></td>
+                <td className="num">{l.invoiced} {l.unit}</td>
+                <td className="num">{l.received} {l.unit}</td>
+                <td className="num"><span className="flag">{l.short} {l.unit} short</span></td>
+                <td className="num">Request £{l.value.toFixed(2)} credit</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       {status === 'proposed' ? (
         <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('closeCase')}>Settle & close</button>
+          <button className="btn btn-primary" onClick={() => resolve('requestCredit', { value, units })}>Request credit note</button>
+          <button className="btn btn-secondary" onClick={() => resolve('editRequest')}>Edit request</button>
           <div className="spacer" />
-          <span className="ac-hint">One decision settles order, delivery and invoice</span>
+          <button className="done-action" onClick={() => resolve('acceptDiff', { value })}>Accept difference</button>
         </div>
-      ) : (<ConfirmStrip label="Case closed" sub={`Posted at £${net.toFixed(2)} — full story in Journal`} />)}
+      ) : resolution === 'accepted' ? (
+        <ConfirmStrip label="Difference accepted"
+          sub={<>£{value.toFixed(2)} written off. Invoice #4902 posted at £1,269.00.</>} />
+      ) : (
+        <ConfirmStrip label="Credit note requested"
+          sub={<>Bidfood has been asked to credit £{value.toFixed(2)} for {units} L not received.</>}
+          note="Invoice #4902 is waiting for supplier response. Stock remains based on the received quantity." />
+      )}
     </Card>
   )
 }
