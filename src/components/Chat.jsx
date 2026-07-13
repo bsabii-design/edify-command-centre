@@ -395,14 +395,13 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
   const resolve = (entry) => (action, payload) => {
     // A driver row with a handle opens its own case, like the follow-up chip.
     if (action === 'openMuffins') { handleSend("Trim Monday's muffin bake"); return }
-    if (action === 'editRequest') { pushAssistant('Tell me what to change — the amount, the wording, or which line it covers — and I\'ll redraft the request before anything is sent.'); return }
     const sc = SCENARIOS[entry.scenarioId]
     const statusByAction = {
       confirm: { status: 'applied' }, decline: { status: 'declined' }, invoiceConfirm: { status: 'applied' },
       muffinConfirm: { status: 'applied' }, muffinKeep: { status: 'declined' },
       recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' },
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
-      requestCredit: { status: 'applied', resolution: 'credit' }, acceptDiff: { status: 'applied', resolution: 'accepted' },
+      invoiceResolutions: { status: 'applied', resolution: 'sent' }, invoiceAcceptAll: { status: 'applied', resolution: 'acceptedAll' },
       supplierAddConfirm: { status: 'applied' }, supplierCreateConfirm: { status: 'applied' },
       supplierUpdateConfirm: { status: 'applied' },
       supplierCancel: { status: 'cancelled' }

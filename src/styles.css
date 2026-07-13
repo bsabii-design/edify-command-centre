@@ -556,7 +556,7 @@ input, textarea { font-family: inherit; font-size: 13px; color: var(--text); }
 .diff-table .val-new { color: var(--blue); font-weight: 600; }
 .diff-table .delta { color: var(--blue); font-weight: 600; font-size: 11px; }
 .diff-table .muted { color: var(--text-3); }
-.diff-table tr.mismatch td { background: var(--red-bg); }
+
 .diff-table .flag { color: var(--accent); font-weight: 600; font-size: 11px; }
 .diff-table .more-row td { cursor: pointer; color: var(--text-3); transition: color 0.13s; }
 .diff-table .more-row:hover td { color: var(--text-2); }
@@ -795,7 +795,8 @@ input, textarea { font-family: inherit; font-size: 13px; color: var(--text); }
 /* Compare (invoice) */
 .compare-cols {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: var(--sp-2);
   margin-bottom: var(--sp-1);
 }
@@ -807,7 +808,7 @@ input, textarea { font-family: inherit; font-size: 13px; color: var(--text); }
 .compare-col .cc-head { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: var(--sp-1); }
 .compare-col .cc-total { font-size: 20px; font-weight: 600; }
 .compare-col .cc-sub { font-size: 11px; color: var(--text-3); }
-.compare-col.flagged { border-color: var(--red-border); background: var(--red-bg); }
+.compare-col.flagged .cc-total { color: var(--accent); }
 .compare-cols.three { grid-template-columns: 1fr 1fr 1fr; }
 .compare-cols.three .cc-total { font-size: 13px; }
 
@@ -1621,3 +1622,21 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .q-next { font-size: 13px; color: var(--text-2); margin-top: var(--sp-0); }
 .q-right { display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-0); flex-shrink: 0; }
 .q-status { font-size: 11px; font-weight: 500; color: var(--text-2); }
+
+/* Invoice resolutions: Item | Issue | Resolution. Facts are read-only;
+   only the resolution is editable, inline in the table. */
+.ir-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.1fr) minmax(0, 1.1fr); gap: var(--sp-3); align-items: center; }
+.ir-headrow { font-size: 11px; color: var(--text-3); padding: var(--sp-3) 0 var(--sp-2); }
+.ir-row { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.1fr) minmax(0, 1.1fr); gap: var(--sp-3); align-items: center; padding: var(--sp-3) 0; border-top: 1px solid var(--border); }
+.ir-headrow + .ir-row { border-top: none; padding-top: 0; }
+.ir-item { font-size: 13px; font-weight: 500; }
+.ir-issue { font-size: 13px; color: var(--text-2); }
+.ir-res { font-size: 13px; color: var(--text); }
+.ir-row.muted .ir-item { font-weight: 400; color: var(--text-2); }
+.ir-row.muted .ir-issue, .ir-row.muted .ir-res { color: var(--text-3); }
+.ir-more { display: block; width: 100%; text-align: left; font-size: 13px; color: var(--text-3); padding: var(--sp-3) 0 var(--sp-1); border-top: 1px solid var(--border); transition: color 0.13s; }
+.ir-more:hover { color: var(--text-2); }
+.ir-select { width: 100%; height: 28px; padding: 0 var(--sp-2); border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); font-size: 13px; color: var(--text); outline: none; }
+.ir-helper { font-size: 11px; color: var(--text-3); padding: var(--sp-2) 0 var(--sp-1); }
+.ir-confirm { border-top: 1px solid var(--border); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); }
+.ir-confirm-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-1); }

@@ -88,9 +88,8 @@ export const SCENARIOS = {
         const n = p.diffs
         return [{ type: 'assistant', text: `Delivery confirmed — **8** items received, **${n} difference${n === 1 ? '' : 's'}** recorded. Stock is updated with what actually arrived, and I'll check the difference${n === 1 ? '' : 's'} against Bidfood's invoice when it lands. If they billed for the full order, I'll bring you a drafted credit claim.` }]
       },
-      requestCredit: (p, entry) => [{ type: 'assistant', text: `Requested — Bidfood has been asked to credit **£${(p?.value ?? 0.96).toFixed(2)}** for **${p?.units ?? 1} L** not received. Invoice #4902 now waits for their response, and stock stays based on what actually arrived. I'll match the credit note when it lands and close the case then.` }],
-      acceptDiff: (p) => [{ type: 'assistant', text: `Accepted — the **£${(p?.value ?? 0.96).toFixed(2)}** difference is written off and invoice #4902 posts at **£1,269.00**. Case closed — the whole story is one thread in Journal.` }],
-      editRequest: () => []
+      invoiceResolutions: (p) => [{ type: 'assistant', text: `Confirmed — **${(p?.lines || []).length} resolution${(p?.lines || []).length === 1 ? '' : 's'}** sent to Bidfood. Invoice #4902 waits for their response — stock stays based on received quantities and no expected prices were changed. I'll close the case when they reply.` }],
+      invoiceAcceptAll: () => [{ type: 'assistant', text: `Accepted as billed — invoice #4902 posts at **£1,269.00**, no corrections requested. Case closed — the whole story is one thread in Journal.` }]
     }
   },
 

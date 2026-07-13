@@ -27,7 +27,6 @@ export function Card({ children }) {
  */
 function StatusChip({ status }) {
   const map = {
-    attention: ['attention', 'Needs review'],
     unverified: ['attention', 'One number unverified'],
     draft: ['draft', 'Not created yet'],
     unsaved: ['draft', 'Not saved yet']
@@ -473,14 +472,41 @@ export function ReceivingCard({ entry, patch, resolve }) {
 }
 
 // ---------- Invoice close (final decision of the Saturday case) ------------
+// ---------- Invoice #4902: line-level resolutions ---------------------------
+// The user never edits invoice facts, delivery facts or received quantities.
+// They only confirm — or change — how Edify handles each difference.
+const QTY_OPTIONS = [
+  ['credit', 'Request credit note'],
+  ['accept', 'Accept difference'],
+  ['hold', 'Hold for supplier review']
+]
+const PRICE_OPTIONS = [
+  ['confirmPrice', 'Ask supplier to confirm price'],
+  ['acceptOnce', 'Accept price once'],
+  ['updateExpected', 'Update expected price'],
+  ['creditDiff', 'Request credit for price difference'],
+  ['holdLine', 'Hold line']
+]
+const resLabel = (line) => {
+  const opts = line.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS
+  const label = (opts.find(o => o[0] === line.resolution) || opts[0])[1]
+  return line.resolution === 'credit' || line.resolution === 'creditDiff'
+    ? `${label} — £${line.amount.toFixed(2)}` : label
+}
+
 export function InvoiceCloseCard({ entry, resolve, patch }) {
-  const { status = 'proposed', value = 0.96, units = 1, net = 1268.04, lines = [], resolution } = entry.data || {}
-  const rows = lines.length ? lines : [{ name: 'Oat milk', unit: 'L', invoiced: 80, received: 80 - units, short: units, value }]
-  const n = rows.length
+  const d = entry.data || {}
+  const { status = 'proposed', mode = 'review', accepting = false } = d
+  const lines = d.lines || []
+  const n = lines.length
+  const totalDiff = lines.reduce((a, l) => a + l.amount, 0)
+  const received = 1269 - lines.filter(l => l.kind === 'qty').reduce((a, l) => a + l.amount, 0)
+  const setRes = (i, resolution) => patch({ lines: lines.map((l, j) => (j === i ? { ...l, resolution } : l)) })
+  const matched = d.matched || []
   return (
     <Card>
-      <CardHead title={`Bidfood invoice #4902 has ${n} delivery difference${n === 1 ? '' : 's'}`}
-        sub="Checked against order #2231 and delivery note #912" status={status === 'proposed' ? 'attention' : 'applied'} />
+      <CardHead title={`Bidfood invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`}
+        sub="Checked against order #2231, delivery note #912 and expected prices" />
       <div className="ac-body">
         <div className="compare-cols">
           <div className="compare-col">
@@ -489,44 +515,82 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           </div>
           <div className="compare-col">
             <div className="cc-head">Received value</div>
-            <div className="cc-total">£{net.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+            <div className="cc-total">£{received.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
           </div>
           <div className="compare-col flagged">
             <div className="cc-head">Difference</div>
-            <div className="cc-total">£{value.toFixed(2)}</div>
+            <div className="cc-total">£{totalDiff.toFixed(2)}</div>
           </div>
         </div>
-        <table className="diff-table fixed">
-          <colgroup><col style={{ width: '26%' }} /><col style={{ width: '17%' }} /><col style={{ width: '17%' }} /><col style={{ width: '17%' }} /><col style={{ width: '23%' }} /></colgroup>
-          <thead><tr><th>Item</th><th className="num">Invoiced</th><th className="num">Received</th><th className="num">Difference</th><th className="num">Proposed action</th></tr></thead>
-          <tbody>
-            {rows.map((l, i) => (
-              <tr key={i} className="mismatch">
-                <td><b>{l.name}</b></td>
-                <td className="num">{l.invoiced} {l.unit}</td>
-                <td className="num">{l.received} {l.unit}</td>
-                <td className="num"><span className="flag">{l.short} {l.unit} short</span></td>
-                <td className="num">Request £{l.value.toFixed(2)} credit</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {status === 'proposed' ? (
-        <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('requestCredit', { value, units })}>Request credit note</button>
-          <button className="btn btn-secondary" onClick={() => resolve('editRequest')}>Edit request</button>
-          <div className="spacer" />
-          <button className="done-action" onClick={() => resolve('acceptDiff', { value })}>Accept difference</button>
+        <div className="ir-grid ir-headrow">
+          <div>Item</div><div>Issue</div><div>Resolution</div>
         </div>
-      ) : resolution === 'accepted' ? (
-        <ConfirmStrip label="Difference accepted"
-          sub={<>£{value.toFixed(2)} written off. Invoice #4902 posted at £1,269.00.</>} />
-      ) : (
-        <ConfirmStrip label="Credit note requested"
-          sub={<>Bidfood has been asked to credit £{value.toFixed(2)} for {units} L not received.</>}
-          note="Invoice #4902 is waiting for supplier response. Stock remains based on the received quantity." />
+        {lines.map((l, i) => (
+          <div key={i} className="ir-row">
+            <div className="ir-item">{l.name}</div>
+            <div className="ir-issue">{l.issue}</div>
+            <div className="ir-res">
+              {status === 'proposed' && mode === 'edit' ? (
+                <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
+                  {(l.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS).map(([k, label]) => (
+                    <option key={k} value={k}>{label}</option>
+                  ))}
+                </select>
+              ) : resLabel(l)}
+            </div>
+          </div>
+        ))}
+        {matched.length > 0 && (
+          <button className="ir-more" onClick={() => patch({ showMatched: !d.showMatched })}>
+            {d.showMatched ? 'Hide matched lines' : `Show ${matched.length} matched lines`}
+          </button>
+        )}
+        {d.showMatched && matched.map((m, i) => (
+          <div key={`m${i}`} className="ir-row muted">
+            <div className="ir-item">{m}</div>
+            <div className="ir-issue">—</div>
+            <div className="ir-res">Matched</div>
+          </div>
+        ))}
+        {status === 'proposed' && mode === 'edit' && (
+          <div className="ir-helper">You can change how Edify handles each difference. Invoice and delivery records stay unchanged.</div>
+        )}
+      </div>
+      {status === 'proposed' && !accepting && mode === 'review' && (
+        <div className="ac-footer">
+          <button className="btn btn-primary" onClick={() => resolve('invoiceResolutions', { lines, totalDiff })}>Confirm {n} resolution{n === 1 ? '' : 's'}</button>
+          <button className="btn btn-secondary" onClick={() => patch({ mode: 'edit' })}>Edit resolutions</button>
+          <div className="spacer" />
+          <button className="done-action" onClick={() => patch({ accepting: true })}>Accept invoice as is</button>
+        </div>
       )}
+      {status === 'proposed' && mode === 'edit' && (
+        <div className="ac-footer">
+          <button className="btn btn-primary" onClick={() => patch({ mode: 'review' })}>Save resolutions</button>
+          <button className="btn btn-secondary" onClick={() => patch({ mode: 'review' })}>Cancel</button>
+        </div>
+      )}
+      {status === 'proposed' && accepting && (
+        <div className="ir-confirm">
+          <div className="cs-title">Accept invoice as billed?</div>
+          <div className="cs-body">This will accept Bidfood invoice #4902 without requesting corrections. No credit note will be requested. Expected supplier prices will not be updated.</div>
+          <div className="ir-confirm-actions">
+            <button className="btn btn-primary" onClick={() => resolve('invoiceAcceptAll', { totalDiff })}>Accept invoice</button>
+            <button className="btn btn-secondary" onClick={() => patch({ accepting: false })}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {status === 'applied' && (d.resolution === 'acceptedAll' ? (
+        <ConfirmStrip label="Invoice accepted as billed"
+          sub="No supplier correction was requested. Stock remains based on received quantities."
+          note="Invoice #4902 was closed." />
+      ) : (
+        <ConfirmStrip label="Resolutions confirmed"
+          sub={lines.map(l => l.kind === 'qty'
+            ? `Credit note requested for ${l.name}.`
+            : `${l.name} price difference sent to Bidfood for confirmation.`).join(' ')}
+          note="Invoice #4902 is waiting for supplier response. Stock remains based on received quantities. No supplier prices were updated." />
+      ))}
     </Card>
   )
 }

@@ -104,22 +104,21 @@ export default function App() {
         toast('Delivery confirmed', diffs > 0 ? 'Stock updated — Edify will check the difference against the invoice' : '8 items checked in — stock updated')
         break
       }
-      case 'requestCredit': {
+      case 'invoiceResolutions': {
         setInterrupt(null)
-        const v = (payload?.value ?? 0.96).toFixed(2)
-        const u = payload?.units ?? 1
+        const lines = payload?.lines || []
+        const detail = lines.map(l => l.kind === 'qty' ? `Credit requested for ${l.name}` : `${l.name} price sent for supplier confirmation`).join(' · ')
         patchThread(threadId, { caseState: 'awaiting_credit' })
-        setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · credit note £${v} requested`, helper: 'Waiting for supplier response', status: 'Waiting', chip: 'by Wed', threadId }])
-        J('action', 'you', 'Credit note requested for invoice #4902', `£${v} requested for ${u} L not received`, 'Invoices')
-        toast('Credit note requested', `Bidfood has been asked to credit £${v}.`)
+        setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · ${lines.length} resolution${lines.length === 1 ? '' : 's'} sent`, helper: 'Waiting for supplier response', status: 'Waiting', chip: 'by Wed', threadId }])
+        J('action', 'you', 'Invoice #4902 resolutions confirmed', detail, 'Invoices')
+        toast('Resolutions confirmed', 'Bidfood has been asked to respond.')
         break
       }
-      case 'acceptDiff': {
+      case 'invoiceAcceptAll': {
         setInterrupt(null)
-        const v = (payload?.value ?? 0.96).toFixed(2)
         patchThread(threadId, { caseState: 'closed' })
-        J('action', 'you', 'Invoice #4902 difference accepted', `£${v} written off — invoice posted at £1,269.00`, 'Invoices')
-        toast('Difference accepted', 'Invoice #4902 posted in full.')
+        J('action', 'you', 'Invoice #4902 accepted as billed', 'No corrections requested', 'Invoices')
+        toast('Invoice accepted', 'Invoice #4902 posted as billed.')
         break
       }
       case 'closeCase':
@@ -211,16 +210,26 @@ export default function App() {
     const t = orderThread
     if (!t) return
     if (t.creditPath === 'hold') {
-      const u = t.shortUnits || 1
-      const v = t.shortValue || 0.96
+      const qtyLines = (t.diffLines || []).map(l => ({
+        kind: 'qty', name: l.name, amount: l.value, resolution: 'credit',
+        issue: `${l.invoiced} ${l.unit} billed · ${l.received} ${l.unit} received`
+      }))
+      const lines = [...qtyLines, {
+        kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
+        issue: '£5.15 invoiced · £4.85 expected'
+      }]
+      const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
+      const matched = ['Oatly Barista oat milk', 'Whole milk', 'Double cream', 'Butter, unsalted', 'Free-range eggs', 'Sourdough loaf, sliced', 'Hass avocado', 'Espresso blend']
+        .filter(nm => ![...mismatched].some(m => nm.includes(m) || m.includes(nm.split(',')[0])))
+      const n = lines.length
       patchThread(t.id, {
         caseState: 'invoice_decision',
         pendingSteps: [
-          { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. It matches the order, but not the delivery note: **${u} L** ${u === 1 ? 'was' : 'were'} billed but not received. I prepared a credit note request for **£${v.toFixed(2)}**. Nothing is sent until you confirm.` },
-          { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { value: v, units: u, net: 1269 - v, lines: t.diffLines || [] } }
+          { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and your expected prices I found **${n} difference${n === 1 ? '' : 's'}**, and proposed a resolution for each. Nothing is sent until you confirm.` },
+          { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched } }
         ]
       })
-      setInterrupt({ icon: 'invoice', threadId: t.id, title: "Invoice #4902 doesn't match the delivery note", cta: 'Review' })
+      setInterrupt({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`, cta: 'Review' })
     } else {
       const net = 1269
       patchThread(t.id, {
@@ -297,7 +306,7 @@ export default function App() {
   // ---- Home data -----------------------------------------------------------
   const needsItems = [
     ...(orderThread?.caseState === 'receiving' ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery ready to check in', why: 'Order #2231 — 8 items, including 80 L oat milk.', cta: 'Receive delivery' }] : []),
-    ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `${orderThread.shortUnits || 2} L`, stakeUnit: 'short', threadId: orderThread.id, title: "Invoice #4902 doesn't match the delivery note", why: 'Edify prepared a credit note request.', cta: 'Review' }] : []),
+    ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `${orderThread.shortUnits || 2} L`, stakeUnit: 'short', threadId: orderThread.id, title: 'Invoice #4902 has differences to review', why: 'Edify proposed a resolution for each.', cta: 'Review' }] : []),
     ...BRIEF.needsCall.filter(i => !resolved.has(i.scenario) && !deferred[i.id] && !dismissed.has(i.id))
   ]
 
