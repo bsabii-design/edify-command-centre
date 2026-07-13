@@ -109,7 +109,7 @@ export default function App() {
         const v = (payload?.value ?? 0.96).toFixed(2)
         const u = payload?.units ?? 1
         patchThread(threadId, { caseState: 'awaiting_credit' })
-        setWatching(w => [...w, { id: 'wcredit', title: 'Invoice #4902 — waiting for supplier', sub: `Credit note for £${v} requested — Edify will match the response`, chip: 'by Wed', threadId }])
+        setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · credit note £${v} requested`, helper: 'Waiting for supplier response', status: 'Waiting', chip: 'by Wed', threadId }])
         J('action', 'you', 'Credit note requested for invoice #4902', `£${v} requested for ${u} L not received`, 'Invoices')
         toast('Credit note requested', `Bidfood has been asked to credit £${v}.`)
         break
@@ -307,9 +307,9 @@ export default function App() {
   ]
 
   const inProgress = [
-    { id: 'ip-today-delivery', title: 'Bidfood delivery', sub: "Edify will prompt you when it's due", chip: DAY.nextDelivery },
-    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Saturday order — Bidfood', sub: `£${(1240.6 + (orderThread.orderAdd ?? 20) * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })} confirmed — Edify is watching for delivery`, chip: 'Sat 07:30' }] : []),
-    ...(orderThread && orderThread.caseState === 'awaiting_invoice' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Waiting for invoice — Bidfood', sub: orderThread.creditPath === 'hold' ? 'Delivery received with 1 difference — Edify will check it against the invoice' : 'Delivery received — Edify will match the invoice when it arrives', chip: 'Mon 06:40' }] : []),
+    { id: 'ip-today-delivery', title: `${DAY.supplier} delivery ${DAY.orderNo}`, sub: `Fitzroy Espresso · ${DAY.items} items · ${DAY.value}`, helper: 'Next step: receive delivery', status: 'Due today', chip: DAY.nextDelivery },
+    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Bidfood delivery #2231', sub: `Fitzroy Espresso · 8 items · £${(1240.6 + (orderThread.orderAdd ?? 20) * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, helper: 'Next step: receive delivery', status: 'Confirmed', chip: 'Sat 07:30' }] : []),
+    ...(orderThread && orderThread.caseState === 'awaiting_invoice' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Bidfood order #2231', sub: orderThread.creditPath === 'hold' ? `Fitzroy Espresso · delivered · ${orderThread.shortUnits || 1} L short recorded` : 'Fitzroy Espresso · delivered · all quantities matched', helper: 'Next step: invoice matching', status: 'Watching', chip: 'Mon 06:40' }] : []),
     ...watching
   ]
 

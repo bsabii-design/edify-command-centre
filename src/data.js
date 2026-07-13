@@ -12,7 +12,7 @@ export const PROMISE = 'Edify proposes — you confirm before anything changes.'
 // A delivery coming → yes. A weather anomaly moving demand → yes. GP
 // materially off → yes. A normal staff count, normal weather, normal GP —
 // the manager already knows, so the bar stays quiet about them.
-export const DAY = { deliveriesCount: 1, nextDelivery: '14:30', supplier: 'Bidfood', weather: 'Warmer than usual', weatherDelta: '+4°', gpDrift: 3.3 }
+export const DAY = { deliveriesCount: 1, nextDelivery: '14:30', supplier: 'Estate Dairy', orderNo: '#5117', items: 5, value: '£212.40', weather: 'Warmer than usual', weatherDelta: '+4°', gpDrift: 3.3 }
 
 // The deadline is a moment, not a string: everything that shows it derives
 // the remaining time from this timestamp, so it ticks and never drifts.

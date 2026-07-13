@@ -1615,3 +1615,9 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .dir-muted { font-size: 13px; color: var(--text-2); }
 .dir-thead .dir-c4, .dir-row .dir-c4 { text-align: right; font-variant-numeric: tabular-nums; }
 .space-hint.spaced { margin-top: var(--sp-5); }
+
+/* In progress rows: identity line, next step, one status over the time. */
+.progress-row .q-sub { font-size: 13px; color: var(--text-3); }
+.q-next { font-size: 13px; color: var(--text-2); margin-top: var(--sp-0); }
+.q-right { display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-0); flex-shrink: 0; }
+.q-status { font-size: 11px; font-weight: 500; color: var(--text-2); }

@@ -58,9 +58,13 @@ function ProgressRow({ item, onOpen }) {
       <span className="progress-pulse" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="q-title">{item.title}</div>
-        <div className="q-sub">{item.sub}</div>
+        {item.sub && <div className="q-sub">{item.sub}</div>}
+        {item.helper && <div className="q-next">{item.helper}</div>}
       </div>
-      <span className="case-chip">{item.chip}</span>
+      <div className="q-right">
+        {item.status && <span className="q-status">{item.status}</span>}
+        <span className="case-chip">{item.chip}</span>
+      </div>
       {item.threadId && <Chevron size={16} className="chev-quiet" />}
     </motion.div>
   )
