@@ -1683,3 +1683,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    enough to scan. Composers track their page width. */
 .today, .dock-inner { max-width: 860px; }
 .chat-thread, .chat-composer-inner { max-width: 760px; }
+
+/* Spec columns: Item 26 / Issue 36 / Impact 10 / Resolution 28. The
+   selected resolution must read in full — labels are sized to fit. */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 26fr) minmax(0, 34fr) minmax(0, 10fr) minmax(0, 30fr); }

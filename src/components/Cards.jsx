@@ -481,10 +481,10 @@ const QTY_OPTIONS = [
   ['hold', 'Hold for supplier review']
 ]
 const PRICE_OPTIONS = [
-  ['confirmPrice', 'Ask supplier to confirm price'],
+  ['confirmPrice', 'Confirm price with supplier'],
   ['acceptOnce', 'Accept price once'],
   ['updateExpected', 'Update expected price'],
-  ['creditDiff', 'Request credit for price difference'],
+  ['creditDiff', 'Request price credit'],
   ['holdLine', 'Hold line']
 ]
 const resLabel = (line) => {
@@ -495,15 +495,17 @@ const joinAnd = (xs) => (xs.length <= 1 ? xs[0] || '' : `${xs.slice(0, -1).join(
 // The success copy reflects the resolutions actually chosen, credits grouped
 // into one sentence. It never claims the invoice is closed — it is waiting
 // on Bidfood.
+// "Butter 250g" is the line, "Butter" is what you say in a sentence.
+const spokenName = (name) => name.replace(/ \d+\s?(g|kg|ml|L)$/, '')
 const invoiceOutcome = (lines) => {
   const parts = []
-  const credits = lines.filter(l => l.resolution === 'credit' || l.resolution === 'creditDiff').map(l => l.name)
+  const credits = lines.filter(l => l.resolution === 'credit' || l.resolution === 'creditDiff').map(l => spokenName(l.name))
   if (credits.length) parts.push(`Credit note${credits.length === 1 ? '' : 's'} requested for ${joinAnd(credits)}.`)
   lines.forEach(l => {
-    if (l.resolution === 'confirmPrice') parts.push(`${l.name} price difference sent to Bidfood for confirmation.`)
-    if (l.resolution === 'accept' || l.resolution === 'acceptOnce') parts.push(`${l.name} difference accepted.`)
-    if (l.resolution === 'updateExpected') parts.push(`Expected price for ${l.name} updated.`)
-    if (l.resolution === 'hold' || l.resolution === 'holdLine') parts.push(`${l.name} held for supplier review.`)
+    if (l.resolution === 'confirmPrice') parts.push(`${spokenName(l.name)} price difference sent to Bidfood for confirmation.`)
+    if (l.resolution === 'accept' || l.resolution === 'acceptOnce') parts.push(`${spokenName(l.name)} difference accepted.`)
+    if (l.resolution === 'updateExpected') parts.push(`Expected price for ${spokenName(l.name)} updated.`)
+    if (l.resolution === 'hold' || l.resolution === 'holdLine') parts.push(`${spokenName(l.name)} held for supplier review.`)
   })
   return parts.join(' ')
 }
@@ -524,7 +526,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
   const matched = d.matched || []
   return (
     <Card>
-      <CardHead title={`Bidfood invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`}
+      <CardHead title={`Bidfood invoice #4902 has ${d.diffLabel || `${n} difference${n === 1 ? '' : 's'}`}`}
         sub="Checked against order #2231, delivery note #912 and expected prices" />
       <div className="ac-body">
         <div className="compare-cols">
@@ -568,7 +570,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
         ))}
         {matched.length > 0 && (
           <button className="ir-more" onClick={() => patch({ showMatched: !d.showMatched })}>
-            <span className="more-toggle"><Chevron size={16} style={{ transform: d.showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> {matched.length} matched lines</span>
+            <span className="more-toggle"><Chevron size={16} style={{ transform: d.showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> {d.showMatched ? 'Hide matched lines' : `Show ${matched.length} matched lines`}</span>
           </button>
         )}
         {d.showMatched && matched.map((m, i) => (
@@ -586,7 +588,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       </div>
       {status === 'proposed' && !accepting && (
         <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('invoiceResolutions', { lines, totalDiff })}>Confirm {n} resolution{n === 1 ? '' : 's'}</button>
+          <button className="btn btn-primary" onClick={() => resolve('invoiceResolutions', { lines, totalDiff })}>{n === 1 ? 'Confirm resolution' : `Confirm ${n} resolutions`}</button>
           <div className="spacer" />
           <button className="done-action" onClick={() => patch({ accepting: true })}>Accept invoice as is</button>
         </div>
@@ -594,7 +596,12 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       {status === 'proposed' && accepting && (
         <div className="ir-confirm">
           <div className="cs-title">Accept invoice as billed?</div>
-          <div className="cs-body">This will accept Bidfood invoice #4902 without requesting corrections. No credit notes will be requested. Expected supplier prices will not be updated.</div>
+          <div className="cs-body">
+            {lines.some(l => l.kind === 'price') && !lines.some(l => l.kind === 'qty')
+              ? 'This will accept Bidfood invoice #4902 without asking the supplier to confirm the higher butter price.'
+              : <>This will accept Bidfood invoice #4902 without requesting corrections.{lines.some(l => l.kind === 'qty') && ' No credit notes will be requested.'}</>}
+            {' '}Expected supplier prices will not be updated.
+          </div>
           <div className="ir-confirm-actions">
             <button className="btn btn-primary" onClick={() => resolve('invoiceAcceptAll', { totalDiff })}>Accept invoice</button>
             <button className="btn btn-secondary" onClick={() => patch({ accepting: false })}>Cancel</button>
@@ -603,12 +610,12 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       )}
       {status === 'applied' && (d.resolution === 'acceptedAll' ? (
         <ConfirmStrip label="Invoice accepted as billed"
-          sub="No supplier correction was requested. Stock remains based on received quantities."
+          sub="No supplier confirmation was requested. Expected supplier price was not updated."
           note="Invoice #4902 was closed." />
       ) : (
-        <ConfirmStrip label="Resolutions confirmed"
+        <ConfirmStrip label={n === 1 ? 'Resolution confirmed' : 'Resolutions confirmed'}
           sub={invoiceOutcome(lines)}
-          note="Invoice #4902 is waiting for supplier response. Stock remains based on received quantities. No supplier prices were updated." />
+          note="Invoice #4902 is waiting for supplier response. Expected supplier price was not updated. Stock remains based on received quantities." />
       ))}
     </Card>
   )

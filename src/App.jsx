@@ -227,22 +227,29 @@ export default function App() {
     }))
     const lines = [...qtyLines, {
       kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
-      issue: '£5.15 per pack billed · £4.85 expected',
-      delta: '+£0.30 × 24 pc'
+      issue: '24 packs billed at £5.15 · expected £4.85',
+      delta: '+£0.30 per pack'
     }]
     const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
     const matched = [...RECEIVE_LINES, ...RECEIVE_MORE]
       .filter(x => ![...mismatched].some(m => x.name.includes(m) || m.includes(x.name.split(',')[0])))
       .map(x => ({ name: x.name, qty: x.expected, unit: x.unit, price: x.price }))
     const n = lines.length
+    // Name the kind of trouble when it is only one kind — "1 price
+    // difference" reads sharper than a generic count.
+    const priceN = lines.filter(l => l.kind === 'price').length
+    const qtyN = n - priceN
+    const diffLabel = qtyN === 0 ? `${priceN} price difference${priceN === 1 ? '' : 's'}`
+      : priceN === 0 ? `${qtyN} quantity difference${qtyN === 1 ? '' : 's'}`
+      : `${n} differences`
     patchThread(t.id, {
       caseState: 'invoice_decision',
       pendingSteps: [
-        { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and your expected prices I found **${n} difference${n === 1 ? '' : 's'}**, and proposed a resolution for each. Nothing is sent until you confirm.` },
-        { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched } }
+        { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and your expected prices I found **${diffLabel}**, and proposed a resolution for each. Nothing is sent until you confirm.` },
+        { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched, diffLabel } }
       ]
     })
-    announce({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`, cta: 'Review' })
+    announce({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${diffLabel}`, cta: 'Review' })
   }
 
   // The count closing is the one trust-promise the GP answer makes. This demo
