@@ -257,23 +257,38 @@ export default function App() {
   // is elsewhere. Opening the order case disarms it — they've seen the task.
   const viewRef = useRef(view)
   useEffect(() => { viewRef.current = view }, [view])
+  const activeIdRef = useRef(activeId)
+  useEffect(() => { activeIdRef.current = activeId }, [activeId])
+  const threadsRef = useRef(threads)
+  threadsRef.current = threads
   const cutoffToastArmed = useRef(false)
+  // One rule, checked everywhere: never announce a task the user can already
+  // see — neither on Home (the row is right there) nor inside its own case.
+  const lookingAtOrderCase = () => {
+    const active = threadsRef.current.find(t => t.id === activeIdRef.current)
+    return viewRef.current === 'chat' && active && isOrder(active)
+  }
   useEffect(() => {
     const t = setTimeout(() => {
       if (interruptShown.current) return
       interruptShown.current = true
-      if (!resolvedRef.current.has('cutoff')) {
-        if (viewRef.current === 'today') cutoffToastArmed.current = true
-        else setInterrupt({ icon: 'clock', scenario: 'cutoff', title: `Oat milk order locks ${cutoffLabel()}`, cta: 'Review' })
-      }
+      if (resolvedRef.current.has('cutoff')) return
+      if (lookingAtOrderCase()) return                    // she's in the case — done, never toast
+      if (viewRef.current === 'today') { cutoffToastArmed.current = true; return }
+      setInterrupt({ icon: 'clock', scenario: 'cutoff', title: `Oat milk order locks ${cutoffLabel()}`, cta: 'Review' })
     }, 20000)
     return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => {
+    // Entering the order case dismisses a visible cutoff toast and disarms it.
+    if (lookingAtOrderCase()) {
+      cutoffToastArmed.current = false
+      setInterrupt(i => (i && i.scenario === 'cutoff' ? null : i))
+      return
+    }
     if (!cutoffToastArmed.current || view === 'today') return
     if (resolvedRef.current.has('cutoff')) { cutoffToastArmed.current = false; return }
-    const active = threads.find(t => t.id === activeId)
-    if (view === 'chat' && active && isOrder(active)) { cutoffToastArmed.current = false; return }
     cutoffToastArmed.current = false
     setInterrupt({ icon: 'clock', scenario: 'cutoff', title: `Oat milk order locks ${cutoffLabel()}`, cta: 'Review' })
     // eslint-disable-next-line react-hooks/exhaustive-deps
