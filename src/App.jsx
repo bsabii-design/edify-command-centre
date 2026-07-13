@@ -227,7 +227,7 @@ export default function App() {
     }))
     const lines = [...qtyLines, {
       kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
-      issue: '£5.15 invoiced · £4.85 expected',
+      issue: '£5.15 per pack billed · £4.85 expected',
       delta: '+£0.30 × 24 pc'
     }]
     const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
