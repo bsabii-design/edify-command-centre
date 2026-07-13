@@ -568,7 +568,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
         ))}
         {matched.length > 0 && (
           <button className="ir-more" onClick={() => patch({ showMatched: !d.showMatched })}>
-            {d.showMatched ? 'Hide matched lines' : `Show ${matched.length} matched lines`}
+            <span className="more-toggle"><Chevron size={16} style={{ transform: d.showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> {matched.length} matched lines</span>
           </button>
         )}
         {d.showMatched && matched.map((m, i) => (

@@ -1660,3 +1660,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ir-headrow .ir-impact { font-size: 11px; color: var(--text-3); }
 .ir-row.muted .ir-impact { color: var(--text-3); }
 .ir-delta { color: var(--accent); font-size: 11px; font-weight: 500; margin-top: 1px; }
+
+/* One header voice everywhere — tiles and every table use the invoice
+   table's column style: 11px, regular weight, no caps, no tracking. */
+.diff-table th, .recv-headrow, .recv-headrow div, .compare-col .cc-head { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.ir-more .more-toggle { display: inline-flex; align-items: center; gap: var(--sp-1); font-weight: 500; }
