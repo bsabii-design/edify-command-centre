@@ -1677,3 +1677,9 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* Impact sits with the facts it is computed from; the row ends on the one
    thing the operator owns — the resolution. */
 .ir-grid, .ir-row { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.15fr) 48px minmax(0, 1fr); }
+
+/* Wider working canvas: Home 860, chat 760. Cards and tables get room —
+   the invoice grid stops feeling pinched — while text lines stay short
+   enough to scan. Composers track their page width. */
+.today, .dock-inner { max-width: 860px; }
+.chat-thread, .chat-composer-inner { max-width: 760px; }

@@ -327,7 +327,7 @@ export default function App() {
   // ---- Home data -----------------------------------------------------------
   const needsItems = [
     ...(orderThread?.caseState === 'receiving' ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery ready to check in', why: 'Order #2231 — 8 items, including 80 L oat milk.', cta: 'Receive delivery' }] : []),
-    ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `${orderThread.shortUnits || 2} L`, stakeUnit: 'short', threadId: orderThread.id, title: 'Invoice #4902 has differences to review', why: 'Edify proposed a resolution for each.', cta: 'Review' }] : []),
+    ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `£${((orderThread.diffLines || []).reduce((a, l) => a + l.value, 0) + 7.20).toFixed(2)}`, stakeUnit: 'over', threadId: orderThread.id, title: 'Invoice #4902 has differences to review', why: 'Edify proposed a resolution for each.', cta: 'Review' }] : []),
     ...BRIEF.needsCall.filter(i => !resolved.has(i.scenario) && !deferred[i.id] && !dismissed.has(i.id))
   ]
 
