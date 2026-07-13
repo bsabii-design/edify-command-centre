@@ -1665,3 +1665,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    table's column style: 11px, regular weight, no caps, no tracking. */
 .diff-table th, .recv-headrow, .recv-headrow div, .compare-col .cc-head { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .ir-more .more-toggle { display: inline-flex; align-items: center; gap: var(--sp-1); font-weight: 500; }
+
+/* Matched lines read like the order card's expanded basket: swatch, quiet
+   text, tight rows without dividers. Resolution selects stay compact and
+   ellipsize instead of stretching the column. */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) minmax(0, 1fr) 48px; }
+.ir-row.sub { border-top: none; padding: var(--sp-2) 0; }
+.ir-row.muted .ir-item { display: flex; align-items: center; gap: var(--sp-2); }
+.ir-select { text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }

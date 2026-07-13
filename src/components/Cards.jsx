@@ -572,9 +572,12 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           </button>
         )}
         {d.showMatched && matched.map((m, i) => (
-          <div key={`m${i}`} className="ir-row muted">
-            <div className="ir-item">{m}</div>
-            <div className="ir-issue">—</div>
+          <div key={`m${i}`} className="ir-row muted sub">
+            <div className="ir-item">
+              <span className="line-swatch sm"><GrainSwatch palette={(BASKET.find(b => b.name === m.name) || {}).cat || 'dairy'} seed={m.name} /></span>
+              {m.name}
+            </div>
+            <div className="ir-issue">{m.qty} {m.unit} × £{m.price.toFixed(2)}</div>
             <div className="ir-res">Matched</div>
             <div className="ir-impact">—</div>
           </div>

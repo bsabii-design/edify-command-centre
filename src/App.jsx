@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { SCENARIOS, JOURNAL_SEED, BRIEF, cutoffLabel, DAY } from './data.js'
+import { SCENARIOS, JOURNAL_SEED, BRIEF, cutoffLabel, DAY, RECEIVE_LINES, RECEIVE_MORE } from './data.js'
 import { Sidebar, Toasts, Interrupt, SpacePage, SuppliersPage } from './components/Shell.jsx'
 import RecipesPage from './components/Recipes.jsx'
 import Home from './components/Today.jsx'
@@ -214,41 +214,35 @@ export default function App() {
     announce({ icon: 'truck', threadId: t.id, title: 'Bidfood delivery due now', cta: 'Receive' })
   }
 
+  // The invoice always needs a decision: even when the delivery matched the
+  // order perfectly, Bidfood billed butter above the expected price — so the
+  // price case survives a clean receiving.
   const fireInvoice = () => {
     const t = orderThread
     if (!t) return
-    if (t.creditPath === 'hold') {
-      const qtyLines = (t.diffLines || []).map(l => ({
-        kind: 'qty', name: l.name, amount: l.value, resolution: 'credit',
-        issue: `${l.invoiced} ${l.unit} billed · ${l.received} ${l.unit} received`,
-        delta: `${l.short} ${l.unit} short × £${(l.value / l.short).toFixed(2)}`
-      }))
-      const lines = [...qtyLines, {
-        kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
-        issue: '£5.15 invoiced · £4.85 expected',
-        delta: '+£0.30 × 24 pc'
-      }]
-      const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
-      const matched = ['Oatly Barista oat milk', 'Whole milk', 'Double cream', 'Butter, unsalted', 'Free-range eggs', 'Sourdough loaf, sliced', 'Hass avocado', 'Espresso blend']
-        .filter(nm => ![...mismatched].some(m => nm.includes(m) || m.includes(nm.split(',')[0])))
-      const n = lines.length
-      patchThread(t.id, {
-        caseState: 'invoice_decision',
-        pendingSteps: [
-          { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and your expected prices I found **${n} difference${n === 1 ? '' : 's'}**, and proposed a resolution for each. Nothing is sent until you confirm.` },
-          { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched } }
-        ]
-      })
-      announce({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`, cta: 'Review' })
-    } else {
-      const net = 1269
-      patchThread(t.id, {
-        caseState: 'closed',
-        pendingSteps: [{ type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood's invoice **#4902** came in overnight. I matched it against PO #2231 and delivery note #912 — **£${net.toFixed(2)}, balanced**. Posted and closed without needing you. Most mornings look like this: the only trace is one quiet line in Done.` }]
-      })
-      addJournal({ kind: 'auto', by: 'edify', title: `Invoice #4902 matched and posted — £${net.toFixed(2)}`, detail: 'Checked against the order + delivery note automatically — case closed', source: 'Edify — Invoices', threadId: t.id })
-      toast('Invoice #4902 matched & posted', 'Balanced against the delivery note — case closed quietly', { label: 'View case', fn: () => openThread(t.id) })
-    }
+    const qtyLines = (t.diffLines || []).map(l => ({
+      kind: 'qty', name: l.name, amount: l.value, resolution: 'credit',
+      issue: `${l.invoiced} ${l.unit} billed · ${l.received} ${l.unit} received`,
+      delta: `${l.short} ${l.unit} short × £${(l.value / l.short).toFixed(2)}`
+    }))
+    const lines = [...qtyLines, {
+      kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
+      issue: '£5.15 invoiced · £4.85 expected',
+      delta: '+£0.30 × 24 pc'
+    }]
+    const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
+    const matched = [...RECEIVE_LINES, ...RECEIVE_MORE]
+      .filter(x => ![...mismatched].some(m => x.name.includes(m) || m.includes(x.name.split(',')[0])))
+      .map(x => ({ name: x.name, qty: x.expected, unit: x.unit, price: x.price }))
+    const n = lines.length
+    patchThread(t.id, {
+      caseState: 'invoice_decision',
+      pendingSteps: [
+        { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and your expected prices I found **${n} difference${n === 1 ? '' : 's'}**, and proposed a resolution for each. Nothing is sent until you confirm.` },
+        { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched } }
+      ]
+    })
+    announce({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${n} difference${n === 1 ? '' : 's'}`, cta: 'Review' })
   }
 
   // The count closing is the one trust-promise the GP answer makes. This demo
