@@ -1873,5 +1873,5 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 
 /* The badge digit reads like the menu text next to it; the Action header
    sits flush on its column — statuses and dropdowns start there too. */
-.nav-item .badge { font-size: 13px; font-weight: 500; }
+.nav-item .badge { font-size: 11px; font-weight: 500; }
 .ir-headrow > :last-child { padding-left: 0; }
