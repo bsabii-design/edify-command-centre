@@ -30,9 +30,12 @@ export function matchScenario(text) {
 }
 
 // tiny markdown: **bold** and *italic*
+// Chat prose is Regular — no bold fragments inside sentences. The old
+// **bold** markers in scenario copy render as plain text; emphasis lives
+// in structured UI, not in conversation.
 function md(text) {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((part, i) => {
-    if (part.startsWith('**')) return <b key={i}>{part.slice(2, -2)}</b>
+    if (part.startsWith('**')) return <span key={i}>{part.slice(2, -2)}</span>
     if (part.startsWith('*')) return <i key={i}>{part.slice(1, -1)}</i>
     return <span key={i}>{part}</span>
   })
@@ -206,8 +209,13 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       setThinking(true)
       setTimeout(() => {
         setThinking(false)
-        const text = step.text.replace('{time}', new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
-        setEntries(es => [...es, { id: nid(), kind: 'assistant', text, done: false, scenarioId: step.scenarioId }])
+        let text = step.text.replace('{time}', new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+        // A leading "**Monday, 06:40.**" becomes a muted metadata line of
+        // its own; the message that follows stays fully Regular.
+        let meta = null
+        const dm = text.match(/^\*\*([A-Z][a-z]+, \d{2}:\d{2})\.?\*\*\s*/)
+        if (dm) { meta = dm[1]; text = text.slice(dm[0].length) }
+        setEntries(es => [...es, { id: nid(), kind: 'assistant', text, meta, done: false, scenarioId: step.scenarioId }])
       }, 500)
     } else if (step.type === 'card') {
       const steps = WORKING_STEPS[step.card]
@@ -519,6 +527,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                 // No avatar, no name — the answer just speaks, like Granola.
                 if (e.kind === 'assistant') return (
                   <motion.div key={e.id} className="msg msg-assistant" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+                    {e.meta && <div className="msg-meta">{e.meta}</div>}
                     <StreamText text={e.text} done={e.done} onDone={() => onStreamDone(e.id)} />
                   </motion.div>
                 )

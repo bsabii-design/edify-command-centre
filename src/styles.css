@@ -1917,3 +1917,6 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .sum-first { display: flex; align-items: center; gap: var(--sp-2); font-size: 13px; color: var(--text); }
 .confirmed-summary .sum-line { padding: 0; margin-left: calc(16px + var(--sp-2)); }
 .confirmed-summary .sum-first + .sum-line, .confirmed-summary .sum-line + .sum-line { margin-top: 0; }
+
+/* Chat timestamps sit on their own muted line above the message. */
+.msg-meta { font-size: 11px; color: var(--text-2); margin-bottom: var(--sp-1); }
