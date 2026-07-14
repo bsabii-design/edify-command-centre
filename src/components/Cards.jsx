@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { INVOICE_LINES, INVOICE_TOTALS, RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
 import { CURRENT_SITE, WEEK_DAYS, formatDays } from '../suppliers.js'
-import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Eye } from './Icons.jsx'
+import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus } from './Icons.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
 
@@ -152,13 +152,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
       </div>
       {/* The decision comes before the evidence — the working sits quietly under it. */}
       {status === 'proposed' && (<>
-        <div className="card-summary inpad">
-          <span className="cs-ico"><Eye size={16} /></span>
-          <div className="cs-copy">
-            <div className="cs-title">1 change proposed</div>
-            <div className="cs-body">Updating sends the edited basket to Bidfood. Keeping it as is leaves oat milk at <b>60 L</b>.</div>
-          </div>
-        </div>
+        <div className="card-helper inpad">Nothing is sent until you confirm.</div>
         <div className="ac-footer">
           <button className="btn btn-primary" disabled={add === 0 || confirming} onClick={runConfirm}>Update basket</button>
           <button className="btn btn-secondary" disabled={!!confirming} onClick={() => resolve('decline')}>Keep as is</button>
@@ -332,13 +326,7 @@ export function InvoiceCard({ entry, patch, resolve }) {
         </table>
       </div>
       <div className="resolution-block">
-        <div className="card-summary noline">
-          <span className="cs-ico"><Eye size={16} /></span>
-          <div className="cs-copy">
-            <div className="cs-title">2 differences found</div>
-            <div className="cs-body">Edify prepared a resolution for each — nothing changes until you confirm. Unresolved, this invoice holds Friday's payment run.</div>
-          </div>
-        </div>
+        <div className="card-helper">Edify prepared a resolution for each difference. Nothing changes until you confirm.</div>
         {flagged.map((l, i) => (
           <div key={i} className="res-item">
             <span className="res-num">{i + 1}</span>
@@ -433,16 +421,10 @@ export function ReceivingCard({ entry, patch, resolve }) {
         </div>
         {lines.map((l, i) => (<ReceiveRow key={i} line={l} i={i} rec={rows[i]} status={status} patch={setRows} />))}
         {status === 'proposed' && (
-          <div className="card-summary">
-            <span className="cs-ico"><Eye size={16} /></span>
-            <div className="cs-copy">
-              <div className="cs-title">{summary.diffs > 0 ? `${summary.diffs} difference${summary.diffs === 1 ? '' : 's'} recorded` : 'All items match'}</div>
-              <div className="cs-body">
-                {summary.diffs > 0
-                  ? <>Stock will update from received quantities. Edify will check {summary.diffs === 1 ? 'this' : 'these'} against the invoice when it arrives.</>
-                  : <>Confirming will update stock using the received quantities.</>}
-              </div>
-            </div>
+          <div className="card-helper">
+            {summary.diffs > 0
+              ? <>{summary.diffs} difference{summary.diffs === 1 ? '' : 's'} recorded.<br />Stock will update from received quantities. Edify will check {summary.diffs === 1 ? 'it' : 'them'} against the invoice when it arrives.</>
+              : <>Stock will update from the received quantities.</>}
           </div>
         )}
       </div>
@@ -582,7 +564,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-res">Matched</div>
           </div>
         ))}
-
+        {status === 'proposed' && <div className="card-helper">Nothing is sent until you confirm.</div>}
       </div>
       {status === 'proposed' && !accepting && (
         <div className="ac-footer">
@@ -646,13 +628,7 @@ export function PriceReplyCard({ entry, resolve }) {
       <CardHead title="Bidfood replied" sub="accounts@bidfood.co.uk · linked to invoice #4902" />
       <div className="ac-body">
         <div className="reply-line">£5.15 is the new price for Butter 250g from 6 Jul.</div>
-        <div className="card-summary">
-          <span className="cs-ico"><Eye size={16} /></span>
-          <div className="cs-copy">
-            <div className="cs-title">Price change needs head-office approval</div>
-            <div className="cs-body">Head office will review the impact on recipe costs and GP before the expected price changes.</div>
-          </div>
-        </div>
+        <div className="card-helper">Head office will review the impact on recipe costs and GP before the expected price changes.</div>
       </div>
       {status === 'proposed' && (
         <div className="ac-footer">
@@ -688,13 +664,7 @@ export function CountFixCard({ entry, resolve, patch }) {
             <tr><td><b>Posted closing count</b></td><td className="num"><b>22 L</b></td><td><span className="flag">+14 L vs expected</span></td></tr>
           </tbody>
         </table>
-        <div className="card-summary">
-          <span className="cs-ico"><Eye size={16} /></span>
-          <div className="cs-copy">
-            <div className="cs-title">Likely counting issue</div>
-            <div className="cs-body">The pattern looks like a counting-unit error. Edify will not change a posted count without confirmation.</div>
-          </div>
-        </div>
+        <div className="card-helper">The posted count remains provisional until you confirm.</div>
         <div className="prop-line">
           <span className="prop-label">Proposed correction — use closing count:</span>
           <span className="stepper sm">
@@ -868,6 +838,7 @@ export function SupplierDraftCard({ entry, patch, resolve }) {
           <div className="supplier-mini-label">Delivery days</div>
           <DayChips value={d.deliveryDays} onToggle={toggleDay} />
           <div className="supplier-later-note">Accounts email, phone and other details can be added later.</div>
+          <div className="card-helper">The supplier will not be created until you confirm.</div>
         </div>
       )}
       {status === 'applied' && <ConfirmStrip label={`${d.name} created`} sub={`Now orderable at ${CURRENT_SITE}`} />}

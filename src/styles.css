@@ -1753,3 +1753,14 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ir-headrow { padding: var(--sp-4) 0 var(--sp-2); }
 .diff-table th { padding-bottom: var(--sp-2); }
 .change-row .ch-cost { font-weight: 600; }
+
+/* Poppins ships no tabular figures, so digit widths vary. Number inputs
+   get a fixed box (fits three digits) instead of glyph-driven sizing —
+   the stepper pill never changes width while values tick. */
+.stepper .step-input { field-sizing: fixed; width: 26px; text-align: center; }
+
+/* Pre-confirmation helper: plain muted text near the actions — no icon,
+   no background, no heading. It explains what WILL happen; the check-mark
+   status block after confirmation records what HAS happened. */
+.card-helper { font-size: 13px; color: var(--text-2); padding: var(--sp-4) 0 0; }
+.card-helper.inpad { margin: 0 var(--sp-4); }
