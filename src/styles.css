@@ -1787,3 +1787,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .action-card .ac-sub { margin-top: 0; }
 .done-sub, .done-note { margin-top: 0; }
 .row-sub { margin-top: 0; }
+
+/* The receipt band stacks its lines flush — the 4px flex gap was the
+   hidden spacing the margin reset could not remove. */
+.done-band { gap: 0; }
