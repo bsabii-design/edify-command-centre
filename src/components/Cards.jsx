@@ -473,15 +473,25 @@ const qtyOptions = (l) => [
   ['correctReceipt', 'Correct receipt'],
   ['accept', `Accept £${l.amount.toFixed(2)} charge`]
 ]
+const priceOptions = (l) => [
+  ['confirmPrice', 'Confirm price with Bidfood'],
+  ['credit', `Request £${l.amount.toFixed(2)} credit`],
+  ['accept', `Accept £${l.amount.toFixed(2)} charge`]
+]
+const lineOptions = (l) => (l.kind === 'qty' ? qtyOptions(l) : priceOptions(l))
 const joinAnd = (xs) => (xs.length <= 1 ? xs[0] || '' : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`)
 const spokenName = (name) => name.replace(/ \d+\s?(g|kg|ml|L)$/, '')
 
 // What the currently selected action WILL do — one plain line.
 const consequence = (l) => {
   switch (l.resolution) {
-    case 'credit': return `Recommended — Bidfood will be asked to credit £${l.amount.toFixed(2)}. Stock stays at ${l.receivedQty}.`
-    case 'accept': return `You will pay for ${l.billedQty}. Stock stays at ${l.receivedQty}.`
-    case 'confirmPrice': return 'The invoice stays open until Bidfood confirms the price.'
+    case 'credit': return l.kind === 'qty'
+      ? `Recommended — Bidfood will be asked to credit £${l.amount.toFixed(2)}. Stock stays at ${l.receivedQty}.`
+      : `Bidfood will be asked to credit £${l.amount.toFixed(2)}. Expected price stays at ${l.expectedPrice}.`
+    case 'accept': return l.kind === 'qty'
+      ? `You will pay for ${l.billedQty}. Stock stays at ${l.receivedQty}.`
+      : `You will pay ${l.billedPrice} per pack. Expected price stays at ${l.expectedPrice}.`
+    case 'confirmPrice': return 'Recommended — the invoice stays open until Bidfood confirms the price.'
     default: return null
   }
 }
@@ -490,7 +500,9 @@ const lineStatus = (l) => {
   switch (l.resolution) {
     case 'credit': return ['Credit requested', `Waiting for Bidfood to issue £${l.amount.toFixed(2)} credit.`]
     case 'correctReceipt': return ['Receipt corrected', `${l.receivedQty} → ${l.corrected ?? l.invoiced} ${l.unit} · Stock updated.`]
-    case 'accept': return ['Charge accepted', `£${l.amount.toFixed(2)} remains included in the invoice. Stock remains at ${l.receivedQty}.`]
+    case 'accept': return ['Charge accepted', l.kind === 'qty'
+      ? `£${l.amount.toFixed(2)} remains included in the invoice. Stock remains at ${l.receivedQty}.`
+      : `£${l.amount.toFixed(2)} remains included in the invoice.`]
     case 'confirmPrice': return ['Waiting for Bidfood', `Waiting for confirmation of the ${l.billedPrice} price.`]
     default: return ['Confirmed', null]
   }
@@ -559,25 +571,20 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             </div>
             <div className="ir-impact">{l.kind === 'qty' ? `${l.short} ${l.unit} · £${l.amount.toFixed(2)}` : `£${l.amount.toFixed(2)}`}</div>
             <div className="ir-res">
-              {status === 'proposed' ? (
-                l.kind === 'qty' ? (<>
-                  <select className="ir-select" value={l.resolution} onChange={e => setLine(i, { resolution: e.target.value })}>
-                    {qtyOptions(l).map(([k, label]) => (<option key={k} value={k}>{label}</option>))}
-                  </select>
-                  {l.resolution === 'correctReceipt' ? (<>
-                    <div className="correct-inline">
-                      {l.receivedQty} → <input className="ir-num" value={l.corrected ?? l.invoiced} inputMode="numeric"
-                        onChange={e => { const v = parseInt(e.target.value.replace(/\D/g, ''), 10); setLine(i, { corrected: isNaN(v) ? 0 : v }) }} /> {l.unit}
-                    </div>
-                    <div className="res-note">Updates delivery note #912 and stock.</div>
-                  </>) : (
-                    <div className="res-note">{consequence(l)}</div>
-                  )}
-                </>) : (<>
-                  <div className="res-status">Confirm price with Bidfood</div>
+              {status === 'proposed' ? (<>
+                <select className="ir-select" value={l.resolution} onChange={e => setLine(i, { resolution: e.target.value })}>
+                  {lineOptions(l).map(([k, label]) => (<option key={k} value={k}>{label}</option>))}
+                </select>
+                {l.resolution === 'correctReceipt' ? (<>
+                  <div className="correct-inline">
+                    {l.receivedQty} → <input className="ir-num" value={l.corrected ?? l.invoiced} inputMode="numeric"
+                      onChange={e => { const v = parseInt(e.target.value.replace(/\D/g, ''), 10); setLine(i, { corrected: isNaN(v) ? 0 : v }) }} /> {l.unit}
+                  </div>
+                  <div className="res-note">Updates delivery note #912 and stock.</div>
+                </>) : (
                   <div className="res-note">{consequence(l)}</div>
-                </>)
-              ) : (() => {
+                )}
+              </>) : (() => {
                 const [statusLabel, helper] = lineStatus(l)
                 return (<>
                   <div className="res-status">{statusLabel}</div>
@@ -600,7 +607,6 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-res">Matched</div>
           </div>
         ))}
-        {status === 'proposed' && <div className="card-helper">Nothing is sent until you confirm.</div>}
       </div>
       {status === 'proposed' && (
         <div className="ac-footer">

@@ -1862,3 +1862,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    Selects keep clear breathing room before the native arrow. */
 .correct-inline { display: flex; align-items: center; gap: var(--sp-1); font-size: 13px; color: var(--text); margin-top: var(--sp-2); }
 .ir-select { padding-right: var(--sp-5); }
+
+/* Column headers: one voice — 11px, regular, one grey, no accidental bold
+   from the value styles below them. The select draws its own chevron with
+   proper breathing room instead of the glued native arrow. Tertiary text
+   actions read at the CTA type size. */
+.ir-headrow > div { font-size: 11px; font-weight: 400; color: var(--text-2); }
+.ir-select { appearance: none; -webkit-appearance: none; background-color: var(--surface); background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a887e' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--sp-2) center; padding-right: var(--sp-8); }
+.done-action { font-size: 11px; font-weight: 500; }
