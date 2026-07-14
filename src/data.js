@@ -79,9 +79,23 @@ export const SCENARIOS = {
       { type: 'card', card: 'receiving' }
     ],
     resolutions: {
-      // The card carries the whole result — the narrative never echoes it.
-      receipt: () => [],
-      invoiceResolutions: () => [],
+      // The card records the result; the chat reply says what Edify does next.
+      receipt: (p) => [{ type: 'assistant', text: p && p.diffs > 0
+        ? "I'll check these against Bidfood's invoice when it arrives."
+        : "I'll match the invoice when it arrives." }],
+      invoiceResolutions: (p) => {
+        const lines = p?.lines || []
+        const spoken = (n) => n.replace(/ \d+\s?(g|kg|ml|L)$/, '')
+        const bits = [
+          ...lines.filter(l => l.resolution === 'credit').map(l => `the ${spoken(l.name)} credit`),
+          ...lines.filter(l => l.resolution === 'confirmPrice').map(l => `${spoken(l.name)} price confirmation`),
+          ...lines.filter(l => l.resolution === 'sendApproval').map(l => `the ${spoken(l.name)} price approval`),
+          ...lines.filter(l => l.resolution === 'await').map(l => `the ${spoken(l.name)} replacement`)
+        ]
+        if (!bits.length) return [{ type: 'assistant', text: 'Every line has a final state — the invoice can close.' }]
+        const list = bits.length === 1 ? bits[0] : `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}`
+        return [{ type: 'assistant', text: `Waiting for ${list}.` }]
+      },
       priceApprovalRequest: () => [{ type: 'assistant', text: "I'll let you know when head office decides." }],
       receiveStart: () => [],
       notArrived: () => []

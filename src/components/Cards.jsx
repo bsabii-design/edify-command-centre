@@ -93,7 +93,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   return (
     <Card>
       <CardHead title="Proposed order change"
-        sub="Bidfood · delivery Sat 07:30" status={status} />
+        sub="Bidfood · order #2231 · delivery Sat 07:30" status={status} />
       {/* No table furniture. Three rows on one grid; old → new is the only
           pattern (grey → ink), the stepper is the only outlined = editable
           thing, and the total is the only bold number. */}
@@ -420,13 +420,6 @@ export function ReceivingCard({ entry, patch, resolve }) {
           <div>Item</div><div className="recv-exp">Ordered</div><div className="recv-got">Received</div><div className="recv-diffc">Difference</div>
         </div>
         {lines.map((l, i) => (<ReceiveRow key={i} line={l} i={i} rec={rows[i]} status={status} patch={setRows} />))}
-        {status === 'proposed' && (
-          <div className="card-helper">
-            {summary.diffs > 0
-              ? <>{summary.diffs} difference{summary.diffs === 1 ? '' : 's'} recorded.<br />Stock will update from received quantities. Edify will check {summary.diffs === 1 ? 'it' : 'them'} against the invoice when it arrives.</>
-              : <>Stock will update from the received quantities.</>}
-          </div>
-        )}
       </div>
       {status === 'proposed' && (
         <div className="ac-footer">
@@ -436,12 +429,10 @@ export function ReceivingCard({ entry, patch, resolve }) {
       )}
       {status === 'applied' && (summary.diffs > 0 ? (
         <ConfirmStrip label="Delivery confirmed"
-          sub={<>8 items received. {summary.diffs} difference{summary.diffs === 1 ? '' : 's'} recorded. Stock has been updated.</>}
-          note={`Edify will check ${summary.diffs === 1 ? 'this' : 'these'} against Bidfood's invoice when it arrives.`} />
+          sub={<>8 items received. {summary.diffs} difference{summary.diffs === 1 ? '' : 's'} recorded. Stock has been updated.</>} />
       ) : (
         <ConfirmStrip label="Delivery confirmed"
-          sub="8 items received. Stock has been updated."
-          note="Edify will match the invoice when it arrives." />
+          sub="8 items received. Stock has been updated." />
       ))}
     </Card>
   )
@@ -493,7 +484,7 @@ const CORRECT_REASONS = ['Item found after check-in', 'Counting error', 'Unit en
 
 export function InvoiceCloseCard({ entry, resolve, patch }) {
   const d = entry.data || {}
-  const { status = 'proposed', showHow = false } = d
+  const { status = 'proposed' } = d
   const lines = d.lines || []
   const n = lines.length
   const totalDiff = lines.reduce((a, l) => a + l.amount, 0)
@@ -503,12 +494,6 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
   const unresolved = lines.reduce((a, l) => (['credit', 'confirmPrice', 'sendApproval', 'await'].includes(l.resolution) ? a + l.amount : a), 0)
   const setLine = (i, linePatch) => patch({ lines: lines.map((l, j) => (j === i ? { ...l, ...linePatch } : l)) })
   const matched = d.matched || []
-  const waiting = [
-    ...lines.filter(l => l.resolution === 'credit').map(l => `the ${spokenName(l.name)} credit`),
-    ...lines.filter(l => l.resolution === 'confirmPrice').map(l => `${spokenName(l.name)} price confirmation`),
-    ...lines.filter(l => l.resolution === 'sendApproval').map(l => `the ${spokenName(l.name)} price approval`),
-    ...lines.filter(l => l.resolution === 'await').map(l => `the ${spokenName(l.name)} replacement`)
-  ]
   return (
     <Card>
       <CardHead title="Bidfood invoice #4902" action={{ label: 'View original', fn: () => {} }} />
@@ -527,20 +512,6 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="cc-total">£{totalDiff.toFixed(2)}</div>
           </div>
         </div>
-        <button className="wfold-chip" onClick={() => patch({ showHow: !showHow })}>
-          How Edify worked this out
-          <Chevron size={16} className={`wf-chev ${showHow ? 'open' : ''}`} />
-        </button>
-        {showHow && (
-          <div className="wsrc-list how-block">
-            <div className="how-line">I compared invoice #4902 with:</div>
-            <div className="how-row"><button className="how-link">Order #2231</button><span className="how-desc">What Ferra ordered.</span></div>
-            <div className="how-row"><button className="how-link">Delivery note #912</button><span className="how-desc">What was recorded as received.</span></div>
-            <div className="how-row"><button className="how-link">Bidfood prices</button><span className="how-desc">The prices Edify expected for each item.</span></div>
-            <div className="how-line">Expected total is calculated from the received quantities and the expected supplier prices.</div>
-            <div className="how-line">{matched.length} lines matched. {n} difference{n === 1 ? '' : 's'} need review.</div>
-          </div>
-        )}
         <div className="ir-grid ir-headrow">
           <div>Item</div><div>What does not match</div><div className="ir-impact">Difference</div><div>Resolution</div>
         </div>
@@ -601,7 +572,6 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-res">Matched</div>
           </div>
         ))}
-        {status === 'proposed' && <div className="card-helper">Nothing is sent until you confirm.</div>}
       </div>
       {status === 'proposed' && (
         <div className="ac-footer">
@@ -610,8 +580,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       )}
       {status === 'applied' && (
         <ConfirmStrip label="Resolutions confirmed"
-          sub={unresolved > 0 ? `Invoice remains open · £${unresolved.toFixed(2)} unresolved` : 'Every line has a final state. The invoice can close.'}
-          note={waiting.length > 0 ? `Waiting for ${joinAnd(waiting)}.` : undefined} />
+          sub={unresolved > 0 ? `Invoice remains open · £${unresolved.toFixed(2)} unresolved` : 'Every line has a final state. The invoice can close.'} />
       )}
     </Card>
   )
@@ -664,8 +633,7 @@ export function PriceReplyCard({ entry, resolve }) {
       )}
       {status === 'applied' && (
         <ConfirmStrip label="Price change sent for approval"
-          sub="Head office will review £4.85 → £5.15 for Butter 250g."
-          note="No expected prices were changed. Invoice #4902 is waiting for an internal decision." />
+          sub="Head office will review £4.85 → £5.15 for Butter 250g." />
       )}
     </Card>
   )

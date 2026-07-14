@@ -31,8 +31,8 @@
   --border: rgba(60, 58, 48, 0.055);
   --border-strong: rgba(60, 58, 48, 0.11);
   --text: #191919;
-  --text-2: #9b998f;
-  --text-3: #9b998f;
+  --text-2: #8a887e;
+  --text-3: #8a887e;
   --navy: #191919;
   --navy-hover: #333130;
   --accent: #ce4023;
@@ -1848,3 +1848,12 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ir-grid, .ir-row { grid-template-columns: minmax(0, 20fr) minmax(0, 33fr) minmax(0, 16fr) minmax(0, 31fr); }
 .ir-row { align-items: start; }
 .ir-impact { white-space: nowrap; }
+
+/* Evidence fold: chip hugs its text, rows sit tight at 11px with dash-
+   separated values. Invoice grid breathes 16px between columns and the
+   Resolution header aligns with the text inside its dropdown. */
+.wfold-chip { align-self: flex-start; width: fit-content; }
+.wsrc { padding: var(--sp-0) 0; font-size: 11px; }
+.wsrc-t, .wsrc-r { font-size: 11px; }
+.ir-grid, .ir-row { gap: var(--sp-4); }
+.ir-headrow > :last-child { padding-left: calc(var(--sp-2) + 1px); }

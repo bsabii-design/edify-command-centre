@@ -58,9 +58,9 @@ const WORKING_STEPS = {
   // Evidence only — facts Edify stands on. System actions ("drafting the
   // change") are not evidence and don't appear here.
   orderDiff: [
-    { t: 'Saturday basket', r: '8 items, £1,240.60' },
+    { t: 'Saturday basket', r: '8 items — £1,240.60' },
     { t: 'Warm weekend demand', r: '74–81 L' },
-    { t: 'Current par level', r: '60 L, set 12 May' }
+    { t: 'Current par level', r: '60 L — set 12 May' }
   ],
   invoiceMatch: [
     { t: 'Opening invoice #4821', r: '£1,249.60' },
@@ -87,6 +87,12 @@ const WORKING_STEPS = {
     { t: 'Comparing with POS usage', r: 'implies 8 L' },
     { t: 'Testing the crate/litre pattern', r: 'matches' }
   ],
+  invoiceClose: [
+    { t: 'Order #2231', r: 'what Ferra ordered' },
+    { t: 'Delivery note #912', r: 'what was recorded as received' },
+    { t: 'Bidfood prices', r: 'expected price per item' },
+    { t: 'Lines compared', r: '5 matched — 3 need review' }
+  ],
   supplierDraft: [
     { t: 'Reading what you sent', r: 'email + days' },
     { t: 'Pulling out the ordering details' },
@@ -96,7 +102,7 @@ const WORKING_STEPS = {
   supplierAdd: [{ t: 'Checking your other sites', r: 'found on 2' }, { t: 'Copying the setup across' }]
 }
 
-function WorkingSteps({ steps, done, label, coverage }) {
+function WorkingSteps({ steps, done, label }) {
   const settled = done >= steps.length
   // Granola-style: while working, ONE live line names the source being read
   // right now. When the card lands it becomes a quiet collapsed line; opening
@@ -133,7 +139,6 @@ function WorkingSteps({ steps, done, label, coverage }) {
                   </div>
                 )
               })}
-              {coverage && <div className="w-coverage"><b>Coverage:</b> {coverage}</div>}
             </div>
           </motion.div>
         )}
@@ -146,16 +151,6 @@ function WorkingSteps({ steps, done, label, coverage }) {
 // per-card overrides but is intentionally empty.
 const WORKING_LABELS = {}
 
-// Granola-style provenance: the fold ends by declaring what was read and
-// how completely — the answer signs its own evidence base.
-const WORKING_COVERAGE = {
-  orderDiff: 'The full Saturday basket, 4 warm weekends of POS sales and the weather feed — read in full.',
-  invoiceMatch: 'Invoice #4821, the signed delivery note and expected prices — compared line by line.',
-  gpBreakdown: 'A full week of POS sales and every recipe costing — read in full.',
-  muffinPlan: 'The last 4 Mondays of production and sell-through — read in full.',
-  receiving: 'Order #2231 and the delivery manifest — read in full.',
-  countFix: "Yesterday's count sheet, POS usage and Thursday's delivery — read in full."
-}
 
 const CARD_MAP = {
   orderDiff: OrderDiffCard, gpBreakdown: GpCard, invoiceMatch: InvoiceCard, countFix: CountFixCard, muffinPlan: MuffinCard,
@@ -234,7 +229,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       // Show Edify doing the work, one step at a time, then hand over the card.
       const wid = nid()
       setTimeout(() => {
-        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card], coverage: WORKING_COVERAGE[step.card] }])
+        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card] }])
         let i = 0
         const tick = () => {
           i += 1
@@ -573,7 +568,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                 }
                 if (e.kind === 'working') return (
                   <motion.div key={e.id} className="msg" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} coverage={e.coverage} />
+                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} />
                   </motion.div>
                 )
                 if (e.kind === 'supplierPick') {
