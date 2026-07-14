@@ -486,12 +486,12 @@ const spokenName = (name) => name.replace(/ \d+\s?(g|kg|ml|L)$/, '')
 const consequence = (l) => {
   switch (l.resolution) {
     case 'credit': return l.kind === 'qty'
-      ? `Recommended — Bidfood will be asked to credit £${l.amount.toFixed(2)}. Stock stays at ${l.receivedQty}.`
+      ? `Bidfood will be asked to credit £${l.amount.toFixed(2)}. Stock stays at ${l.receivedQty}.`
       : `Bidfood will be asked to credit £${l.amount.toFixed(2)}. Expected price stays at ${l.expectedPrice}.`
     case 'accept': return l.kind === 'qty'
       ? `You will pay for ${l.billedQty}. Stock stays at ${l.receivedQty}.`
       : `You will pay ${l.billedPrice} per pack. Expected price stays at ${l.expectedPrice}.`
-    case 'confirmPrice': return 'Recommended — the invoice stays open until Bidfood confirms the price.'
+    case 'confirmPrice': return 'The invoice stays open until Bidfood confirms the price.'
     default: return null
   }
 }
