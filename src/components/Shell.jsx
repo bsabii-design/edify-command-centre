@@ -151,10 +151,10 @@ export function Toasts({ toasts, dismiss }) {
           <motion.div key={t.id} className="toast success" layout
             initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.97 }} transition={{ type: 'spring', stiffness: 420, damping: 32 }}>
-            <span className="t-icon"><Check size={16} /></span>
+            <span className="t-icon"><Check size={12} stroke={1.9} /></span>
             <div className="t-body">
-              <div className="t-title">{t.title}</div>
-              {t.sub && <div className="t-sub">{t.sub}</div>}
+              <span className="t-title">{t.title}</span>
+              {t.sub && <span className="t-sub">{t.sub}</span>}
             </div>
             {t.action && <button className="t-action" onClick={() => { t.action.fn(); dismiss(t.id) }}>{t.action.label}</button>}
             <button className="t-close" onClick={() => dismiss(t.id)}><X size={16} /></button>

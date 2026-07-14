@@ -1987,3 +1987,16 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .diff-table td b, .diff-table th b { font-weight: 500; }
 
 .how-docwrap { display: inline-flex; align-items: center; gap: var(--sp-2); }
+
+/* ---- Toasts read like the notification pill: light surface, one line,
+   title Medium + detail quiet, the 16px confirmed disc on the left. ---- */
+.toast-stack { width: auto; max-width: 560px; align-items: flex-end; }
+.toast { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--r-full); padding: var(--sp-2) var(--sp-3); align-items: center; gap: var(--sp-2); }
+.toast .t-body { display: flex; align-items: baseline; gap: var(--sp-2); min-width: 0; white-space: nowrap; }
+.toast .t-icon { margin-top: 0; }
+.toast .t-title { font-weight: 500; font-size: 13px; }
+.toast .t-sub { font-size: 13px; opacity: 1; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; }
+.toast .t-action { background: none; padding: 0; color: var(--text-2); font-weight: 500; }
+.toast .t-action:hover { background: none; color: var(--text); }
+.toast .t-close { opacity: 1; color: var(--text-3); padding: 0; display: grid; place-items: center; border-radius: var(--r-full); }
+.toast .t-close:hover { background: var(--surface-2); color: var(--text); }
