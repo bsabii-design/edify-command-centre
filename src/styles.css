@@ -1810,3 +1810,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .wlive { font-size: 13px; color: var(--text-2); padding: var(--sp-1) 0; }
 .wsrc { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4); font-size: 13px; color: var(--text-2); padding: var(--sp-1) 0; }
 .wsrc-r { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+/* The helper carries no padding of its own — the surrounding insets
+   (body bottom, footer top) already give it exactly 16 each side. */
+.card-helper { padding: 0; }
