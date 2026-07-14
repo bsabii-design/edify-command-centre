@@ -47,7 +47,7 @@ export const SCENARIOS = {
       { type: 'card', card: 'orderDiff' }
     ],
     resolutions: {
-      confirm: [{ type: 'assistant', text: "Next, I'll prompt you when the delivery is ready to check in." }],
+      confirm: [{ type: 'assistant', text: "I'll let you know when the delivery is due." }],
       decline: [{ type: 'assistant', text: "No changes made — oat milk stays at **60 L**, nothing was sent. Until the order locks at **16:00** I keep watching everything that could change this call — prices, stock, the forecast, the supplier. If anything shifts, it comes straight back to you the moment it does. Otherwise you won't hear about this again." }]
     }
   },
@@ -62,7 +62,7 @@ export const SCENARIOS = {
       { type: 'card', card: 'orderDiff' }
     ],
     resolutions: {
-      confirm: [{ type: 'assistant', text: "Next, I'll prompt you when the delivery is ready to check in." }],
+      confirm: [{ type: 'assistant', text: "I'll let you know when the delivery is due." }],
       decline: [{ type: 'assistant', text: "Left as is — the basket stays at **60 L**, nothing was sent. Until the order locks at **16:00** I keep watching everything that could change this call — prices, stock, the forecast, the supplier. If anything shifts, it comes straight back to you the moment it does. Otherwise you won't hear about this again." }]
     }
   },
@@ -75,21 +75,16 @@ export const SCENARIOS = {
     sub: 'Receiving',
     userText: null,
     steps: [
-      { type: 'assistant', text: "**Saturday, 07:28.** Bidfood delivery is ready to check in — I pre-filled it from order **#2231**. Only change the quantities that don't match." },
+      { type: 'assistant', text: "I pre-filled this from order **#2231**. Change only the quantities that do not match." },
       { type: 'card', card: 'receiving' }
     ],
     resolutions: {
-      // The card carries the confirmation — the narrative below only says
-      // what happens next, never the same thing twice.
-      receipt: (p) => {
-        if (!p || p.diffs <= 0) {
-          return [{ type: 'assistant', text: "I'll match the invoice when it arrives." }]
-        }
-        return [{ type: 'assistant', text: "I'll check the recorded differences against Bidfood's invoice when it arrives." }]
-      },
-      invoiceResolutions: () => [{ type: 'assistant', text: "I'll close the case when Bidfood replies." }],
+      // The card carries the whole result — the narrative never echoes it.
+      receipt: () => [],
+      invoiceResolutions: () => [],
       priceApprovalRequest: () => [{ type: 'assistant', text: "I'll let you know when head office decides." }],
-      invoiceAcceptAll: () => [{ type: 'assistant', text: 'Case closed — the whole story is one thread in Journal.' }]
+      receiveStart: () => [],
+      notArrived: () => []
     }
   },
 

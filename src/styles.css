@@ -1829,3 +1829,22 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .wsrc-list { border-left: 1px solid var(--border-strong); margin-top: var(--sp-2); margin-left: var(--sp-2); padding-left: var(--sp-3); }
 .wsrc-t { color: var(--text); }
 .w-coverage { font-size: 13px; }
+
+/* Invoice review, plain-language edition: each mismatched line names its
+   sources (invoice vs receipt), the resolution carries ONE consequence
+   line, and after confirmation the same cell reads as a status. */
+.src-line { display: flex; align-items: baseline; gap: var(--sp-2); font-size: 13px; color: var(--text); padding: var(--sp-0) 0; }
+.src-label { color: var(--text-2); flex-shrink: 0; }
+.res-note { font-size: 11px; color: var(--text-2); margin-top: var(--sp-1); }
+.res-status { font-size: 13px; font-weight: 500; color: var(--text); }
+.correct-block { margin-top: var(--sp-2); display: flex; flex-direction: column; gap: var(--sp-1); }
+.ir-num { width: 34px; height: 28px; border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); text-align: center; font-size: 13px; outline: none; }
+.how-block { margin-bottom: var(--sp-2); }
+.how-line { font-size: 13px; color: var(--text-2); padding: var(--sp-0) 0; }
+.how-row { display: flex; align-items: baseline; gap: var(--sp-2); padding: var(--sp-0) 0; }
+.how-link { font-size: 13px; color: var(--text); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 2px; background: none; }
+.how-desc { font-size: 13px; color: var(--text-2); }
+/* The Difference column needs room for "2 L · £2.84". */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 20fr) minmax(0, 33fr) minmax(0, 16fr) minmax(0, 31fr); }
+.ir-row { align-items: start; }
+.ir-impact { white-space: nowrap; }

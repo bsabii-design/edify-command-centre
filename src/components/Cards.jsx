@@ -37,7 +37,7 @@ function StatusChip({ status }) {
     initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}>{label}</motion.span>
 }
 
-function CardHead({ title, sub, status, deadline }) {
+function CardHead({ title, sub, status, deadline, action }) {
   return (
     <div className="ac-head">
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -45,6 +45,7 @@ function CardHead({ title, sub, status, deadline }) {
         {sub && <div className="ac-sub">{sub}</div>}
       </div>
       {/* A live deadline outranks any status; once decided, the chip retires. */}
+      {action && <button className="done-action" onClick={action.fn}>{action.label}</button>}
       {deadline && status === 'proposed'
         ? <span className="deadline-chip"><Clock size={16} /> {deadline}</span>
         : <StatusChip status={status} />}
@@ -158,7 +159,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
         </div>
       </>)}
       {status === 'applied' && <ConfirmStrip label="Order #2231 sent to Bidfood"
-        sub={<>{newQty} L oat milk added. Accepted {(entry.data || {}).acceptedAt || '22:31'}. Delivery Sat 07:30.</>}
+        sub={<>{newQty} L oat milk included. Accepted {(entry.data || {}).acceptedAt || '22:31'}. Delivery Sat 07:30.</>}
         action={{ label: 'View order', fn: () => {} }} />}
       {status === 'declined' && <KeptStrip label="No changes made — Saturday's order stays at 60 L of oat milk" />}
     </Card>
@@ -446,71 +447,75 @@ export function ReceivingCard({ entry, patch, resolve }) {
   )
 }
 
-// ---------- Invoice close (final decision of the Saturday case) ------------
 // ---------- Invoice #4902: line-level resolutions ---------------------------
-// The user never edits invoice facts, delivery facts or received quantities.
-// They only confirm — or change — how Edify handles each difference.
-const QTY_OPTIONS = [
-  ['credit', 'Request credit note'],
-  ['accept', 'Accept difference'],
-  ['hold', 'Hold for supplier review']
-]
-// Priya can contact suppliers through Edify, but future supplier prices
-// change only through head-office approval — so a price line offers
-// exactly two moves, and neither touches expected prices directly.
+// Facts are read-only. Each mismatched line shows what Bidfood billed, what
+// Ferra recorded or expected, the difference, and an editable resolution with
+// ONE consequence line underneath. No accounting vocabulary anywhere.
 const PRICE_OPTIONS = [
-  ['confirmPrice', 'Confirm price with supplier'],
+  ['confirmPrice', 'Confirm price with Bidfood'],
   ['sendApproval', 'Send price change for approval']
 ]
-const PRICE_HELPERS = {
-  confirmPrice: 'Will be emailed to accounts@bidfood.co.uk. The reply will stay linked to invoice #4902.',
-  sendApproval: 'Head office will review the new price and its impact on recipe costs and GP.'
-}
-const resLabel = (line) => {
-  const opts = line.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS
-  return (opts.find(o => o[0] === line.resolution) || opts[0])[1]
-}
+const qtyOptions = (l) => [
+  ['credit', `Request £${l.amount.toFixed(2)} credit`],
+  ['correctReceipt', 'Correct receipt'],
+  ['accept', `Accept £${l.amount.toFixed(2)} charge`],
+  ['await', 'Await replacement']
+]
+const lineOptions = (l) => (l.kind === 'qty' ? qtyOptions(l) : PRICE_OPTIONS)
 const joinAnd = (xs) => (xs.length <= 1 ? xs[0] || '' : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`)
-// The success copy reflects the resolutions actually chosen, credits grouped
-// into one sentence. It never claims the invoice is closed — it is waiting
-// on Bidfood.
 // "Butter 250g" is the line, "Butter" is what you say in a sentence.
 const spokenName = (name) => name.replace(/ \d+\s?(g|kg|ml|L)$/, '')
-const invoiceOutcome = (lines) => {
-  const parts = []
-  const credits = lines.filter(l => l.resolution === 'credit' || l.resolution === 'creditDiff').map(l => spokenName(l.name))
-  if (credits.length) parts.push(`Credit note${credits.length === 1 ? '' : 's'} requested for ${joinAnd(credits)}.`)
-  lines.forEach(l => {
-    if (l.resolution === 'confirmPrice') parts.push(`${spokenName(l.name)} price confirmation sent to accounts@bidfood.co.uk.`)
-    if (l.resolution === 'sendApproval') parts.push(`${spokenName(l.name)} price change sent to head office for approval.`)
-    if (l.resolution === 'accept') parts.push(`${spokenName(l.name)} difference accepted.`)
-    if (l.resolution === 'hold') parts.push(`${spokenName(l.name)} held for supplier review.`)
-  })
-  return parts.join(' ')
+
+// What the currently selected decision WILL do — one plain line.
+const consequence = (l) => {
+  switch (l.resolution) {
+    case 'accept': return `You will pay for ${l.billedQty}. Stock stays at ${l.receivedQty}.`
+    case 'credit': return `Bidfood will be asked to remove £${l.amount.toFixed(2)} from the invoice. The invoice stays open until the credit arrives.`
+    case 'await': return 'Stock stays at the received quantity. This line remains open until the replacement arrives.'
+    case 'confirmPrice': return `Bidfood will be asked whether ${l.billedPrice} is correct. The invoice stays open until they reply.`
+    case 'sendApproval': return 'Head office will review the new price and its impact on recipe costs and GP.'
+    default: return null
+  }
 }
+// After confirmation the same cell becomes a status — what HAS happened.
+const lineStatus = (l) => {
+  switch (l.resolution) {
+    case 'accept': return ['Charge accepted', `Included in the invoice. Stock remains at ${l.receivedQty}.`]
+    case 'credit': return ['Credit requested', `Waiting for Bidfood to issue £${l.amount.toFixed(2)} credit.`]
+    case 'confirmPrice': return ['Waiting for Bidfood', `Waiting for confirmation of the ${l.billedPrice} price.`]
+    case 'sendApproval': return ['Sent for approval', 'Waiting for an internal decision on the new price.']
+    case 'correctReceipt': return ['Receipt corrected', `Received quantity changed from ${l.receivedQty} to ${l.corrected ?? l.invoiced} ${l.unit}. Stock was updated. No supplier credit is needed.`]
+    case 'await': return ['Awaiting replacement', 'This line stays open until the replacement arrives.']
+    default: return ['Confirmed', null]
+  }
+}
+const CORRECT_REASONS = ['Item found after check-in', 'Counting error', 'Unit entered incorrectly', 'Other']
 
 export function InvoiceCloseCard({ entry, resolve, patch }) {
   const d = entry.data || {}
-  const { status = 'proposed', accepting = false } = d
+  const { status = 'proposed', showHow = false } = d
   const lines = d.lines || []
   const n = lines.length
-  // One consistent sum: invoiced − expected = difference, where expected is
-  // what the invoice should say given received quantities and expected prices.
-  const qtyDiff = lines.filter(l => l.kind === 'qty').reduce((a, l) => a + l.amount, 0)
-  const priceDiff = lines.filter(l => l.kind === 'price').reduce((a, l) => a + l.amount, 0)
-  const totalDiff = qtyDiff + priceDiff
+  const totalDiff = lines.reduce((a, l) => a + l.amount, 0)
   const invoiced = d.invoiced ?? 1269
   const expected = invoiced - totalDiff
-  const setRes = (i, resolution) => patch({ lines: lines.map((l, j) => (j === i ? { ...l, resolution } : l)) })
+  // Money that stays open after the currently selected resolutions.
+  const unresolved = lines.reduce((a, l) => (['credit', 'confirmPrice', 'sendApproval', 'await'].includes(l.resolution) ? a + l.amount : a), 0)
+  const setLine = (i, linePatch) => patch({ lines: lines.map((l, j) => (j === i ? { ...l, ...linePatch } : l)) })
   const matched = d.matched || []
+  const waiting = [
+    ...lines.filter(l => l.resolution === 'credit').map(l => `the ${spokenName(l.name)} credit`),
+    ...lines.filter(l => l.resolution === 'confirmPrice').map(l => `${spokenName(l.name)} price confirmation`),
+    ...lines.filter(l => l.resolution === 'sendApproval').map(l => `the ${spokenName(l.name)} price approval`),
+    ...lines.filter(l => l.resolution === 'await').map(l => `the ${spokenName(l.name)} replacement`)
+  ]
   return (
     <Card>
-      <CardHead title={`Bidfood invoice #4902 has ${d.diffLabel || `${n} difference${n === 1 ? '' : 's'}`}`}
-        sub="Checked against order #2231, delivery note #912 and expected prices" />
+      <CardHead title="Bidfood invoice #4902" action={{ label: 'View original', fn: () => {} }} />
       <div className="ac-body">
         <div className="compare-cols">
           <div className="compare-col">
-            <div className="cc-head">Invoiced total</div>
+            <div className="cc-head">Invoice total</div>
             <div className="cc-total">£{invoiced.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
           </div>
           <div className="compare-col">
@@ -520,33 +525,66 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           <div className="compare-col flagged">
             <div className="cc-head">Difference</div>
             <div className="cc-total">£{totalDiff.toFixed(2)}</div>
-            {qtyDiff > 0 && priceDiff > 0 && (
-              <div className="cc-sub">£{qtyDiff.toFixed(2)} quantity · £{priceDiff.toFixed(2)} price</div>
-            )}
           </div>
         </div>
+        <button className="wfold-chip" onClick={() => patch({ showHow: !showHow })}>
+          How Edify worked this out
+          <Chevron size={16} className={`wf-chev ${showHow ? 'open' : ''}`} />
+        </button>
+        {showHow && (
+          <div className="wsrc-list how-block">
+            <div className="how-line">I compared invoice #4902 with:</div>
+            <div className="how-row"><button className="how-link">Order #2231</button><span className="how-desc">What Ferra ordered.</span></div>
+            <div className="how-row"><button className="how-link">Delivery note #912</button><span className="how-desc">What was recorded as received.</span></div>
+            <div className="how-row"><button className="how-link">Bidfood prices</button><span className="how-desc">The prices Edify expected for each item.</span></div>
+            <div className="how-line">Expected total is calculated from the received quantities and the expected supplier prices.</div>
+            <div className="how-line">{matched.length} lines matched. {n} difference{n === 1 ? '' : 's'} need review.</div>
+          </div>
+        )}
         <div className="ir-grid ir-headrow">
-          <div>Item</div><div>Issue</div><div className="ir-impact">Impact</div><div>Resolution</div>
+          <div>Item</div><div>What does not match</div><div className="ir-impact">Difference</div><div>Resolution</div>
         </div>
         {lines.map((l, i) => (
           <div key={i} className="ir-row">
             <div className="ir-item">{l.name}</div>
             <div className="ir-issue">
-              <div>{l.issue}</div>
-              {l.delta && <div className="ir-delta">{l.delta}</div>}
+              {l.kind === 'qty' ? (<>
+                <div className="src-line"><span className="src-label">Invoice</span>{l.billedQty} billed</div>
+                <div className="src-line"><span className="src-label">Delivery receipt</span>{l.receivedQty} received</div>
+              </>) : (<>
+                <div className="src-line"><span className="src-label">Invoice price</span>{l.billedPrice}</div>
+                <div className="src-line"><span className="src-label">Expected price</span>{l.expectedPrice}</div>
+                <div className="src-line"><span className="src-label">Quantity</span>{l.qtyStr}</div>
+              </>)}
             </div>
-            <div className="ir-impact">£{l.amount.toFixed(2)}</div>
+            <div className="ir-impact">{l.kind === 'qty' ? `${l.short} ${l.unit} · £${l.amount.toFixed(2)}` : `£${l.amount.toFixed(2)}`}</div>
             <div className="ir-res">
               {status === 'proposed' ? (<>
-                <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
-                  {(l.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS).map(([k, label]) => (
-                    <option key={k} value={k}>{label}</option>
-                  ))}
+                <select className="ir-select" value={l.resolution} onChange={e => setLine(i, { resolution: e.target.value })}>
+                  {lineOptions(l).map(([k, label]) => (<option key={k} value={k}>{label}</option>))}
                 </select>
-                {l.kind === 'price' && PRICE_HELPERS[l.resolution] && (
-                  <div className="ir-helper">{PRICE_HELPERS[l.resolution]}</div>
+                {l.resolution === 'correctReceipt' ? (
+                  <div className="correct-block">
+                    <div className="src-line"><span className="src-label">Recorded received</span>{l.receivedQty}</div>
+                    <div className="src-line"><span className="src-label">Corrected received</span>
+                      <input className="ir-num" value={l.corrected ?? l.invoiced} inputMode="numeric"
+                        onChange={e => { const v = parseInt(e.target.value.replace(/\D/g, ''), 10); setLine(i, { corrected: isNaN(v) ? 0 : v }) }} /> {l.unit}
+                    </div>
+                    <select className="ir-select" value={l.reason || CORRECT_REASONS[0]} onChange={e => setLine(i, { reason: e.target.value })}>
+                      {CORRECT_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <div className="res-note">This will correct delivery note #912 and update stock. The original receipt will remain in the audit trail.</div>
+                  </div>
+                ) : (
+                  consequence(l) && <div className="res-note">{consequence(l)}</div>
                 )}
-              </>) : resLabel(l)}
+              </>) : (() => {
+                const [statusLabel, helper] = lineStatus(l)
+                return (<>
+                  <div className="res-status">{statusLabel}</div>
+                  {helper && <div className="res-note">{helper}</div>}
+                </>)
+              })()}
             </div>
           </div>
         ))}
@@ -563,70 +601,61 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-res">Matched</div>
           </div>
         ))}
+        {status === 'proposed' && <div className="card-helper">Nothing is sent until you confirm.</div>}
       </div>
-      {status === 'proposed' && !accepting && (
+      {status === 'proposed' && (
         <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('invoiceResolutions', { lines, totalDiff })}>{n === 1 ? 'Confirm resolution' : `Confirm ${n} resolutions`}</button>
-          <div className="spacer" />
-          <button className="done-action" onClick={() => patch({ accepting: true })}>Accept invoice as is</button>
+          <button className="btn btn-primary" onClick={() => resolve('invoiceResolutions', { lines, totalDiff, unresolved, invoiced })}>{n === 1 ? 'Confirm resolution' : `Confirm ${n} resolutions`}</button>
         </div>
       )}
-      {status === 'proposed' && accepting && (
-        <div className="ir-confirm">
-          <div className="cs-title">Accept invoice as billed?</div>
-          <div className="cs-body">This will accept Bidfood invoice #4902 without requesting corrections. No credit notes will be requested. Expected supplier prices will not be updated.</div>
-          <div className="ir-confirm-actions">
-            <button className="btn btn-primary" onClick={() => resolve('invoiceAcceptAll', { totalDiff })}>Accept invoice</button>
-            <button className="btn btn-secondary" onClick={() => patch({ accepting: false })}>Cancel</button>
-          </div>
-        </div>
+      {status === 'applied' && (
+        <ConfirmStrip label="Resolutions confirmed"
+          sub={unresolved > 0 ? `Invoice remains open · £${unresolved.toFixed(2)} unresolved` : 'Every line has a final state. The invoice can close.'}
+          note={waiting.length > 0 ? `Waiting for ${joinAnd(waiting)}.` : undefined} />
       )}
-      {status === 'applied' && (d.resolution === 'acceptedAll' ? (
-        <ConfirmStrip label="Invoice accepted as billed"
-          sub="No supplier correction was requested. Expected supplier prices were not updated."
-          note="Invoice #4902 was closed." />
-      ) : (() => {
-        // A lone price line gets its own confirmed state — the two price
-        // resolutions lead to genuinely different waiting rooms.
-        const single = n === 1 && lines[0].kind === 'price' ? lines[0] : null
-        if (single?.resolution === 'confirmPrice') return (
-          <ConfirmStrip label="Price confirmation sent"
-            sub="Sent to accounts@bidfood.co.uk. Invoice #4902 is waiting for Bidfood's reply."
-            note="Expected price remains £4.85. Stock remains based on received quantities."
-            action={{ label: 'View message', fn: () => {} }} />
-        )
-        if (single?.resolution === 'sendApproval') return (
-          <ConfirmStrip label="Price change sent for approval"
-            sub="Head office will review £4.85 → £5.15 for Butter 250g."
-            note="No expected prices were changed. Invoice #4902 is waiting for an internal decision." />
-        )
-        const supplierFacing = lines.some(l => l.resolution === 'credit' || l.resolution === 'confirmPrice')
-        const internal = lines.some(l => l.resolution === 'sendApproval')
-        const note = [
-          supplierFacing && "Invoice #4902 is waiting for Bidfood's reply.",
-          internal && 'The price change is waiting for an internal decision.',
-          'Expected supplier prices were not updated. Stock remains based on received quantities.'
-        ].filter(Boolean).join(' ')
-        return (
-          <ConfirmStrip label={n === 1 ? 'Resolution confirmed' : 'Resolutions confirmed'}
-            sub={invoiceOutcome(lines)} note={note} />
-        )
-      })())}
     </Card>
   )
 }
 
-// ---------- Supplier price reply (compact follow-up) ------------------------
-// Bidfood's reply lands in the same case. Priya cannot change future prices,
-// so the only move is routing the new price to head office.
+// ---------- Delivery due (expected time means due, not arrived) -------------
+export function DeliveryDueCard({ entry, resolve, patch }) {
+  const { status = 'proposed', watching = false } = entry.data || {}
+  return (
+    <Card>
+      <CardHead title="Bidfood delivery is due now" sub="Order #2231 · 8 items · expected Sat 07:30" />
+      {status === 'proposed' && (<>
+        {watching && <div className="card-helper inpad">I’ll keep watching this delivery.</div>}
+        <div className="ac-footer">
+          <button className="btn btn-primary" onClick={() => resolve('receiveStart')}>Receive delivery</button>
+          <button className="btn btn-secondary" onClick={() => { patch({ watching: true }); resolve('notArrived') }}>Not arrived yet</button>
+        </div>
+      </>)}
+      {status === 'applied' && <KeptStrip label="Checked in — receiving recorded below" />}
+    </Card>
+  )
+}
+
+// ---------- Supplier reply (one reply settles both supplier questions) ------
 export function PriceReplyCard({ entry, resolve }) {
-  const { status = 'proposed' } = entry.data || {}
+  const { status = 'proposed', invoiced = 1269, credit = 1.92, unresolved = 7.20 } = entry.data || {}
+  const newTotal = invoiced - credit
   return (
     <Card>
       <CardHead title="Bidfood replied" sub="accounts@bidfood.co.uk · linked to invoice #4902" />
       <div className="ac-body">
-        <div className="reply-line">£5.15 is the new price for Butter 250g from 6 Jul.</div>
-        <div className="card-helper">Head office will review the impact on recipe costs and GP before the expected price changes.</div>
+        <div className="src-line"><span className="src-label">Whole milk</span>Credit note #CN-1042 issued for £{credit.toFixed(2)}.</div>
+        <div className="src-line"><span className="src-label">Butter 250g</span>£5.15 is the new price from 6 Jul.</div>
+        <div className="compare-cols">
+          <div className="compare-col">
+            <div className="cc-head">Invoice total</div>
+            <div className="cc-total">£{newTotal.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+          </div>
+          <div className="compare-col flagged">
+            <div className="cc-head">Still unresolved</div>
+            <div className="cc-total">£{unresolved.toFixed(2)}</div>
+          </div>
+        </div>
+        {status === 'proposed' && <div className="card-helper">Head office will review the impact on recipe costs and GP before the expected price changes.</div>}
       </div>
       {status === 'proposed' && (
         <div className="ac-footer">

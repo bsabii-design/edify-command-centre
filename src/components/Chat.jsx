@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SCENARIOS, WORKING_TEXT, PROMISE, cutoffLabel } from '../data.js'
 import { useStream } from '../hooks.js'
 import {
-  OrderDiffCard, GpCard, InvoiceCard, CountFixCard, ReceivingCard, InvoiceCloseCard, PriceReplyCard,
+  OrderDiffCard, GpCard, InvoiceCard, CountFixCard, ReceivingCard, InvoiceCloseCard, PriceReplyCard, DeliveryDueCard,
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
@@ -87,10 +87,6 @@ const WORKING_STEPS = {
     { t: 'Comparing with POS usage', r: 'implies 8 L' },
     { t: 'Testing the crate/litre pattern', r: 'matches' }
   ],
-  invoiceClose: [
-    { t: 'Matching invoice #4902', r: '80 L billed' },
-    { t: 'Applying your held credit', r: '£2.84' }
-  ],
   supplierDraft: [
     { t: 'Reading what you sent', r: 'email + days' },
     { t: 'Pulling out the ordering details' },
@@ -158,13 +154,12 @@ const WORKING_COVERAGE = {
   gpBreakdown: 'A full week of POS sales and every recipe costing — read in full.',
   muffinPlan: 'The last 4 Mondays of production and sell-through — read in full.',
   receiving: 'Order #2231 and the delivery manifest — read in full.',
-  countFix: "Yesterday's count sheet, POS usage and Thursday's delivery — read in full.",
-  invoiceClose: 'Invoice #4902 against order #2231, delivery note #912 and expected prices — every line compared.'
+  countFix: "Yesterday's count sheet, POS usage and Thursday's delivery — read in full."
 }
 
 const CARD_MAP = {
   orderDiff: OrderDiffCard, gpBreakdown: GpCard, invoiceMatch: InvoiceCard, countFix: CountFixCard, muffinPlan: MuffinCard,
-  receiving: ReceivingCard, invoiceClose: InvoiceCloseCard, priceReply: PriceReplyCard,
+  receiving: ReceivingCard, invoiceClose: InvoiceCloseCard, priceReply: PriceReplyCard, deliveryDue: DeliveryDueCard,
   supplierAdd: SupplierAddCard, supplierDraft: SupplierDraftCard,
   supplierUpdate: SupplierUpdateCard
 }
@@ -417,7 +412,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       muffinConfirm: { status: 'applied' }, muffinKeep: { status: 'declined' },
       recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' }, countCorrect: { status: 'applied', choice: 'countCorrect' },
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
-      invoiceResolutions: { status: 'applied', resolution: 'sent' }, invoiceAcceptAll: { status: 'applied', resolution: 'acceptedAll' }, priceApprovalRequest: { status: 'applied' },
+      invoiceResolutions: { status: 'applied', resolution: 'sent' }, priceApprovalRequest: { status: 'applied' }, receiveStart: { status: 'applied' },
       supplierAddConfirm: { status: 'applied' }, supplierCreateConfirm: { status: 'applied' },
       supplierUpdateConfirm: { status: 'applied' },
       supplierCancel: { status: 'cancelled' }

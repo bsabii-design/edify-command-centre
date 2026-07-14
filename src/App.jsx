@@ -98,6 +98,15 @@ export default function App() {
         addJournal({ kind: 'action', by: 'you', quiet: true, title: "Saturday's basket kept at 60 L", detail: "Reviewed Edify's +20 L oat-milk suggestion and kept it as is — no change sent to Bidfood", source: 'Case — Saturday order', threadId })
         toast('Kept as is', 'Saturday basket stays at 60 L — nothing sent')
         break
+      case 'receiveStart': {
+        setInterrupt(null)
+        const t = threadsRef.current.find(x => x.id === threadId)
+        patchThread(threadId, { caseState: 'receiving', pendingSteps: SCENARIOS.delivery.steps.map(st => (st.type === 'card' ? { ...st, scenarioId: 'delivery', data: { orderAdd: t?.orderAdd ?? 20 } } : { ...st, scenarioId: 'delivery' })) })
+        break
+      }
+      case 'notArrived':
+        toast("I'll keep watching this delivery", 'It stays on your list — open it when the van shows up')
+        break
       case 'receipt': {
         setInterrupt(null)
         const short = payload?.shortUnits || 0
@@ -111,16 +120,30 @@ export default function App() {
       case 'invoiceResolutions': {
         setInterrupt(null)
         const lines = payload?.lines || []
-        const detail = lines.map(l => l.kind === 'qty' ? `Credit requested for ${l.name}`
-          : l.resolution === 'sendApproval' ? `${l.name} price change sent for approval`
-          : `${l.name} price confirmation emailed to Bidfood`).join(' · ')
+        const unresolved = payload?.unresolved ?? 0
+        const detailFor = (l) => {
+          switch (l.resolution) {
+            case 'credit': return `£${l.amount.toFixed(2)} credit requested for ${l.name}`
+            case 'accept': return `£${l.amount.toFixed(2)} ${l.name} charge accepted as a cost variance`
+            case 'correctReceipt': return `Delivery note #912 corrected — ${l.name} ${l.received} → ${l.corrected ?? l.invoiced} ${l.unit}`
+            case 'await': return `${l.name} awaiting replacement`
+            case 'sendApproval': return `${l.name} price change sent for approval`
+            default: return `${l.name} price confirmation emailed to Bidfood`
+          }
+        }
+        const detail = lines.map(detailFor).join(' · ')
         // Which waiting room the invoice enters depends on where the price
         // line went: supplier email, head office, or nowhere (qty only).
         const pricePath = lines.find(l => l.kind === 'price')?.resolution || null
         const toSupplier = lines.some(l => l.resolution === 'credit' || l.resolution === 'confirmPrice')
         const internal = pricePath === 'sendApproval'
-        patchThread(threadId, { caseState: 'awaiting_credit', pricePath })
-        setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · ${lines.length} resolution${lines.length === 1 ? '' : 's'} sent`, helper: toSupplier && internal ? 'Waiting for Bidfood and head office' : internal ? 'Waiting for internal approval' : "Waiting for Bidfood's reply", status: 'Waiting', chip: 'by Wed', threadId }])
+        const creditAmt = lines.filter(l => l.resolution === 'credit').reduce((a, l) => a + l.amount, 0)
+        // A case closes only when every line has a FINAL state — accepted or
+        // corrected. Anything waiting on Bidfood or head office keeps it open.
+        patchThread(threadId, { caseState: unresolved > 0 ? 'awaiting_credit' : 'closed', pricePath, creditAmt, unresolvedAmt: unresolved })
+        if (unresolved > 0) {
+          setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · £${unresolved.toFixed(2)} unresolved`, helper: toSupplier && internal ? 'Waiting for Bidfood and head office' : internal ? 'Waiting for internal approval' : "Waiting for Bidfood's reply", status: 'Waiting', chip: 'by Wed', threadId }])
+        }
         J('action', 'you', 'Invoice #4902 resolutions confirmed', detail, 'Invoices')
         if (lines.some(l => l.resolution === 'confirmPrice')) {
           J('action', 'you', 'Supplier price confirmation requested by Priya', 'Sent to accounts@bidfood.co.uk by Edify — the reply stays linked to invoice #4902', 'Invoices')
@@ -128,7 +151,7 @@ export default function App() {
         if (internal) {
           J('action', 'you', 'Price change requested by Priya', 'Butter 250g £4.85 → £5.15 — waiting for head-office approval', 'Invoices')
         }
-        toast('Resolutions confirmed', internal && !toSupplier ? 'Sent to head office for review.' : 'Bidfood has been asked to respond.')
+        toast('Resolutions confirmed', unresolved > 0 ? `Invoice remains open — £${unresolved.toFixed(2)} unresolved.` : 'Every line has a final state.')
         break
       }
       case 'priceApprovalRequest': {
@@ -137,13 +160,6 @@ export default function App() {
         setWatching(w => w.map(x => (x.id === 'wcredit' ? { ...x, helper: 'Waiting for head-office approval', chip: 'by Thu' } : x)))
         J('action', 'you', 'Price change requested by Priya', 'Butter 250g £4.85 → £5.15 — waiting for head-office approval', 'Invoices')
         toast('Price change sent for approval', 'Head office will review the impact on recipes and GP.')
-        break
-      }
-      case 'invoiceAcceptAll': {
-        setInterrupt(null)
-        patchThread(threadId, { caseState: 'closed' })
-        J('action', 'you', 'Invoice #4902 accepted as billed', 'No corrections requested', 'Invoices')
-        toast('Invoice accepted', 'Invoice #4902 posted as billed.')
         break
       }
       case 'closeCase':
@@ -226,6 +242,7 @@ export default function App() {
   const orderThread = threads.find(isOrder)
   const demoStage = !orderThread || !orderThread.caseState ? 0
     : orderThread.caseState === 'awaiting_delivery' ? 1
+    : orderThread.caseState === 'delivery_due' ? 1.4
     : orderThread.caseState === 'receiving' ? 1.5
     : orderThread.caseState === 'awaiting_invoice' ? 2
     : orderThread.caseState === 'invoice_decision' ? 2.5
@@ -233,11 +250,16 @@ export default function App() {
     : orderThread.caseState === 'awaiting_approval' ? 2.9
     : 3
 
+  // Expected time means DUE, not arrived — the receiving form opens only
+  // when Priya says the van is actually here.
   const fireDelivery = () => {
     const t = orderThread
     if (!t) return
-    patchThread(t.id, { caseState: 'receiving', pendingSteps: SCENARIOS.delivery.steps.map(s => (s.type === 'card' ? { ...s, scenarioId: 'delivery', data: { orderAdd: t.orderAdd ?? 20 } } : { ...s, scenarioId: 'delivery' })) })
-    announce({ icon: 'truck', threadId: t.id, title: 'Bidfood delivery due now', cta: 'Receive' })
+    patchThread(t.id, {
+      caseState: 'delivery_due',
+      pendingSteps: [{ type: 'card', card: 'deliveryDue', scenarioId: 'delivery', data: {} }]
+    })
+    announce({ icon: 'truck', threadId: t.id, title: 'Bidfood delivery is due now', cta: 'Receive', snoozeLabel: 'Not arrived yet' })
   }
 
   // The invoice always needs a decision: even when the delivery matched the
@@ -246,15 +268,17 @@ export default function App() {
   const fireInvoice = () => {
     const t = orderThread
     if (!t) return
+    // Demo defaults per the spec: the oat shortage is accepted as a cost,
+    // the whole-milk shortage asks for a credit, butter asks Bidfood.
     const qtyLines = (t.diffLines || []).map(l => ({
-      kind: 'qty', name: l.name, amount: l.value, resolution: 'credit',
-      issue: `${l.invoiced} ${l.unit} billed · ${l.received} ${l.unit} received`,
-      delta: `${l.short} ${l.unit} short × £${(l.value / l.short).toFixed(2)}`
+      kind: 'qty', name: l.name, amount: l.value,
+      resolution: /oat/i.test(l.name) ? 'accept' : 'credit',
+      invoiced: l.invoiced, received: l.received, short: l.short, unit: l.unit,
+      billedQty: `${l.invoiced} ${l.unit}`, receivedQty: `${l.received} ${l.unit}`
     }))
     const lines = [...qtyLines, {
       kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
-      issue: '24 packs billed at £5.15 · expected £4.85',
-      delta: '+£0.30 per pack'
+      billedPrice: '£5.15', expectedPrice: '£4.85', qtyStr: '24 packs'
     }]
     const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
     const matched = [...RECEIVE_LINES, ...RECEIVE_MORE]
@@ -272,9 +296,9 @@ export default function App() {
     // if the change was declined, £1,269.00 with the extra 20 L.
     const invoiced = 1240.6 + (t.orderAdd ?? 20) * 1.42
     patchThread(t.id, {
-      caseState: 'invoice_decision',
+      caseState: 'invoice_decision', invoiced,
       pendingSteps: [
-        { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and expected prices, I found **${diffLabel}** and proposed a resolution for each. Nothing is sent until you confirm.` },
+        { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and expected prices, I found **${diffLabel}** and proposed a resolution for each.` },
         { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched, diffLabel, invoiced } }
       ]
     })
@@ -288,24 +312,35 @@ export default function App() {
   const fireReply = () => {
     const t = orderThread
     if (!t) return
+    const credit = t.creditAmt || 1.92
+    const stillOpen = Math.max(0, (t.unresolvedAmt || 9.12) - credit)
     patchThread(t.id, {
+      unresolvedAmt: stillOpen,
       pendingSteps: [
         { type: 'assistant', scenarioId: 'delivery', text: '**Tuesday, 09:12.** Bidfood replied about invoice **#4902**:' },
-        { type: 'card', card: 'priceReply', scenarioId: 'delivery', data: {} }
+        { type: 'card', card: 'priceReply', scenarioId: 'delivery', data: { invoiced: t.invoiced || 1269, credit, unresolved: stillOpen } }
       ]
     })
+    addJournal({ kind: 'auto', by: 'edify', title: 'Credit note #CN-1042 applied to invoice #4902', detail: `Whole milk credit −£${credit.toFixed(2)} — invoice total now £${((t.invoiced || 1269) - credit).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, source: 'Invoices', threadId: t.id })
+    setWatching(w => w.map(x => (x.id === 'wcredit' ? { ...x, sub: `Fitzroy Espresso · £${stillOpen.toFixed(2)} unresolved`, helper: 'Butter price needs an internal decision' } : x)))
     announce({ icon: 'invoice', threadId: t.id, title: 'Bidfood replied about invoice #4902', cta: 'Review' })
   }
   const fireApproval = () => {
     const t = orderThread
     if (!t) return
+    const credit = t.creditAmt || 1.92
+    const finalPayable = ((t.invoiced || 1269) - credit).toLocaleString('en-GB', { minimumFractionDigits: 2 })
     patchThread(t.id, {
-      caseState: 'closed',
-      pendingSteps: [{ type: 'assistant', scenarioId: 'delivery', text: '**Wednesday, 10:20.** Head office approved the change. **Expected price updated** — Butter 250g for Bidfood changed from **£4.85 to £5.15**. 4 recipes were recosted. Projected GP decreased by **0.4 pts**. Menu prices were not changed.' }]
+      caseState: 'closed', unresolvedAmt: 0,
+      pendingSteps: [
+        { type: 'assistant', scenarioId: 'delivery', text: '**Wednesday, 10:20.** Head office approved the change. **Expected price updated** — Butter 250g for Bidfood, **£4.85 → £5.15**. 4 recipes were recosted. Projected GP decreased by **0.4 pts**. Menu prices were not changed.' },
+        { type: 'assistant', scenarioId: 'delivery', text: `**Invoice #4902 resolved.** Original invoice **£${(t.invoiced || 1269).toLocaleString('en-GB', { minimumFractionDigits: 2 })}**, Whole milk credit **−£${credit.toFixed(2)}** — final payable **£${finalPayable}**. The oat milk variance (£2.84) and the butter price were already inside the original invoice — nothing is added twice.` }
+      ]
     })
     setWatching(w => w.filter(x => x.id !== 'wcredit'))
     addJournal({ kind: 'auto', by: 'edify', title: 'Expected price approved by Head Office', detail: 'Butter 250g · £4.85 → £5.15 — 4 recipes recosted, projected GP −0.4 pts, menu prices unchanged', source: 'Invoices', threadId: t.id })
-    toast('Expected price updated', 'Butter 250g £4.85 → £5.15. 4 recipes recosted.')
+    addJournal({ kind: 'auto', by: 'edify', title: `Invoice #4902 resolved — final payable £${finalPayable}`, detail: 'Credit note #CN-1042 applied, oat variance accepted, butter price approved', source: 'Invoices', threadId: t.id })
+    toast('Invoice #4902 resolved', `Final payable £${finalPayable}.`)
   }
 
   // control pays it: the thread gets the update through the same pendingSteps
@@ -388,7 +423,7 @@ export default function App() {
 
   // ---- Home data -----------------------------------------------------------
   const needsItems = [
-    ...(orderThread?.caseState === 'receiving' ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery ready to check in', why: `Order #2231 — 8 items, including ${60 + (orderThread.orderAdd ?? 20)} L oat milk.`, cta: 'Receive delivery' }] : []),
+    ...(['delivery_due', 'receiving'].includes(orderThread?.caseState) ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery is due now', why: 'Order #2231 · 8 items · expected Sat 07:30', cta: 'Receive delivery' }] : []),
     ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `£${((orderThread.diffLines || []).reduce((a, l) => a + l.value, 0) + 7.20).toFixed(2)}`, stakeUnit: 'over', threadId: orderThread.id, title: 'Invoice #4902 has differences to review', why: 'Edify proposed a resolution for each.', cta: 'Review' }] : []),
     ...BRIEF.needsCall.filter(i => !resolved.has(i.scenario) && !deferred[i.id] && !dismissed.has(i.id))
   ]
@@ -438,7 +473,7 @@ export default function App() {
       <div className="demo-ctl">
         {demoStage === 0 && <span className="demo-hint">Demo timeline — confirm Saturday's order to unlock</span>}
         {demoStage === 1 && <button className="demo-btn" onClick={fireDelivery}>⏩ Sat 07:30 — the van arrives</button>}
-        {demoStage === 1.5 && <span className="demo-hint">Receive the delivery in its case to continue</span>}
+        {(demoStage === 1.4 || demoStage === 1.5) && <span className="demo-hint">Receive the delivery in its case to continue</span>}
         {demoStage === 2 && <button className="demo-btn" onClick={fireInvoice}>⏩ Mon 06:40 — the invoice lands</button>}
         {gpThread && !countFired && <button className="demo-btn" onClick={fireCount}>⏩ Thu 18:05 — Marco closes the count</button>}
         {demoStage === 2.5 && <span className="demo-hint">Review the invoice in its case to continue</span>}
