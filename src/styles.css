@@ -1744,3 +1744,14 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* The last table row does not stack its own bottom padding on top of the
    body inset — every edge reads 16, same above and below. */
 .ac-body > :last-child { padding-bottom: 0; }
+
+/* TABLE LAW — one rhythm for every table in the prototype:
+   · 16px base: outer inset, and from row text to every divider;
+   · 8px between column names and the first row's content;
+   · borderless sub-rows use 8px padding (16 between rows);
+   · money the row commits to reads bold, like the total. */
+.change-row.ch-headrow { padding: 0 0 var(--sp-2); }
+.recv-headrow { padding: 0 0 var(--sp-2); }
+.ir-headrow { padding: var(--sp-4) 0 var(--sp-2); }
+.diff-table th { padding-bottom: var(--sp-2); }
+.change-row .ch-cost { font-weight: 600; }
