@@ -135,8 +135,8 @@ export function SpacePage({ spaceId }) {
       <h1>{s.name}</h1>
       <div className="j-sub">For Fitzroy Espresso.</div>
       <div className="space-body">
-        <p>This is where the full <b>{s.name}</b> screen lives — the tables, filters and forms for working manually, exactly as before.</p>
-        <p>The <b>Command Centre</b> (Home) sits alongside it: instead of clicking through here, you ask Edify — “<i>why is GP% down?</i>”, “<i>add 20 L oat milk to Saturday's order</i>”, “<i>set up a supplier</i>” — and it does the work, showing its reasoning and asking you to confirm.</p>
+        <p>This is where the full {s.name} screen lives — the tables, filters and forms for working manually, exactly as before.</p>
+        <p>The Command Centre (Home) sits alongside it: instead of clicking through here, you ask Edify — “<i>why is GP% down?</i>”, “<i>add 20 L oat milk to Saturday's order</i>”, “<i>set up a supplier</i>” — and it does the work, showing its reasoning and asking you to confirm.</p>
         <div className="space-hint">Static reference page in this prototype — the interactive flows live on Home.</div>
       </div>
     </div>

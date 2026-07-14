@@ -1966,3 +1966,24 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .change-row .ch-cost { font-weight: 500; }
 .change-row .ch-cost.quiet { font-weight: 400; }
 .ch-old { font-weight: 400; }
+
+/* ---- Count card rows: the same table language as the order card —
+   borderless rows, 11px quiet headers, values tabular, red Medium only
+   on the actual discrepancy. ---- */
+.cnt-row { display: grid; grid-template-columns: minmax(0, 1.1fr) 72px minmax(0, 1.3fr); gap: var(--sp-4); align-items: baseline; padding: var(--sp-4) 0; border-top: 1px solid var(--border); font-size: 13px; }
+.cnt-row.cnt-headrow { padding: var(--sp-4) 0 var(--sp-2); border-top: none; }
+.cnt-headrow span { font-size: 11px; font-weight: 400; color: var(--text-2); }
+.cnt-headrow + .cnt-row { border-top: none; padding-top: 0; }
+.cnt-val { text-align: right; font-variant-numeric: tabular-nums; }
+.cnt-basis { color: var(--text-2); }
+.cnt-delta { color: var(--accent); font-weight: 500; }
+
+/* Disclosure toggles read the same everywhere: Regular, quiet. */
+.ir-more .more-toggle, .diff-table .more-toggle { font-weight: 400; }
+
+/* Emphasis inside remaining tables: Medium, never bold. */
+.diff-table .em { font-weight: 500; }
+.diff-table .val-new, .diff-table .delta, .diff-table .flag { font-weight: 500; }
+.diff-table td b, .diff-table th b { font-weight: 500; }
+
+.how-docwrap { display: inline-flex; align-items: center; gap: var(--sp-2); }

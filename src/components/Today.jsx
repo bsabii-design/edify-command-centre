@@ -111,7 +111,7 @@ function DayBar({ deliveries }) {
         </button>
         {pop('delivery', <>
           {deliveries.map(d => (
-            <div key={d.id} className="ds-pop-body"><b>{d.name}</b> expected at <b>{d.when}</b>.</div>
+            <div key={d.id} className="ds-pop-body">{d.name} expected at {d.when}.</div>
           ))}
           <div className="ds-pop-body">Edify will ask you to confirm when it arrives.</div>
         </>)}
@@ -124,7 +124,7 @@ function DayBar({ deliveries }) {
           <span className="ds-num">{DAY.weatherDelta}, warmer</span>
         </button>
         {pop('demand', <>
-          <div className="ds-pop-body">Saturday is forecast <b>4°</b> warmer than usual. Expected higher iced drink and oat milk demand.</div>
+          <div className="ds-pop-body">Saturday is forecast 4° warmer than usual. Expected higher iced drink and oat milk demand.</div>
         </>)}
       </span>
 
@@ -138,7 +138,7 @@ function DayBar({ deliveries }) {
             <span className="ds-num">−{DAY.gpDrift} pts</span>
           </button>
           {pop('gp', <>
-            <div className="ds-pop-body">GP is tracking <b>3.3 pts</b> below average. Clearest checks: Bidfood invoice and whole milk count.</div>
+            <div className="ds-pop-body">GP is tracking 3.3 pts below average. Clearest checks: Bidfood invoice and whole milk count.</div>
           </>)}
         </span>
       )}

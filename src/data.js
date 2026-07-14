@@ -35,6 +35,36 @@ export const WORKING_TEXT = {
   default: "From the live data this card touches — POS, orders, invoices and counts. Ask about any number on it and I'll trace that one."
 }
 
+// Invoice #4821 reconciles to the £13.40 difference:
+//   cream short 2 × £3.10 = £6.20  +  butter 24 × £0.30 (the +6.2%) = £7.20
+export const INVOICE2_LINES = [
+  { kind: 'qty', name: 'Double cream 2 L', amount: 6.20, resolution: 'credit',
+    invoiced: 6, received: 4, short: 2, unit: 'pc', billedQty: '6 pc', receivedQty: '4 pc' },
+  { kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
+    billedPrice: '£5.15', expectedPrice: '£4.85', qtyStr: '24 packs', packs: 24 }
+]
+export const INVOICE2_MATCHED = [
+  { name: 'Whole milk', qty: 48, unit: 'L', price: 0.96 },
+  { name: 'Oatly Barista oat milk', qty: 60, unit: 'L', price: 1.42 },
+  { name: 'Free-range eggs', qty: 6, unit: 'trays', price: 6.80 },
+  { name: 'Sourdough loaf, sliced', qty: 18, unit: 'pc', price: 2.40 },
+  { name: 'Hass avocado', qty: 40, unit: 'pc', price: 0.85 },
+  { name: 'Espresso blend', qty: 12, unit: 'kg', price: 18.20 }
+]
+
+// One closing line for any confirmed invoice: name what Edify now waits for.
+export const invoiceWaitingLine = (p) => {
+  const lines = p?.lines || []
+  const spoken = (n) => n.replace(/ \d+\s?(g|kg|ml|L)$/, '')
+  const bits = [
+    ...lines.filter(l => l.resolution === 'credit').map(l => `the ${spoken(l.name)} credit`),
+    ...lines.filter(l => l.resolution === 'confirmPrice').map(l => `${spoken(l.name)} price confirmation`),
+  ]
+  if (!bits.length) return [{ type: 'assistant', text: 'Every line has a final state — the invoice can close.' }]
+  const list = bits.length === 1 ? bits[0] : `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}`
+  return [{ type: 'assistant', text: `Waiting for ${list}.` }]
+}
+
 export const SCENARIOS = {
   cutoff: {
     id: 'cutoff',
@@ -83,17 +113,7 @@ export const SCENARIOS = {
       receipt: (p) => [{ type: 'assistant', text: p && p.diffs > 0
         ? `I'll check ${p.diffs === 1 ? 'this' : 'these'} against Bidfood's invoice when it arrives.`
         : "I'll match the invoice when it arrives." }],
-      invoiceResolutions: (p) => {
-        const lines = p?.lines || []
-        const spoken = (n) => n.replace(/ \d+\s?(g|kg|ml|L)$/, '')
-        const bits = [
-          ...lines.filter(l => l.resolution === 'credit').map(l => `the ${spoken(l.name)} credit`),
-          ...lines.filter(l => l.resolution === 'confirmPrice').map(l => `${spoken(l.name)} price confirmation`),
-        ]
-        if (!bits.length) return [{ type: 'assistant', text: 'Every line has a final state — the invoice can close.' }]
-        const list = bits.length === 1 ? bits[0] : `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}`
-        return [{ type: 'assistant', text: `Waiting for ${list}.` }]
-      },
+      invoiceResolutions: (p) => invoiceWaitingLine(p),
       receiveStart: () => []
     }
   },
@@ -135,25 +155,11 @@ export const SCENARIOS = {
     sub: "Thursday's delivery — needs review",
     userText: 'Review Bidfood invoice #4821',
     steps: [
-      { type: 'assistant', text: "Bidfood invoice **#4821** is **£13.40** higher than Thursday's delivery record. I compared the invoice with the delivery note signed by Marco at 08:05. Two items need review — I've prepared a resolution for each, you just confirm:" },
-      { type: 'card', card: 'invoiceMatch' }
+      { type: 'assistant', text: "Bidfood invoice **#4821** is **£13.40** higher than Thursday's delivery record. I found **2 differences** and proposed an action for each." },
+      { type: 'card', card: 'invoiceClose', data: { num: '#4821', noteLabel: "Thursday's delivery note", expLabel: 'Expected from delivery', invoiced: 1249.60, lines: INVOICE2_LINES, matched: INVOICE2_MATCHED } }
     ],
     resolutions: {
-      invoiceConfirm: (p) => {
-        const c = p?.choices || {}
-        const cream = c['Double cream 2 L'] || 'Request credit note'
-        const butter = c['Butter 250 g'] || 'Ask supplier to confirm'
-        const bothAccepted = /Accept/.test(cream) && /Accept/.test(butter)
-        if (bothAccepted) {
-          return [{ type: 'assistant', text: "Done — invoice **#4821** approved and passed for payment as charged. I've noted the butter is now £5.15 — nothing else changed." }]
-        }
-        const creamBit = /later/.test(cream) ? 'marked the 2 Double cream as coming in a later delivery'
-          : /Accept/.test(cream) ? 'accepted the Double cream as charged'
-          : 'asked Bidfood for a credit note on the 2 missing Double cream'
-        const butterBit = /Accept/.test(butter) ? 'updated the butter to £5.15 for future orders'
-          : 'sent the butter price difference to Bidfood to confirm'
-        return [{ type: 'assistant', text: `Done — I've ${creamBit}, and ${butterBit}. Invoice **#4821** is now waiting for supplier — I'll chase it if nothing comes back by **Friday**, and I haven't changed any prices in the meantime.` }]
-      }
+      invoiceResolutions: (p) => invoiceWaitingLine(p)
     }
   },
 
@@ -206,23 +212,6 @@ export const BASKET = [
   { name: 'Sourdough loaf, sliced', sub: 'Fitzroy Bakehouse', qty: 18, unit: 'pc', price: 3.40, cat: 'bakery' },
   { name: 'Hass avocado', sub: 'Spanish, in season', qty: 40, unit: 'pc', price: 0.68, cat: 'green' },
   { name: 'Espresso blend', sub: '1 kg bag', qty: 12, unit: 'kg', price: 18.20, cat: 'coffee' }
-]
-
-// Charged − received reconciles to the £13.40 difference:
-//   cream short 2 × £3.10 = £6.20  +  butter 24 × £0.30 (the +6.2%) = £7.20
-export const INVOICE_TOTALS = { charged: '£1,249.60', received: '£1,236.20', difference: '£13.40', items: 2 }
-
-export const INVOICE_LINES = [
-  { name: 'Double cream 2 L', charged: '6 × £3.10', received: '4 × £3.10', diff: 'Short by 2', bad: true,
-    kind: 'short', issue: '2 units were charged but not received.',
-    resolution: 'Request credit note from Bidfood',
-    options: ['Request credit note', 'It’s coming later', 'Accept as charged'] },
-  { name: 'Butter 250 g', charged: '24 × £5.15', received: '24 × £4.85', diff: 'Price +6.2%', bad: true,
-    kind: 'price', issue: 'Invoice price is 6.2% above the expected price.',
-    resolution: 'Ask Bidfood to confirm the price difference',
-    options: ['Ask supplier to confirm', 'Accept new price', 'Hold for supplier review'] },
-  { name: 'Whole milk 2 L', charged: '48 × £0.96', received: '48 × £0.96', diff: null },
-  { name: 'Oatly Barista 1 L', charged: '60 × £1.42', received: '60 × £1.42', diff: null }
 ]
 
 // Lines to check in on Saturday morning (the interactive slice of 8).

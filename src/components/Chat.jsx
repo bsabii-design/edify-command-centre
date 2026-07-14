@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SCENARIOS, WORKING_TEXT, PROMISE, cutoffLabel } from '../data.js'
 import { useStream } from '../hooks.js'
 import {
-  OrderDiffCard, GpCard, InvoiceCard, CountFixCard, ReceivingCard, InvoiceCloseCard, DeliveryDueCard,
+  OrderDiffCard, GpCard, CountFixCard, ReceivingCard, InvoiceCloseCard, DeliveryDueCard,
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
@@ -64,12 +64,6 @@ const WORKING_STEPS = {
     { t: 'Forecast demand', r: '74–81 L' },
     { t: 'Current order', r: '60 L' }
   ],
-  invoiceMatch: [
-    { t: 'Opening invoice #4821', r: '£1,249.60' },
-    { t: 'Comparing with the delivery note', r: 'signed 08:05' },
-    { t: 'Checking quantities and expected prices', r: '2 differences' },
-    { t: 'Preparing a resolution' }
-  ],
   gpBreakdown: [
     { t: 'Pulling POS sales for the week', r: '4,182 sales' },
     { t: 'Recosting recipes against invoices', r: 'version 214' },
@@ -101,25 +95,34 @@ const WORKING_STEPS = {
 
 // The invoice fold answers three questions in three lines: which records,
 // how the expected amount was built, what the comparison found. Only the
-// document names are clickable — sentences stay plain.
-const WORKING_CUSTOM = {
-  invoiceClose: (
-    <>
-      <div className="how-line">Compared with:</div>
-      <div className="how-docs">
-        <button className="how-doc">Order #2231<ExtLink size={12} /></button>
-        <span className="how-sep">·</span>
-        <button className="how-doc">Delivery note #912<ExtLink size={12} /></button>
-        <span className="how-sep">·</span>
-        <button className="how-doc">Bidfood price list<ExtLink size={12} /></button>
-      </div>
-      <div className="how-line">Expected from receipt uses received quantities and saved Bidfood prices.</div>
-      <div className="how-line">6 of 8 lines matched. <span className="how-strong">2 need review.</span></div>
-    </>
-  )
+// document names are clickable — sentences stay plain. The records differ
+// per case; the shape never does.
+const FOLD_DOCS = {
+  delivery: ['Order #2231', 'Delivery note #912', 'Bidfood price list'],
+  invoice: ["Thursday's delivery note", 'Bidfood price list']
 }
+const FOLD_CALC = {
+  delivery: 'Expected from receipt uses received quantities and saved Bidfood prices.',
+  invoice: 'Expected from delivery uses the quantities Marco signed for and saved Bidfood prices.'
+}
+const foldBody = (sc) => (
+  <>
+    <div className="how-line">Compared with:</div>
+    <div className="how-docs">
+      {(FOLD_DOCS[sc] || FOLD_DOCS.delivery).map((d, i) => (
+        <span key={d} className="how-docwrap">
+          {i > 0 && <span className="how-sep">·</span>}
+          <button className="how-doc">{d}<ExtLink size={12} /></button>
+        </span>
+      ))}
+    </div>
+    <div className="how-line">{FOLD_CALC[sc] || FOLD_CALC.delivery}</div>
+    <div className="how-line">6 of 8 lines matched. <span className="how-strong">2 need review.</span></div>
+  </>
+)
+const WORKING_CUSTOM = { invoiceClose: foldBody }
 
-function WorkingSteps({ steps, done, label, card }) {
+function WorkingSteps({ steps, done, label, card, sc }) {
   const settled = done >= steps.length
   // Granola-style: while working, ONE live line names the source being read
   // right now. When the card lands it becomes a quiet collapsed line; opening
@@ -147,7 +150,7 @@ function WorkingSteps({ steps, done, label, card }) {
           <motion.div key="list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease }} style={{ overflow: 'hidden' }}>
             <div className="wsrc-list">
-              {WORKING_CUSTOM[card] || steps.map((s, i) => {
+              {WORKING_CUSTOM[card] ? WORKING_CUSTOM[card](sc) : steps.map((s, i) => {
                 const step = typeof s === 'string' ? { t: s } : s
                 return (
                   <div key={i} className="wsrc">
@@ -170,15 +173,15 @@ const WORKING_LABELS = {}
 
 
 const CARD_MAP = {
-  orderDiff: OrderDiffCard, gpBreakdown: GpCard, invoiceMatch: InvoiceCard, countFix: CountFixCard, muffinPlan: MuffinCard,
+  orderDiff: OrderDiffCard, gpBreakdown: GpCard, countFix: CountFixCard, muffinPlan: MuffinCard,
   receiving: ReceivingCard, invoiceClose: InvoiceCloseCard, deliveryDue: DeliveryDueCard,
   supplierAdd: SupplierAddCard, supplierDraft: SupplierDraftCard,
   supplierUpdate: SupplierUpdateCard
 }
 const SUPPLIER_CARD = new Set(['supplierAdd', 'supplierDraft', 'supplierUpdate'])
 const CARD_TITLES = {
-  orderDiff: "Saturday's order change", receiving: 'Delivery check-in', invoiceMatch: 'Invoice #4821',
-  invoiceClose: 'Invoice #4902', countFix: 'Whole milk count', muffinPlan: "Monday's muffin bake",
+  orderDiff: "Saturday's order change", receiving: 'Delivery check-in',
+  invoiceClose: 'Invoice', countFix: 'Whole milk count', muffinPlan: "Monday's muffin bake",
   supplierAdd: 'Supplier setup', supplierDraft: 'Supplier draft', supplierUpdate: 'Supplier update'
 }
 
@@ -187,7 +190,11 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
   // open, and folds away with the card once the case is settled.
   // Revisits show the thread exactly as it was left — evidence folds and
   // confirmed cards included. Nothing collapses behind a hover.
-  const [entries, setEntries] = useState(() => thread.entries || [])
+  // A working entry can be persisted mid-tick (leave the thread while the
+  // spinner runs) — on revisit it settles into the evidence fold instead of
+  // spinning forever.
+  const [entries, setEntries] = useState(() => (thread.entries || []).map(e =>
+    e.kind === 'working' && e.done < (e.steps || []).length ? { ...e, done: (e.steps || []).length } : e))
   const [thinking, setThinking] = useState(false)
   const [thinkingLabel, setThinkingLabel] = useState('Edify is checking…')
   const [supplierFlow, setSupplierFlow] = useState(thread.supplierFlow || { action: 'add', phase: 'awaiting_name' })
@@ -245,7 +252,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       // Show Edify doing the work, one step at a time, then hand over the card.
       const wid = nid()
       setTimeout(() => {
-        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card], card: step.card }])
+        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card], card: step.card, sc: step.scenarioId }])
         let i = 0
         const tick = () => {
           i += 1
@@ -419,7 +426,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
     if (action === 'openMuffins') { handleSend("Trim Monday's muffin bake"); return }
     const sc = SCENARIOS[entry.scenarioId]
     const statusByAction = {
-      confirm: { status: 'applied' }, decline: { status: 'declined' }, invoiceConfirm: { status: 'applied' },
+      confirm: { status: 'applied' }, decline: { status: 'declined' },
       muffinConfirm: { status: 'applied' }, muffinKeep: { status: 'declined' },
       recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' }, countCorrect: { status: 'applied', choice: 'countCorrect' },
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
@@ -591,7 +598,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                 }
                 if (e.kind === 'working') return (
                   <motion.div key={e.id} className="msg" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} card={e.card} />
+                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} card={e.card} sc={e.sc} />
                   </motion.div>
                 )
                 if (e.kind === 'supplierPick') {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { INVOICE_LINES, INVOICE_TOTALS, RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
+import { RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
 import { CURRENT_SITE, WEEK_DAYS, formatDays } from '../suppliers.js'
 import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Doc, ExtLink } from './Icons.jsx'
 
@@ -256,7 +256,7 @@ export function GpCard({ entry, resolve }) {
             <div>
               <div className="un-title">One number here is a range, not a fact</div>
               <div className="un-body">
-                Thursday's stocktake at <b>Hub kitchen</b> — our prep site — is still open, so I can't split the
+                Thursday's stocktake at Hub kitchen — our prep site — is still open, so I can't split the
                 unexplained −0.7 pts between real waste and a counting error. Until it closes, read it as −0.3 to −1.1 pts.
               </div>
               {/* No button: closing the count is the stocktake's job, not this
@@ -267,119 +267,6 @@ export function GpCard({ entry, resolve }) {
             </div>
           </div>
         )}
-      </div>
-    </Card>
-  )
-}
-
-// ---------- Invoice review (decision flow) --------------------------------
-function receiptLine(name, choice) {
-  if (name === 'Double cream 2 L') {
-    if (/later/.test(choice)) return '2 Double cream logged as coming in a later delivery'
-    if (/Accept/.test(choice)) return 'Double cream accepted as charged'
-    return 'Credit note requested for 2 missing Double cream units'
-  }
-  if (/Accept/.test(choice)) return 'Butter expected price updated to £5.15'
-  if (/Hold/.test(choice)) return 'Butter price held for supplier review'
-  return 'Butter price difference sent to Bidfood for confirmation'
-}
-
-export function InvoiceCard({ entry, patch, resolve }) {
-  const { status = 'proposed', changing = false, showMatched = false, choices = {} } = entry.data || {}
-  const flagged = INVOICE_LINES.filter(l => l.bad)
-  const matched = INVOICE_LINES.filter(l => !l.bad)
-  const chosen = (l) => choices[l.name] || l.options[0]
-  const pickOption = (name, opt) => patch({ choices: { ...choices, [name]: opt } })
-
-  if (status === 'applied') {
-    const bothAccepted = flagged.every(l => /Accept/.test(chosen(l)))
-    return (
-      <Card>
-        <CardHead title="Bidfood invoice #4821 — resolved"
-          sub="Compared with delivery note signed by Marco, Thu 08:05" status="applied" />
-        <div className="ac-body">
-          <ul className="ac-receipt-list">
-            {flagged.map(l => <li key={l.name}>{receiptLine(l.name, chosen(l))}</li>)}
-            <li>{/Accept new price/.test(chosen(flagged[1])) ? 'Butter price updated for future orders' : 'No supplier prices were updated'}</li>
-          </ul>
-        </div>
-        <ConfirmStrip label="Resolution confirmed"
-          sub={bothAccepted ? 'Invoice approved and passed for payment' : 'Invoice moved to Waiting for supplier'} />
-      </Card>
-    )
-  }
-
-  return (
-    <Card>
-      <CardHead title="Bidfood invoice #4821 needs review"
-        sub="Compared with delivery note signed by Marco, Thu 08:05" status="attention" />
-      <div className="ac-body">
-        <div className="compare-cols three">
-          <div className="compare-col">
-            <div className="cc-head">Supplier charged</div>
-            <div className="cc-total">{INVOICE_TOTALS.charged}</div>
-            <div className="cc-sub">arrived overnight</div>
-          </div>
-          <div className="compare-col">
-            <div className="cc-head">Delivery received</div>
-            <div className="cc-total">{INVOICE_TOTALS.received}</div>
-            <div className="cc-sub">delivery note, Thu 08:05</div>
-          </div>
-          <div className="compare-col flagged">
-            <div className="cc-head">Difference</div>
-            <div className="cc-total">{INVOICE_TOTALS.difference}</div>
-            <div className="cc-sub">across {INVOICE_TOTALS.items} items</div>
-          </div>
-        </div>
-        <table className="diff-table fixed">
-          <colgroup><col style={{ width: '30%' }} /><col style={{ width: '22%' }} /><col style={{ width: '26%' }} /><col style={{ width: '22%' }} /></colgroup>
-          <thead><tr><th>Item</th><th className="num">Charged</th><th className="num">Received / expected</th><th className="num">Difference</th></tr></thead>
-          <tbody>
-            {flagged.map((l, i) => (
-              <tr key={i} className="mismatch">
-                <td><b>{l.name}</b></td>
-                <td className="num">{l.charged}</td>
-                <td className="num">{l.received}</td>
-                <td className="num"><span className="flag">{l.diff}</span></td>
-              </tr>
-            ))}
-            <tr className="more-row" onClick={() => patch({ showMatched: !showMatched })}>
-              <td colSpan={4}><span className="more-toggle"><Chevron size={16} style={{ transform: showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} />{showMatched ? 'Hide matched items' : `${matched.length} other items matched`}</span></td>
-            </tr>
-            {showMatched && matched.map((l, i) => (
-              <tr key={`m${i}`} className="sub-row">
-                <td className="muted">{l.name}</td>
-                <td className="num muted">{l.charged}</td>
-                <td className="num muted">{l.received}</td>
-                <td className="num muted">—</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="resolution-block">
-        <div className="card-helper">Edify prepared a resolution for each difference. Nothing changes until you confirm.</div>
-        {flagged.map((l, i) => (
-          <div key={i} className="res-item">
-            <span className="res-num">{i + 1}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="res-name">{l.name}</div>
-              <div className="res-issue">{l.issue}</div>
-              <div className="res-action"><span className="res-label">Resolution</span> {chosen(l)}</div>
-              {changing && (
-                <div className="res-options">
-                  {l.options.map(opt => (
-                    <button key={opt} className={`seg-btn ${chosen(l) === opt ? 'on' : ''}`} onClick={() => pickOption(l.name, opt)}>{opt}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="ac-footer">
-        <button className="btn btn-primary" onClick={() => resolve('invoiceConfirm', { choices })}>Confirm resolution</button>
-        <button className="btn btn-secondary" onClick={() => patch({ changing: !changing })}>{changing ? 'Done' : 'Change resolution'}</button>
       </div>
     </Card>
   )
@@ -563,6 +450,9 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
   const lines = d.lines || []
   const n = lines.length
   const invoiced = d.invoiced ?? 1269
+  const num = d.num || '#4902'
+  const noteLabel = d.noteLabel || 'delivery note #912'
+  const expLabel = d.expLabel || 'Expected from receipt'
   // Before confirmation the summary describes the SOURCE data — dropdown
   // changes never move the totals. Only a confirmed correction does.
   const totalDiff = lines.reduce((a, l) => a + l.amount, 0)
@@ -578,7 +468,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       <div className="ac-head">
         <button className="doc-title" onClick={() => {}}>
           <Doc size={16} className="doc-ico" />
-          <span className="doc-name">Bidfood invoice #4902</span>
+          <span className="doc-name">Bidfood invoice {num}</span>
           <ExtLink size={12} className="doc-ext" />
         </button>
       </div>
@@ -590,7 +480,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           </div>
           {status === 'proposed' ? (<>
             <div className="compare-col">
-              <div className="cc-head">Expected from receipt</div>
+              <div className="cc-head">{expLabel}</div>
               <div className="cc-total">£{expected.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
             </div>
             <div className="compare-col flagged">
@@ -632,7 +522,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
                     {l.receivedQty} → <input className="ir-num" value={l.corrected ?? l.invoiced} inputMode="numeric"
                       onChange={e => { const v = parseInt(e.target.value.replace(/\D/g, ''), 10); setLine(i, { corrected: isNaN(v) ? 0 : v }) }} /> {l.unit}
                   </div>
-                  <div className="res-note">Updates delivery note #912 and stock.</div>
+                  <div className="res-note">Updates {noteLabel} and stock.</div>
                 </>) : (
                   <div className="res-note">{consequence(l)}</div>
                 )}
@@ -687,40 +577,68 @@ export function DeliveryDueCard({ resolve }) {
 }
 
 // ---------- Count fix --------------------------------------------------
+// Same object pattern as the order card: facts in borderless rows, the
+// proposed correction editable inline, and a confirmed card that keeps a
+// summary footer with the details behind View details.
 export function CountFixCard({ entry, resolve, patch }) {
-  // Facts are read-only; the proposed corrected count is editable inline.
   const { status = 'proposed', choice, corrected = 8, accepting = false } = entry.data || {}
   const setQty = (q) => patch({ corrected: Math.max(0, Math.min(999, q)) })
+  const expanded = !!(entry.data || {}).expanded
+  const rowsInner = (<>
+    <div className="cnt-row cnt-headrow"><span>Figure</span><span className="cnt-val">Value</span><span>Basis</span></div>
+    <div className="cnt-row"><span>Opening stock</span><span className="cnt-val">39 L</span><span className="cnt-basis">Thursday delivery + carry-over</span></div>
+    <div className="cnt-row"><span>POS recipe usage</span><span className="cnt-val">−31 L</span><span className="cnt-basis">418 milk-based drinks sold</span></div>
+    <div className="cnt-row"><span>Expected closing stock</span><span className="cnt-val">8 L</span><span className="cnt-basis">Sales and recipes</span></div>
+    <div className="cnt-row"><span>Posted closing count</span><span className="cnt-val">22 L</span><span className="cnt-basis"><span className="cnt-delta">+14 L vs expected</span></span></div>
+  </>)
+  if (status === 'applied') {
+    const heads = { recount: 'Recount requested', acceptCount: 'Posted count accepted' }
+    const sums = {
+      recount: ["Recount added to tonight's closing checklist", 'The posted 22 L stays provisional until checked.'],
+      acceptCount: ['Posted count accepted — 22 L stands', 'The +14 L difference now counts in GP and variance.']
+    }
+    const title = heads[choice] || 'Count corrected'
+    const [sumFirst, sumQuiet] = sums[choice] || [`Closing count corrected — 22 L → ${corrected} L`, 'GP and variance use the corrected value.']
+    return (
+      <Card>
+        <CardHead title={title} sub="Whole milk · Fitzroy Espresso · posted 07:20"
+          action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }} style={{ overflow: 'hidden' }}>
+              <div className="ac-body">{rowsInner}</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <div className="ac-body confirmed-summary">
+          <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>{sumFirst}</div>
+          <div className="sum-line quiet">{sumQuiet}</div>
+        </div>
+      </Card>
+    )
+  }
   return (
     <Card>
       <CardHead title="Whole milk count looks too high"
         sub="Fitzroy Espresso · posted by Aisha at 07:20" />
       <div className="ac-body">
-        <table className="diff-table fixed">
-          <colgroup><col style={{ width: '36%' }} /><col style={{ width: '20%' }} /><col style={{ width: '44%' }} /></colgroup>
-          <thead><tr><th>Figure</th><th className="num">Value</th><th>Basis</th></tr></thead>
-          <tbody>
-            <tr><td>Opening stock</td><td className="num">39 L</td><td className="muted">Thursday delivery + carry-over</td></tr>
-            <tr><td>POS recipe usage</td><td className="num">−31 L</td><td className="muted">418 milk-based drinks sold</td></tr>
-            <tr><td>Expected closing stock</td><td className="num"><b>8 L</b></td><td className="muted">Based on sales and recipes</td></tr>
-            <tr><td><b>Posted closing count</b></td><td className="num"><b>22 L</b></td><td><span className="flag">+14 L vs expected</span></td></tr>
-          </tbody>
-        </table>
+        {rowsInner}
         <div className="card-helper">The posted count remains provisional until you confirm.</div>
         <div className="prop-line">
           <span className="prop-label">Proposed correction — use closing count:</span>
           <span className="stepper sm">
-            <button onClick={() => setQty(corrected - 1)} aria-label="Less" disabled={status !== 'proposed'}><Minus size={16} /></button>
+            <button onClick={() => setQty(corrected - 1)} aria-label="Less"><Minus size={16} /></button>
             <span className="step-value">
-              <input className="step-input" value={corrected} inputMode="numeric" disabled={status !== 'proposed'}
+              <input className="step-input" value={corrected} inputMode="numeric"
                 onChange={e => { const v = parseInt(e.target.value.replace(/\D/g, ''), 10); setQty(isNaN(v) ? 0 : v) }} />
               <span className="unit">L</span>
             </span>
-            <button onClick={() => setQty(corrected + 1)} aria-label="More" disabled={status !== 'proposed'}><Plus size={16} /></button>
+            <button onClick={() => setQty(corrected + 1)} aria-label="More"><Plus size={16} /></button>
           </span>
         </div>
       </div>
-      {status === 'proposed' && !accepting && (
+      {!accepting && (
         <div className="ac-footer">
           <button className="btn btn-primary" onClick={() => resolve('countCorrect', { corrected })}>Confirm correction</button>
           <button className="btn btn-secondary" onClick={() => resolve('recount')}>Request recount</button>
@@ -728,24 +646,15 @@ export function CountFixCard({ entry, resolve, patch }) {
           <button className="done-action" onClick={() => patch({ accepting: true })}>Accept posted count</button>
         </div>
       )}
-      {status === 'proposed' && accepting && (
+      {accepting && (
         <div className="ir-confirm">
           <div className="cs-title">Accept the posted count of 22 L?</div>
-          <div className="cs-body">This confirms yesterday's count as correct. The +14 L difference goes into GP% and variance as real.</div>
+          <div className="cs-body">This confirms yesterday's count as correct. The +14 L difference goes into GP and variance as real.</div>
           <div className="ir-confirm-actions">
             <button className="btn btn-primary" onClick={() => resolve('acceptCount')}>Accept posted count</button>
             <button className="btn btn-secondary" onClick={() => patch({ accepting: false })}>Cancel</button>
           </div>
         </div>
-      )}
-      {status === 'applied' && (
-        <ConfirmStrip
-          label={choice === 'recount' ? 'Recount requested' : choice === 'acceptCount' ? 'Posted count accepted' : 'Count corrected'}
-          sub={choice === 'recount'
-            ? "Added to tonight's closing checklist. The posted 22 L stays provisional until checked."
-            : choice === 'acceptCount'
-            ? 'The 22 L stands. The +14 L difference now counts in GP and variance.'
-            : `Closing count set to ${corrected} L. GP and variance now use the corrected value.`} />
       )}
     </Card>
   )
@@ -768,8 +677,8 @@ export function MuffinCard({ entry, resolve }) {
           <thead><tr><th>Plan</th><th className="num">Muffins</th><th>Basis</th></tr></thead>
           <tbody>
             <tr><td>Current plan</td><td className="num">12</td><td className="muted">Same as every Monday</td></tr>
-            <tr><td>Sold on a typical Monday</td><td className="num"><b>6–7</b></td><td className="muted">POS, last 4 Mondays</td></tr>
-            <tr className="mismatch"><td><b>Proposed plan</b></td><td className="num"><b>8</b></td><td><span className="delta">Saves ~£3/week</span></td></tr>
+            <tr><td>Sold on a typical Monday</td><td className="num"><span className="em">6–7</span></td><td className="muted">POS, last 4 Mondays</td></tr>
+            <tr className="mismatch"><td><span className="em">Proposed plan</span></td><td className="num"><span className="em">8</span></td><td><span className="delta">Saves ~£3/week</span></td></tr>
           </tbody>
         </table>
         <div className="ac-note">If Monday sells out before 15:00, I'll flag it and suggest putting two back — this isn't one-way.</div>

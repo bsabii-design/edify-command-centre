@@ -121,24 +121,27 @@ export default function App() {
         setInterrupt(null)
         const lines = payload?.lines || []
         const unresolved = payload?.unresolved ?? 0
+        const num = scenarioId === 'invoice' ? '#4821' : '#4902'
+        const noteRef = scenarioId === 'invoice' ? "Thursday's delivery note" : 'Delivery note #912'
         const detailFor = (l) => {
           switch (l.resolution) {
             case 'credit': return `£${l.amount.toFixed(2)} credit requested for ${l.name}`
             case 'accept': return `£${l.amount.toFixed(2)} ${l.name} charge accepted as a cost variance`
-            case 'correctReceipt': return `Delivery note #912 corrected — ${l.name} ${l.received} → ${l.corrected ?? l.invoiced} ${l.unit}`
+            case 'correctReceipt': return `${noteRef} corrected — ${l.name} ${l.received} → ${l.corrected ?? l.invoiced} ${l.unit}`
             default: return `${l.name} price confirmation emailed to Bidfood`
           }
         }
         const detail = lines.map(detailFor).join(' · ')
         // The prototype ends here: Edify would keep each unresolved line open
         // and connect Bidfood's replies to this same invoice case.
-        patchThread(threadId, { caseState: 'awaiting_credit', unresolvedAmt: unresolved })
+        if (scenarioId === 'invoice') markResolved('invoice')
+        else patchThread(threadId, { caseState: 'awaiting_credit', unresolvedAmt: unresolved })
         if (unresolved > 0) {
-          setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · £${unresolved.toFixed(2)} unresolved`, helper: "Waiting for Bidfood's reply", status: 'Waiting', chip: 'by Wed', threadId }])
+          setWatching(w => [...w, { id: 'wcredit' + num, title: `Bidfood invoice ${num}`, sub: `Fitzroy Espresso · £${unresolved.toFixed(2)} unresolved`, helper: "Waiting for Bidfood's reply", status: 'Waiting', chip: 'by Wed', threadId }])
         }
-        J('action', 'you', 'Invoice #4902 changes confirmed', detail, 'Invoices')
+        J('action', 'you', `Invoice ${num} changes confirmed`, detail, 'Invoices')
         if (lines.some(l => l.resolution === 'confirmPrice')) {
-          J('action', 'you', 'Supplier price confirmation requested by Priya', 'Sent to accounts@bidfood.co.uk by Edify — the reply stays linked to invoice #4902', 'Invoices')
+          J('action', 'you', 'Supplier price confirmation requested by Priya', `Sent to accounts@bidfood.co.uk by Edify — the reply stays linked to invoice ${num}`, 'Invoices')
         }
         toast('Changes confirmed', unresolved > 0 ? `Invoice remains open — £${unresolved.toFixed(2)} unresolved.` : 'Every line has a final state.')
         break
@@ -149,22 +152,6 @@ export default function App() {
         J('action', 'you', 'Saturday order case closed — invoice #4902 posted net £1,266.16', 'Order → +20 L change → delivery (2 L short) → credit → invoice: one thread', 'Case — Saturday order')
         toast('Case closed', 'Order, delivery and invoice settled in one decision', { label: 'Journal', fn: () => setView('journal') })
         break
-      case 'invoiceConfirm': {
-        markResolved(scenarioId)
-        const c = payload?.choices || {}
-        const cream = c['Double cream 2 L'] || 'Request credit note'
-        const butter = c['Butter 250 g'] || 'Ask supplier to confirm'
-        const bothAccepted = /Accept/.test(cream) && /Accept/.test(butter)
-        if (bothAccepted) {
-          J('action', 'you', 'Invoice #4821 approved and passed for payment', 'Both differences accepted as charged — butter now £5.15', 'Case — Invoice #4821')
-          toast('Invoice approved', 'Passed for payment as charged')
-        } else {
-          setWatching(w => [...w, { id: 'w4821', title: 'Invoice #4821 — Bidfood', sub: 'Waiting for supplier — sent back to Bidfood', chip: 'by Fri', threadId }])
-          J('action', 'you', 'Invoice #4821 resolution confirmed — waiting for supplier', 'Credit note requested for 2 Double cream, butter price sent to Bidfood to confirm — no prices changed', 'Case — Invoice #4821')
-          toast('Sent to Bidfood', 'Invoice #4821 is now waiting for supplier')
-        }
-        break
-      }
       case 'muffinConfirm':
         markResolved('muffins')
         setWatching(w => [...w, { id: 'wmuffin', title: "Monday's muffin bake — Hub kitchen", sub: 'Plan updated to 8 — watching Monday sell-through', chip: 'Mon', threadId }])
