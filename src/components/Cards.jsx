@@ -158,7 +158,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
           <button className="btn btn-secondary" disabled={!!confirming} onClick={() => resolve('decline')}>Keep as is</button>
         </div>
       </>)}
-      {status === 'applied' && <ConfirmStrip label="Order sent to Bidfood"
+      {status === 'applied' && <ConfirmStrip label="Order #2231 sent to Bidfood"
         sub={<>{newQty} L oat milk added. Accepted {(entry.data || {}).acceptedAt || '22:31'}. Delivery Sat 07:30.</>}
         action={{ label: 'View order', fn: () => {} }} />}
       {status === 'declined' && <KeptStrip label="No changes made — Saturday's order stays at 60 L of oat milk" />}
