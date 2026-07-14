@@ -474,13 +474,17 @@ const QTY_OPTIONS = [
   ['accept', 'Accept difference'],
   ['hold', 'Hold for supplier review']
 ]
+// Priya can contact suppliers through Edify, but future supplier prices
+// change only through head-office approval — so a price line offers
+// exactly two moves, and neither touches expected prices directly.
 const PRICE_OPTIONS = [
   ['confirmPrice', 'Confirm price with supplier'],
-  ['acceptOnce', 'Accept price once'],
-  ['updateExpected', 'Update expected price'],
-  ['creditDiff', 'Request price credit'],
-  ['holdLine', 'Hold line']
+  ['sendApproval', 'Send price change for approval']
 ]
+const PRICE_HELPERS = {
+  confirmPrice: 'Will be emailed to accounts@bidfood.co.uk. The reply will stay linked to invoice #4902.',
+  sendApproval: 'Head office will review the new price and its impact on recipe costs and GP.'
+}
 const resLabel = (line) => {
   const opts = line.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS
   return (opts.find(o => o[0] === line.resolution) || opts[0])[1]
@@ -496,10 +500,10 @@ const invoiceOutcome = (lines) => {
   const credits = lines.filter(l => l.resolution === 'credit' || l.resolution === 'creditDiff').map(l => spokenName(l.name))
   if (credits.length) parts.push(`Credit note${credits.length === 1 ? '' : 's'} requested for ${joinAnd(credits)}.`)
   lines.forEach(l => {
-    if (l.resolution === 'confirmPrice') parts.push(`${spokenName(l.name)} price difference sent to Bidfood for confirmation.`)
-    if (l.resolution === 'accept' || l.resolution === 'acceptOnce') parts.push(`${spokenName(l.name)} difference accepted.`)
-    if (l.resolution === 'updateExpected') parts.push(`Expected price for ${spokenName(l.name)} updated.`)
-    if (l.resolution === 'hold' || l.resolution === 'holdLine') parts.push(`${spokenName(l.name)} held for supplier review.`)
+    if (l.resolution === 'confirmPrice') parts.push(`${spokenName(l.name)} price confirmation sent to accounts@bidfood.co.uk.`)
+    if (l.resolution === 'sendApproval') parts.push(`${spokenName(l.name)} price change sent to head office for approval.`)
+    if (l.resolution === 'accept') parts.push(`${spokenName(l.name)} difference accepted.`)
+    if (l.resolution === 'hold') parts.push(`${spokenName(l.name)} held for supplier review.`)
   })
   return parts.join(' ')
 }
@@ -552,13 +556,16 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             </div>
             <div className="ir-impact">£{l.amount.toFixed(2)}</div>
             <div className="ir-res">
-              {status === 'proposed' ? (
+              {status === 'proposed' ? (<>
                 <select className="ir-select" value={l.resolution} onChange={e => setRes(i, e.target.value)}>
                   {(l.kind === 'qty' ? QTY_OPTIONS : PRICE_OPTIONS).map(([k, label]) => (
                     <option key={k} value={k}>{label}</option>
                   ))}
                 </select>
-              ) : resLabel(l)}
+                {l.kind === 'price' && PRICE_HELPERS[l.resolution] && (
+                  <div className="ir-helper">{PRICE_HELPERS[l.resolution]}</div>
+                )}
+              </>) : resLabel(l)}
             </div>
           </div>
         ))}
@@ -598,11 +605,65 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
         <ConfirmStrip label="Invoice accepted as billed"
           sub="No supplier correction was requested. Expected supplier prices were not updated."
           note="Invoice #4902 was closed." />
-      ) : (
-        <ConfirmStrip label={n === 1 ? 'Resolution confirmed' : 'Resolutions confirmed'}
-          sub={invoiceOutcome(lines)}
-          note="Invoice #4902 is waiting for supplier response. Expected supplier prices were not updated. Stock remains based on received quantities." />
-      ))}
+      ) : (() => {
+        // A lone price line gets its own confirmed state — the two price
+        // resolutions lead to genuinely different waiting rooms.
+        const single = n === 1 && lines[0].kind === 'price' ? lines[0] : null
+        if (single?.resolution === 'confirmPrice') return (
+          <ConfirmStrip label="Price confirmation sent"
+            sub="Sent to accounts@bidfood.co.uk. Invoice #4902 is waiting for Bidfood's reply."
+            note="Expected price remains £4.85. Stock remains based on received quantities."
+            action={{ label: 'View message', fn: () => {} }} />
+        )
+        if (single?.resolution === 'sendApproval') return (
+          <ConfirmStrip label="Price change sent for approval"
+            sub="Head office will review £4.85 → £5.15 for Butter 250g."
+            note="No expected prices were changed. Invoice #4902 is waiting for an internal decision." />
+        )
+        const supplierFacing = lines.some(l => l.resolution === 'credit' || l.resolution === 'confirmPrice')
+        const internal = lines.some(l => l.resolution === 'sendApproval')
+        const note = [
+          supplierFacing && "Invoice #4902 is waiting for Bidfood's reply.",
+          internal && 'The price change is waiting for an internal decision.',
+          'Expected supplier prices were not updated. Stock remains based on received quantities.'
+        ].filter(Boolean).join(' ')
+        return (
+          <ConfirmStrip label={n === 1 ? 'Resolution confirmed' : 'Resolutions confirmed'}
+            sub={invoiceOutcome(lines)} note={note} />
+        )
+      })())}
+    </Card>
+  )
+}
+
+// ---------- Supplier price reply (compact follow-up) ------------------------
+// Bidfood's reply lands in the same case. Priya cannot change future prices,
+// so the only move is routing the new price to head office.
+export function PriceReplyCard({ entry, resolve }) {
+  const { status = 'proposed' } = entry.data || {}
+  return (
+    <Card>
+      <CardHead title="Bidfood replied" sub="accounts@bidfood.co.uk · linked to invoice #4902" />
+      <div className="ac-body">
+        <div className="reply-line">£5.15 is the new price for Butter 250g from 6 Jul.</div>
+        <div className="card-summary">
+          <span className="cs-ico"><Eye size={16} /></span>
+          <div className="cs-copy">
+            <div className="cs-title">Price change needs head-office approval</div>
+            <div className="cs-body">Head office will review the impact on recipe costs and GP before the expected price changes.</div>
+          </div>
+        </div>
+      </div>
+      {status === 'proposed' && (
+        <div className="ac-footer">
+          <button className="btn btn-primary" onClick={() => resolve('priceApprovalRequest')}>Send price change for approval</button>
+        </div>
+      )}
+      {status === 'applied' && (
+        <ConfirmStrip label="Price change sent for approval"
+          sub="Head office will review £4.85 → £5.15 for Butter 250g."
+          note="No expected prices were changed. Invoice #4902 is waiting for an internal decision." />
+      )}
     </Card>
   )
 }

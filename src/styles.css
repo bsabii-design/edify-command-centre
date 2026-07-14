@@ -1692,3 +1692,10 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    darker on hover. One label system — "How Edify worked this out". */
 .wfold-toggle { color: var(--text-2); }
 .wfold-toggle:hover { color: var(--text); }
+
+/* Price-resolution rows: the helper under the dropdown names the channel
+   before anything is sent. Column split nudged toward the spec (24/36/10/30)
+   while keeping "Confirm price with supplier" un-truncated. */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 24fr) minmax(0, 36fr) minmax(0, 10fr) minmax(0, 30fr); }
+.ir-helper { font-size: 11px; color: var(--text-3); margin-top: var(--sp-1); }
+.reply-line { font-size: 13px; color: var(--text); padding: var(--sp-2) 0 var(--sp-3); }

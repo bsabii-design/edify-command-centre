@@ -111,11 +111,32 @@ export default function App() {
       case 'invoiceResolutions': {
         setInterrupt(null)
         const lines = payload?.lines || []
-        const detail = lines.map(l => l.kind === 'qty' ? `Credit requested for ${l.name}` : `${l.name} price sent for supplier confirmation`).join(' · ')
-        patchThread(threadId, { caseState: 'awaiting_credit' })
-        setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · ${lines.length} resolution${lines.length === 1 ? '' : 's'} sent`, helper: 'Waiting for supplier response', status: 'Waiting', chip: 'by Wed', threadId }])
+        const detail = lines.map(l => l.kind === 'qty' ? `Credit requested for ${l.name}`
+          : l.resolution === 'sendApproval' ? `${l.name} price change sent for approval`
+          : `${l.name} price confirmation emailed to Bidfood`).join(' · ')
+        // Which waiting room the invoice enters depends on where the price
+        // line went: supplier email, head office, or nowhere (qty only).
+        const pricePath = lines.find(l => l.kind === 'price')?.resolution || null
+        const toSupplier = lines.some(l => l.resolution === 'credit' || l.resolution === 'confirmPrice')
+        const internal = pricePath === 'sendApproval'
+        patchThread(threadId, { caseState: 'awaiting_credit', pricePath })
+        setWatching(w => [...w, { id: 'wcredit', title: 'Bidfood invoice #4902', sub: `Fitzroy Espresso · ${lines.length} resolution${lines.length === 1 ? '' : 's'} sent`, helper: toSupplier && internal ? 'Waiting for Bidfood and head office' : internal ? 'Waiting for internal approval' : "Waiting for Bidfood's reply", status: 'Waiting', chip: 'by Wed', threadId }])
         J('action', 'you', 'Invoice #4902 resolutions confirmed', detail, 'Invoices')
-        toast('Resolutions confirmed', 'Bidfood has been asked to respond.')
+        if (lines.some(l => l.resolution === 'confirmPrice')) {
+          J('action', 'you', 'Supplier price confirmation requested by Priya', 'Sent to accounts@bidfood.co.uk by Edify — the reply stays linked to invoice #4902', 'Invoices')
+        }
+        if (internal) {
+          J('action', 'you', 'Price change requested by Priya', 'Butter 250g £4.85 → £5.15 — waiting for head-office approval', 'Invoices')
+        }
+        toast('Resolutions confirmed', internal && !toSupplier ? 'Sent to head office for review.' : 'Bidfood has been asked to respond.')
+        break
+      }
+      case 'priceApprovalRequest': {
+        setInterrupt(null)
+        patchThread(threadId, { caseState: 'awaiting_approval' })
+        setWatching(w => w.map(x => (x.id === 'wcredit' ? { ...x, helper: 'Waiting for head-office approval', chip: 'by Thu' } : x)))
+        J('action', 'you', 'Price change requested by Priya', 'Butter 250g £4.85 → £5.15 — waiting for head-office approval', 'Invoices')
+        toast('Price change sent for approval', 'Head office will review the impact on recipes and GP.')
         break
       }
       case 'invoiceAcceptAll': {
@@ -209,6 +230,7 @@ export default function App() {
     : orderThread.caseState === 'awaiting_invoice' ? 2
     : orderThread.caseState === 'invoice_decision' ? 2.5
     : orderThread.caseState === 'awaiting_credit' ? 2.8
+    : orderThread.caseState === 'awaiting_approval' ? 2.9
     : 3
 
   const fireDelivery = () => {
@@ -260,6 +282,32 @@ export default function App() {
   }
 
   // The count closing is the one trust-promise the GP answer makes. This demo
+  // The price-difference tail: Bidfood's reply lands in the case, Priya can
+  // only route the new price to head office, and the decision comes back as
+  // a compact follow-up — prices never change silently.
+  const fireReply = () => {
+    const t = orderThread
+    if (!t) return
+    patchThread(t.id, {
+      pendingSteps: [
+        { type: 'assistant', scenarioId: 'delivery', text: '**Tuesday, 09:12.** Bidfood replied about invoice **#4902**:' },
+        { type: 'card', card: 'priceReply', scenarioId: 'delivery', data: {} }
+      ]
+    })
+    announce({ icon: 'invoice', threadId: t.id, title: 'Bidfood replied about invoice #4902', cta: 'Review' })
+  }
+  const fireApproval = () => {
+    const t = orderThread
+    if (!t) return
+    patchThread(t.id, {
+      caseState: 'closed',
+      pendingSteps: [{ type: 'assistant', scenarioId: 'delivery', text: '**Wednesday, 10:20.** Head office approved the change. **Expected price updated** — Butter 250g for Bidfood changed from **£4.85 to £5.15**. 4 recipes were recosted. Projected GP decreased by **0.4 pts**. Menu prices were not changed.' }]
+    })
+    setWatching(w => w.filter(x => x.id !== 'wcredit'))
+    addJournal({ kind: 'auto', by: 'edify', title: 'Expected price approved by Head Office', detail: 'Butter 250g · £4.85 → £5.15 — 4 recipes recosted, projected GP −0.4 pts, menu prices unchanged', source: 'Invoices', threadId: t.id })
+    toast('Expected price updated', 'Butter 250g £4.85 → £5.15. 4 recipes recosted.')
+  }
+
   // control pays it: the thread gets the update through the same pendingSteps
   // channel deliveries use, and the card recomputes itself.
   const gpThread = threads.find(t => t.scenarioId === 'gp')
@@ -394,7 +442,10 @@ export default function App() {
         {demoStage === 2 && <button className="demo-btn" onClick={fireInvoice}>⏩ Mon 06:40 — the invoice lands</button>}
         {gpThread && !countFired && <button className="demo-btn" onClick={fireCount}>⏩ Thu 18:05 — Marco closes the count</button>}
         {demoStage === 2.5 && <span className="demo-hint">Review the invoice in its case to continue</span>}
-        {demoStage === 2.8 && <span className="demo-hint">Credit note sent — the case closes when Bidfood replies</span>}
+        {demoStage === 2.8 && orderThread?.pricePath === 'confirmPrice' && <button className="demo-btn" onClick={fireReply}>⏩ Tue 09:12 — Bidfood replies</button>}
+        {demoStage === 2.8 && orderThread?.pricePath === 'sendApproval' && <button className="demo-btn" onClick={fireApproval}>⏩ Wed 10:20 — head office decides</button>}
+        {demoStage === 2.8 && !orderThread?.pricePath && <span className="demo-hint">Credit note sent — the case closes when Bidfood replies</span>}
+        {demoStage === 2.9 && <button className="demo-btn" onClick={fireApproval}>⏩ Wed 10:20 — head office decides</button>}
         {demoStage === 3 && <span className="demo-hint">✓ Demo complete — the whole case is one thread in Journal</span>}
       </div>
 

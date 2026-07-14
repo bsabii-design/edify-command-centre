@@ -88,6 +88,7 @@ export const SCENARIOS = {
         return [{ type: 'assistant', text: "I'll check the recorded differences against Bidfood's invoice when it arrives." }]
       },
       invoiceResolutions: () => [{ type: 'assistant', text: "I'll close the case when Bidfood replies." }],
+      priceApprovalRequest: () => [{ type: 'assistant', text: "I'll let you know when head office decides." }],
       invoiceAcceptAll: () => [{ type: 'assistant', text: 'Case closed — the whole story is one thread in Journal.' }]
     }
   },

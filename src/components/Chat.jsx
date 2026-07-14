@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SCENARIOS, WORKING_TEXT, PROMISE, cutoffLabel } from '../data.js'
 import { useStream } from '../hooks.js'
 import {
-  OrderDiffCard, GpCard, InvoiceCard, CountFixCard, ReceivingCard, InvoiceCloseCard,
+  OrderDiffCard, GpCard, InvoiceCard, CountFixCard, ReceivingCard, InvoiceCloseCard, PriceReplyCard,
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
@@ -149,7 +149,7 @@ const WORKING_LABELS = {}
 
 const CARD_MAP = {
   orderDiff: OrderDiffCard, gpBreakdown: GpCard, invoiceMatch: InvoiceCard, countFix: CountFixCard, muffinPlan: MuffinCard,
-  receiving: ReceivingCard, invoiceClose: InvoiceCloseCard,
+  receiving: ReceivingCard, invoiceClose: InvoiceCloseCard, priceReply: PriceReplyCard,
   supplierAdd: SupplierAddCard, supplierDraft: SupplierDraftCard,
   supplierUpdate: SupplierUpdateCard
 }
@@ -402,7 +402,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       muffinConfirm: { status: 'applied' }, muffinKeep: { status: 'declined' },
       recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' }, countCorrect: { status: 'applied', choice: 'countCorrect' },
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
-      invoiceResolutions: { status: 'applied', resolution: 'sent' }, invoiceAcceptAll: { status: 'applied', resolution: 'acceptedAll' },
+      invoiceResolutions: { status: 'applied', resolution: 'sent' }, invoiceAcceptAll: { status: 'applied', resolution: 'acceptedAll' }, priceApprovalRequest: { status: 'applied' },
       supplierAddConfirm: { status: 'applied' }, supplierCreateConfirm: { status: 'applied' },
       supplierUpdateConfirm: { status: 'applied' },
       supplierCancel: { status: 'cancelled' }
