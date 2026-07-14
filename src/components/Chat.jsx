@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SCENARIOS, WORKING_TEXT, PROMISE, cutoffLabel } from '../data.js'
 import { useStream } from '../hooks.js'
 import {
-  OrderDiffCard, GpCard, InvoiceCard, CountFixCard, ReceivingCard, InvoiceCloseCard, PriceReplyCard, DeliveryDueCard,
+  OrderDiffCard, GpCard, InvoiceCard, CountFixCard, ReceivingCard, InvoiceCloseCard, DeliveryDueCard,
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
@@ -58,9 +58,8 @@ const WORKING_STEPS = {
   // Evidence only — facts Edify stands on. System actions ("drafting the
   // change") are not evidence and don't appear here.
   orderDiff: [
-    { t: 'Saturday basket', r: '8 items — £1,240.60' },
-    { t: 'Warm weekend demand', r: '74–81 L' },
-    { t: 'Current par level', r: '60 L — set 12 May' }
+    { t: 'Forecast demand', r: '74–81 L' },
+    { t: 'Current order', r: '60 L' }
   ],
   invoiceMatch: [
     { t: 'Opening invoice #4821', r: '£1,249.60' },
@@ -78,10 +77,6 @@ const WORKING_STEPS = {
     { t: 'Checking muffin sell-through, last 4 Mondays', r: '6–7 sold' },
     { t: 'Drafting the change' }
   ],
-  receiving: [
-    { t: 'Order #2231', r: '8 items' },
-    { t: 'Expected delivery', r: 'Sat 07:30' }
-  ],
   countFix: [
     { t: "Reading yesterday's count", r: '22 L' },
     { t: 'Comparing with POS usage', r: 'implies 8 L' },
@@ -91,7 +86,8 @@ const WORKING_STEPS = {
     { t: 'Order #2231', r: 'what Ferra ordered' },
     { t: 'Delivery note #912', r: 'what was recorded as received' },
     { t: 'Bidfood prices', r: 'expected price per item' },
-    { t: 'Lines compared', r: '5 matched — 3 need review' }
+    { t: 'Expected from receipt', r: 'received quantities × expected prices' },
+    { t: 'Lines compared', r: '6 matched · 2 need review' }
   ],
   supplierDraft: [
     { t: 'Reading what you sent', r: 'email + days' },
@@ -154,7 +150,7 @@ const WORKING_LABELS = {}
 
 const CARD_MAP = {
   orderDiff: OrderDiffCard, gpBreakdown: GpCard, invoiceMatch: InvoiceCard, countFix: CountFixCard, muffinPlan: MuffinCard,
-  receiving: ReceivingCard, invoiceClose: InvoiceCloseCard, priceReply: PriceReplyCard, deliveryDue: DeliveryDueCard,
+  receiving: ReceivingCard, invoiceClose: InvoiceCloseCard, deliveryDue: DeliveryDueCard,
   supplierAdd: SupplierAddCard, supplierDraft: SupplierDraftCard,
   supplierUpdate: SupplierUpdateCard
 }
@@ -168,15 +164,9 @@ const CARD_TITLES = {
 export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
   // The checklist is the card's evidence — it stays while the decision is
   // open, and folds away with the card once the case is settled.
-  const [entries, setEntries] = useState(() => {
-    const list = thread.entries || []
-    if (!thread.started) return list
-    return list.filter((e, i) => {
-      if (e.kind !== 'working') return true
-      const next = list.slice(i + 1).find(x => x.kind === 'card')
-      return next && !['applied', 'declined', 'cancelled'].includes(next.data?.status)
-    })
-  })
+  // Revisits show the thread exactly as it was left — evidence folds and
+  // confirmed cards included. Nothing collapses behind a hover.
+  const [entries, setEntries] = useState(() => thread.entries || [])
   const [thinking, setThinking] = useState(false)
   const [thinkingLabel, setThinkingLabel] = useState('Edify is checking…')
   const [supplierFlow, setSupplierFlow] = useState(thread.supplierFlow || { action: 'add', phase: 'awaiting_name' })
@@ -407,7 +397,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       muffinConfirm: { status: 'applied' }, muffinKeep: { status: 'declined' },
       recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' }, countCorrect: { status: 'applied', choice: 'countCorrect' },
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
-      invoiceResolutions: { status: 'applied', resolution: 'sent' }, priceApprovalRequest: { status: 'applied' }, receiveStart: { status: 'applied' },
+      invoiceResolutions: { status: 'applied', resolution: 'sent' }, receiveStart: { status: 'applied' }, notArrived: { late: true },
       supplierAddConfirm: { status: 'applied' }, supplierCreateConfirm: { status: 'applied' },
       supplierUpdateConfirm: { status: 'applied' },
       supplierCancel: { status: 'cancelled' }
@@ -530,7 +520,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                   const C = CARD_MAP[e.card]
                   // A settled card folds to one line — the thread stays scannable.
                   // Fold and reopen cross-animate through height: seamless, no swap.
-                  const settled = settledAtMount.current.has(e.id) && ['applied', 'declined', 'cancelled'].includes(e.data?.status)
+                  const settled = false
                   const expanded = settled && e.data?.reopened
                   const ease = [0.25, 0.1, 0.25, 1]
                   const word = { applied: 'done', declined: 'kept as is', cancelled: 'discarded' }[e.data?.status]

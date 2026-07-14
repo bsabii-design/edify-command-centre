@@ -42,8 +42,8 @@ export const SCENARIOS = {
     sub: 'One case: order → delivery → invoice',
     userText: null,
     steps: [
-      { type: 'assistant', text: "Saturday's **oat milk** looks short. You ordered **60 L**, but I expect about **78 L** — Saturday is warmer than usual. The order locks at **16:00** today." },
-      { type: 'assistant', text: "I prepared a change. You can adjust the amount before confirming." },
+      { type: 'assistant', text: "Saturday's **oat milk** order looks short. You ordered **60 L**, but demand is forecast at **74–81 L** because Saturday will be warmer than usual. The order locks at **16:00** today." },
+      { type: 'assistant', text: "I prepared a change to **80 L**. You can adjust it before confirming." },
       { type: 'card', card: 'orderDiff' }
     ],
     resolutions: {
@@ -81,7 +81,7 @@ export const SCENARIOS = {
     resolutions: {
       // The card records the result; the chat reply says what Edify does next.
       receipt: (p) => [{ type: 'assistant', text: p && p.diffs > 0
-        ? "I'll check these against Bidfood's invoice when it arrives."
+        ? `I'll check ${p.diffs === 1 ? 'this' : 'these'} against Bidfood's invoice when it arrives.`
         : "I'll match the invoice when it arrives." }],
       invoiceResolutions: (p) => {
         const lines = p?.lines || []
@@ -89,14 +89,11 @@ export const SCENARIOS = {
         const bits = [
           ...lines.filter(l => l.resolution === 'credit').map(l => `the ${spoken(l.name)} credit`),
           ...lines.filter(l => l.resolution === 'confirmPrice').map(l => `${spoken(l.name)} price confirmation`),
-          ...lines.filter(l => l.resolution === 'sendApproval').map(l => `the ${spoken(l.name)} price approval`),
-          ...lines.filter(l => l.resolution === 'await').map(l => `the ${spoken(l.name)} replacement`)
         ]
         if (!bits.length) return [{ type: 'assistant', text: 'Every line has a final state — the invoice can close.' }]
         const list = bits.length === 1 ? bits[0] : `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}`
         return [{ type: 'assistant', text: `Waiting for ${list}.` }]
       },
-      priceApprovalRequest: () => [{ type: 'assistant', text: "I'll let you know when head office decides." }],
       receiveStart: () => [],
       notArrived: () => []
     }
@@ -258,11 +255,11 @@ export const BRIEF = {
   // a deadline the operator can actually miss.
   needsCall: [
     { id: 'cutoff', tier: 'urgent', deadlineMins: 135, stake: '18 L', stakeUnit: 'short', deadlineTs: DEADLINE_TS,
-      title: "Saturday's oat milk order needs review", why: '60 L ordered, ~78 L expected.', cta: 'Review basket', scenario: 'cutoff', urgent: true },
+      title: "Saturday's oat milk order needs review", why: '60 L ordered, ~78 L expected', cta: 'Review basket', scenario: 'cutoff', urgent: true },
     { id: 'invoice', tier: 'important', stake: '£13.40', stakeUnit: 'over',
-      title: "Bidfood invoice doesn't match delivery", why: 'Invoice #4821 — cream short by 2, butter price +6.2%.', cta: 'Review invoice', scenario: 'invoice' },
+      title: "Bidfood invoice doesn't match delivery", why: 'Invoice #4821 — cream short by 2, butter price +6.2%', cta: 'Review invoice', scenario: 'invoice' },
     { id: 'count', tier: 'important', stake: '14 L', stakeUnit: 'difference',
-      title: 'Whole milk count looks wrong', why: 'Counted 22 L — tills imply 8 L left.', cta: 'Check count', scenario: 'count' }
+      title: 'Whole milk count looks wrong', why: 'Counted 22 L — tills imply 8 L left', cta: 'Check count', scenario: 'count' }
     // The muffin trim (~£3/wk) stays off this list — too small to compete for
     // a decision today. It surfaces inside the GP% breakdown, where it belongs.
   ]

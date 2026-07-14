@@ -1857,3 +1857,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .wsrc-t, .wsrc-r { font-size: 11px; }
 .ir-grid, .ir-row { gap: var(--sp-4); }
 .ir-headrow > :last-child { padding-left: calc(var(--sp-2) + 1px); }
+
+/* Correct receipt is one compact inline edit under the dropdown — no form.
+   Selects keep clear breathing room before the native arrow. */
+.correct-inline { display: flex; align-items: center; gap: var(--sp-1); font-size: 13px; color: var(--text); margin-top: var(--sp-2); }
+.ir-select { padding-right: var(--sp-5); }
