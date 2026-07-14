@@ -152,7 +152,6 @@ export function OrderDiffCard({ entry, patch, resolve }) {
       </div>
       {/* The decision comes before the evidence — the working sits quietly under it. */}
       {status === 'proposed' && (<>
-        <div className="card-helper inpad">Nothing is sent until you confirm.</div>
         <div className="ac-footer">
           <button className="btn btn-primary" disabled={add === 0 || confirming} onClick={runConfirm}>Update basket</button>
           <button className="btn btn-secondary" disabled={!!confirming} onClick={() => resolve('decline')}>Keep as is</button>
@@ -564,7 +563,6 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
             <div className="ir-res">Matched</div>
           </div>
         ))}
-        {status === 'proposed' && <div className="card-helper">Nothing is sent until you confirm.</div>}
       </div>
       {status === 'proposed' && !accepting && (
         <div className="ac-footer">
