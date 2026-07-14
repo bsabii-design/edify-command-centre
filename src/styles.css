@@ -28,8 +28,8 @@
   --surface: #ffffff;
   --surface-2: #f2f1ec;
   --hover: #f8f7f4;       /* lighter than surface-2 — a wash, not a fill */
-  --border: #ebe9e3;
-  --border-strong: #dddbd3;
+  --border: #f1efe9;
+  --border-strong: #e5e3db;
   --text: #191919;
   --text-2: #64625b;
   --text-3: #9b998f;
@@ -1791,3 +1791,10 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* The receipt band stacks its lines flush — the 4px flex gap was the
    hidden spacing the margin reset could not remove. */
 .done-band { gap: 0; }
+
+/* Receipt lockup: the check disc gets 8px to its title (4px felt glued
+   for a filled disc); the sub indent follows. Dividers across the whole
+   prototype go one step paler — they separate, they don't draw. */
+.done-head { gap: var(--sp-2); }
+.done-sub, .done-note { padding-left: calc(16px + var(--sp-2)); }
+
