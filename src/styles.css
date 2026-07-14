@@ -1779,3 +1779,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .interrupt { gap: var(--sp-1); }
 .asrow .ch-name { display: inline-flex; align-items: center; gap: var(--sp-1); }
 .wfold-toggle, .more-toggle { gap: var(--sp-1); }
+
+/* Lockup law rev.2 — the disc glyph is 12px inside a 16px disc, and a
+   heading sits FLUSH on its subline (0px): the line-heights alone carry
+   the optical gap. Applies to card heads, receipt bands, Home rows and
+   table item names with their unit sublines. */
+.action-card .ac-sub { margin-top: 0; }
+.done-sub, .done-note { margin-top: 0; }
+.row-sub { margin-top: 0; }

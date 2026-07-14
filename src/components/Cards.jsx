@@ -60,7 +60,7 @@ function ConfirmStrip({ label, sub, details, note, action }) {
       <div className="done-head">
         <motion.span className="done-check" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 480, damping: 16, delay: 0.12 }}>
-          <Check size={14} />
+          <Check size={12} />
         </motion.span>
         <span className="done-line">{label}</span>
         {action && <button className="done-action" onClick={action.fn}>{action.label}</button>}
