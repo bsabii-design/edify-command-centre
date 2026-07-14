@@ -1709,3 +1709,25 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
   100% { color: inherit; }
 }
 .val-flash { animation: valuePulse 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both; background: none; padding: 0; margin: 0; border-radius: 0; }
+
+/* One table rhythm — 16px: the table's outer inset, header to first row,
+   and every row's distance to its divider. Borderless sub-rows keep 8px
+   padding so the gap BETWEEN them still reads as 16. Applies to the order
+   table, receiving, the invoice grid and the facts tables. */
+.action-card .ac-body { padding: var(--sp-4); }
+.change-row, .change-row.total { padding: var(--sp-4) 0; }
+.change-row.ch-headrow { padding: 0 0 var(--sp-4); }
+.recv-row { padding: var(--sp-4) 0; }
+.recv-headrow { padding: 0 0 var(--sp-4); }
+.ir-headrow { padding: var(--sp-4) 0; }
+.ir-row { padding: var(--sp-4) 0; }
+.ir-row.sub { border-top: none; padding: var(--sp-2) 0; }
+.ir-more { padding: var(--sp-4) 0; }
+.diff-table th { padding-top: 0; padding-bottom: var(--sp-4); }
+.diff-table td { padding-top: var(--sp-4); padding-bottom: var(--sp-4); }
+.card-summary { padding: var(--sp-4) 0; }
+
+/* The deadline chip keeps one width while the minutes tick — Poppins ships
+   no tabular figures (verified in-browser), so the chip is fixed-width with
+   centred content; tabular-nums stays for any future font swap. */
+.deadline-chip:not(.i-meta) { min-width: 92px; justify-content: center; font-variant-numeric: tabular-nums; }
