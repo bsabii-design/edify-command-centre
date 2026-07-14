@@ -1700,15 +1700,13 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ir-helper { font-size: 11px; color: var(--text-3); margin-top: var(--sp-1); }
 .reply-line { font-size: 13px; color: var(--text); padding: var(--sp-2) 0 var(--sp-3); }
 
-/* Value change: the new number breathes in — brief blue, gentle fade,
-   no background and no layout shift (the old flash padded itself and
-   jumped). Blue stays the confirmed-moment colour, just quieter. */
+/* Value change: the new number simply fades in — no colour, no background,
+   no layout shift. The quietest possible acknowledgement that it changed. */
 @keyframes valuePulse {
-  0% { opacity: 0.25; color: var(--blue); }
-  55% { opacity: 1; color: var(--blue); }
-  100% { color: inherit; }
+  0% { opacity: 0.15; }
+  100% { opacity: 1; }
 }
-.val-flash { animation: valuePulse 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) both; background: none; padding: 0; margin: 0; border-radius: 0; }
+.val-flash { animation: valuePulse 0.4s ease-out both; background: none; padding: 0; margin: 0; border-radius: 0; }
 
 /* One table rhythm — 16px: the table's outer inset, header to first row,
    and every row's distance to its divider. Borderless sub-rows keep 8px
