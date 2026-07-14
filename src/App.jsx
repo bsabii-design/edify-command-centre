@@ -101,12 +101,12 @@ export default function App() {
       case 'receiveStart': {
         setInterrupt(null)
         const t = threadsRef.current.find(x => x.id === threadId)
-        patchThread(threadId, { caseState: 'receiving', pendingSteps: SCENARIOS.delivery.steps.map(st => (st.type === 'card' ? { ...st, scenarioId: 'delivery', data: { orderAdd: t?.orderAdd ?? 20 } } : { ...st, scenarioId: 'delivery' })) })
+        // The click IS the arrival record — expected vs actual stays on the
+        // delivery for future punctuality reporting.
+        const arrivedAt = '07:42'
+        patchThread(threadId, { caseState: 'receiving', arrivedAt, pendingSteps: SCENARIOS.delivery.steps.map(st => (st.type === 'card' ? { ...st, scenarioId: 'delivery', data: { orderAdd: t?.orderAdd ?? 20, arrivedAt } } : { ...st, scenarioId: 'delivery' })) })
         break
       }
-      case 'notArrived':
-        toast('Not arrived yet', "I'll remind you again in 30 minutes.")
-        break
       case 'receipt': {
         setInterrupt(null)
         const short = payload?.shortUnits || 0

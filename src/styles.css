@@ -1903,3 +1903,6 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .recv-final { font-weight: 400; }
 .recv-final.changed { font-weight: 500; }
 .head-action { font-weight: 400; }
+
+/* Confirmed check sits flush on the summary text — no extra air. */
+.confirmed-summary .done-check { margin: 0; }

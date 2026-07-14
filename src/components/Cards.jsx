@@ -436,8 +436,9 @@ export function ReceivingCard({ entry, patch, resolve }) {
   }, { short: 0, extra: 0, value: 0, diffs: 0, shortLines: [] })
 
   const expanded = !!(entry.data || {}).expanded
+  const arrivedAt = (entry.data || {}).arrivedAt || '07:42'
   const confirmedHead = (
-    <CardHead title="Delivery confirmed" sub="Order #2231 · expected Sat 07:30"
+    <CardHead title="Delivery confirmed" sub={`Order #2231 · arrived ${arrivedAt}`}
       action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
   )
   const confirmedSummary = (
@@ -465,8 +466,8 @@ export function ReceivingCard({ entry, patch, resolve }) {
   return (
     <Card>
       {status === 'applied' ? confirmedHead : (
-        <CardHead title="Receive Bidfood delivery"
-          sub="Order #2231 · expected Sat 07:30" />
+        <CardHead title="Check in Bidfood delivery"
+          sub={`Order #2231 · expected 07:30 · arrived ${arrivedAt}`} />
       )}
       <div className="ac-body recv-body">
         <div className="recv-grid recv-headrow">
@@ -652,19 +653,15 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
 }
 
 // ---------- Delivery due (expected time means due, not arrived) -------------
-export function DeliveryDueCard({ entry, resolve }) {
-  const { status = 'proposed', late = false } = entry.data || {}
+export function DeliveryDueCard({ resolve }) {
+  // Checking in confirms the van is physically here — the due prompt is
+  // then replaced by the receiving form itself, not by a status card.
   return (
     <Card>
       <CardHead title="Bidfood delivery is due now" sub="Order #2231 · 8 items · expected Sat 07:30" />
-      {status === 'proposed' && (<>
-        {late && <div className="card-helper inpad">I'll remind you again in 30 minutes.</div>}
-        <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('receiveStart')}>Check in delivery</button>
-          {!late && <button className="btn btn-secondary" onClick={() => resolve('notArrived')}>Not arrived yet</button>}
-        </div>
-      </>)}
-      {status === 'applied' && <KeptStrip label="Checked in — receiving recorded below" />}
+      <div className="ac-footer">
+        <button className="btn btn-primary" onClick={() => resolve('receiveStart')}>Check in delivery</button>
+      </div>
     </Card>
   )
 }

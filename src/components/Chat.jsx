@@ -397,14 +397,20 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       muffinConfirm: { status: 'applied' }, muffinKeep: { status: 'declined' },
       recount: { status: 'applied', choice: 'recount' }, acceptCount: { status: 'applied', choice: 'acceptCount' }, countCorrect: { status: 'applied', choice: 'countCorrect' },
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
-      invoiceResolutions: { status: 'applied', resolution: 'sent' }, receiveStart: { status: 'applied' }, notArrived: { late: true },
+      invoiceResolutions: { status: 'applied', resolution: 'sent' },
       supplierAddConfirm: { status: 'applied' }, supplierCreateConfirm: { status: 'applied' },
       supplierUpdateConfirm: { status: 'applied' },
       supplierCancel: { status: 'cancelled' }
     }
-    const patch = { ...(statusByAction[action] || {}) }
-    if (action === 'confirm') patch.acceptedAt = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-    patchEntry(entry.id, patch)
+    // Checking in replaces the due prompt with the receiving form — the
+    // active flow only ever holds the current actionable object.
+    if (action === 'receiveStart') {
+      setEntries(es => es.filter(x => x.id !== entry.id))
+    } else {
+      const patch = { ...(statusByAction[action] || {}) }
+      if (action === 'confirm') patch.acceptedAt = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+      patchEntry(entry.id, patch)
+    }
     onEvent(action, { scenarioId: entry.scenarioId, entry, payload })
 
     if (action === 'supplierAddConfirm' || action === 'supplierCreateConfirm') {

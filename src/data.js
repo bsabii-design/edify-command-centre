@@ -94,8 +94,7 @@ export const SCENARIOS = {
         const list = bits.length === 1 ? bits[0] : `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}`
         return [{ type: 'assistant', text: `Waiting for ${list}.` }]
       },
-      receiveStart: () => [],
-      notArrived: () => []
+      receiveStart: () => []
     }
   },
 
