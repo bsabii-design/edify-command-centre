@@ -37,8 +37,8 @@
   --navy-hover: #333130;
   --accent: #ce4023;
   --accent-hover: #b23519;
-  --blue: #2d50c4;   /* deeper, warmer — tuned to sit next to #ce4023 */
-  --blue-soft: #5872cd; /* the receipt check — success without shouting */
+  --blue: #2f63d3;   /* the confirmed moment — tuned to sit next to #ce4023 */
+  --blue-soft: #5d83dd; /* the receipt check — success without shouting */
   --blue-bg: #eef1fa;
   --blue-border: #d8def2;
   --scroll: #d8d7d1;
@@ -1875,3 +1875,12 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    sits flush on its column — statuses and dropdowns start there too. */
 .nav-item .badge { font-size: 11px; font-weight: 500; }
 .ir-headrow > :last-child { padding-left: 0; }
+
+/* The receipt chevron reopens a confirmed card; alone it hugs the right. */
+.done-chev.solo { margin-left: auto; }
+
+/* Confirmed card, collapsed: title + meta up top, one or two summary
+   lines below, View details on the right. Same object, same card. */
+.confirmed-summary .sum-line { font-size: 13px; color: var(--text); padding: var(--sp-0) 0; }
+.confirmed-summary .sum-line.quiet { color: var(--text-2); }
+.head-action { display: inline-flex; align-items: center; gap: var(--sp-1); flex-shrink: 0; }

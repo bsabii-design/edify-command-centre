@@ -45,7 +45,12 @@ function CardHead({ title, sub, status, deadline, action }) {
         {sub && <div className="ac-sub">{sub}</div>}
       </div>
       {/* A live deadline outranks any status; once decided, the chip retires. */}
-      {action && <button className="done-action" onClick={action.fn}>{action.label}</button>}
+      {action && (
+        <button className="done-action head-action" onClick={action.fn}>
+          {action.label}
+          {action.chev && <Chevron size={16} className={`wf-chev ${action.open ? 'open' : ''}`} />}
+        </button>
+      )}
       {deadline && status === 'proposed'
         ? <span className="deadline-chip"><Clock size={16} /> {deadline}</span>
         : <StatusChip status={status} />}
@@ -79,13 +84,21 @@ function KeptStrip({ label }) {
 // ---------- Order diff --------------------------------------------------
 export function OrderDiffCard({ entry, patch, resolve }) {
   const { status = 'proposed', add = 20, showAll = false } = entry.data || {}
-  // Confirmed = a compact receipt, not the whole proposal replayed.
-  if (status === 'applied') {
+  // One object = one card. Confirmed is the same card collapsed into a
+  // read-only summary; View details expands the full confirmed snapshot.
+  const expanded = !!(entry.data || {}).expanded
+  const confirmedHead = (
+    <CardHead title="Order updated" sub="Bidfood · order #2231 · delivery Sat 07:30"
+      action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
+  )
+  if (status === 'applied' && !expanded) {
     return (
       <Card>
-        <ConfirmStrip label="Order #2231 sent to Bidfood"
-          sub={`${60 + add} L oat milk included. Delivery Sat 07:30.`}
-          action={{ label: 'View order', fn: () => {} }} />
+        {confirmedHead}
+        <div className="ac-body confirmed-summary">
+          <div className="sum-line">Sent to Bidfood — {60 + add} L oat milk included</div>
+          <div className="sum-line quiet">Basket £1,240.60 → £{(1240.6 + add * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+        </div>
       </Card>
     )
   }
@@ -102,8 +115,10 @@ export function OrderDiffCard({ entry, patch, resolve }) {
 
   return (
     <Card>
-      <CardHead title="Proposed order change"
-        sub="Bidfood · order #2231 · delivery Sat 07:30" status={status} />
+      {status === 'applied' ? confirmedHead : (
+        <CardHead title="Proposed order change"
+          sub="Bidfood · order #2231 · delivery Sat 07:30" status={status} />
+      )}
       {/* No table furniture. Three rows on one grid; old → new is the only
           pattern (grey → ink), the stepper is the only outlined = editable
           thing, and the total is the only bold number. */}
@@ -419,24 +434,38 @@ export function ReceivingCard({ entry, patch, resolve }) {
     return acc
   }, { short: 0, extra: 0, value: 0, diffs: 0, shortLines: [] })
 
-  if (compact) {
+  const expanded = !!(entry.data || {}).expanded
+  const confirmedHead = (
+    <CardHead title="Delivery confirmed" sub="Order #2231 · expected Sat 07:30"
+      action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
+  )
+  const confirmedSummary = (
+    <div className="ac-body confirmed-summary">
+      {summary.diffs > 0 ? (<>
+        {summary.shortLines.map(l => (
+          <div key={l.name} className="sum-line">{l.name} — {l.invoiced} {l.unit} ordered · {l.received} {l.unit} received · {l.short} {l.unit} short</div>
+        ))}
+        <div className="sum-line quiet">{8 - summary.diffs} other items matched. Stock has been updated.</div>
+      </>) : (<>
+        <div className="sum-line">All 8 items matched order #2231</div>
+        <div className="sum-line quiet">Stock has been updated</div>
+      </>)}
+    </div>
+  )
+  if (compact && !expanded) {
     return (
       <Card>
-        <CardHead title="Receive Bidfood delivery" sub="Order #2231 · expected Sat 07:30" />
-        <ConfirmStrip label="Delivery confirmed"
-          sub={summary.diffs > 0
-            ? (<>{summary.shortLines.map(l => (
-                <div key={l.name}>{l.name} — {l.invoiced} {l.unit} ordered · {l.received} {l.unit} received · {l.short} {l.unit} short</div>
-              ))}</>)
-            : 'All 8 items matched order #2231. Stock has been updated.'}
-          note={summary.diffs > 0 ? `${8 - summary.diffs} other items matched. Stock has been updated.` : undefined} />
+        {confirmedHead}
+        {confirmedSummary}
       </Card>
     )
   }
   return (
     <Card>
-      <CardHead title="Receive Bidfood delivery"
-        sub="Order #2231 · expected Sat 07:30" status={status === 'proposed' ? null : 'applied'} />
+      {status === 'applied' ? confirmedHead : (
+        <CardHead title="Receive Bidfood delivery"
+          sub="Order #2231 · expected Sat 07:30" />
+      )}
       <div className="ac-body recv-body">
         <div className="recv-grid recv-headrow">
           <div>Item</div><div className="recv-exp">Ordered</div><div className="recv-got">Received</div><div className="recv-diffc">Difference</div>
@@ -456,7 +485,6 @@ export function ReceivingCard({ entry, patch, resolve }) {
             onClick={() => { setConfirming(true); setTimeout(() => resolve('receipt', { shortUnits: summary.short, extraUnits: summary.extra, value: summary.value, diffs: summary.diffs, shortLines: summary.shortLines }), 600) }}>Confirm received</button>
         </div>
       )}
-
     </Card>
   )
 }
