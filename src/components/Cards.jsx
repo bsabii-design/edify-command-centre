@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { INVOICE_LINES, INVOICE_TOTALS, RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
 import { CURRENT_SITE, WEEK_DAYS, formatDays } from '../suppliers.js'
-import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus } from './Icons.jsx'
+import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Doc, ExtLink } from './Icons.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
 
@@ -66,7 +66,7 @@ function ConfirmStrip({ label, sub, details, note, action }) {
       <div className="done-head">
         <motion.span className="done-check" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 480, damping: 16, delay: 0.12 }}>
-          <Check size={12} />
+          <Check size={12} stroke={1.9} />
         </motion.span>
         <span className="done-line">{label}</span>
         {action && <button className="done-action" onClick={action.fn}>{action.label}</button>}
@@ -93,7 +93,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
-      <div className="sum-first"><span className="done-check"><Check size={12} /></span>Sent to Bidfood — {60 + add} L oat milk included</div>
+      <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>Sent to Bidfood — {60 + add} L oat milk included</div>
       <div className="sum-line quiet">Basket £1,240.60 → £{(1240.6 + add * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
     </div>
   )
@@ -170,7 +170,14 @@ export function OrderDiffCard({ entry, patch, resolve }) {
     return (
       <Card>
         {confirmedHead}
-        {expanded && tableBody}
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }} style={{ overflow: 'hidden' }}>
+              {tableBody}
+            </motion.div>
+          )}
+        </AnimatePresence>
         {confirmedSummary}
       </Card>
     )
@@ -446,13 +453,13 @@ export function ReceivingCard({ entry, patch, resolve }) {
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
       {summary.diffs > 0 ? (<>
-        <div className="sum-first"><span className="done-check"><Check size={12} /></span>{summary.shortLines[0].name} — {summary.shortLines[0].invoiced} {summary.shortLines[0].unit} ordered · {summary.shortLines[0].received} {summary.shortLines[0].unit} received · {summary.shortLines[0].short} {summary.shortLines[0].unit} short</div>
+        <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>{summary.shortLines[0].name} — {summary.shortLines[0].invoiced} {summary.shortLines[0].unit} ordered · {summary.shortLines[0].received} {summary.shortLines[0].unit} received · {summary.shortLines[0].short} {summary.shortLines[0].unit} short</div>
         {summary.shortLines.slice(1).map(l => (
           <div key={l.name} className="sum-line">{l.name} — {l.invoiced} {l.unit} ordered · {l.received} {l.unit} received · {l.short} {l.unit} short</div>
         ))}
         <div className="sum-line quiet">{8 - summary.diffs} other items matched. Stock has been updated.</div>
       </>) : (<>
-        <div className="sum-first"><span className="done-check"><Check size={12} /></span>All 8 items matched order #2231</div>
+        <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>All 8 items matched order #2231</div>
         <div className="sum-line quiet">Stock has been updated</div>
       </>)}
     </div>
@@ -476,7 +483,14 @@ export function ReceivingCard({ entry, patch, resolve }) {
     return (
       <Card>
         {confirmedHead}
-        {expanded && tableBody}
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }} style={{ overflow: 'hidden' }}>
+              {tableBody}
+            </motion.div>
+          )}
+        </AnimatePresence>
         {confirmedSummary}
       </Card>
     )
@@ -521,12 +535,12 @@ const spokenName = (name) => name.replace(/ \d+\s?(g|kg|ml|L)$/, '')
 const consequence = (l) => {
   switch (l.resolution) {
     case 'credit': return l.kind === 'qty'
-      ? `Bidfood will be asked to credit £${l.amount.toFixed(2)}. Stock stays at ${l.receivedQty}.`
-      : `Bidfood will be asked to credit £${l.amount.toFixed(2)}. Expected price stays at ${l.expectedPrice}.`
+      ? `Requests £${l.amount.toFixed(2)} credit. Stock stays at ${l.receivedQty}.`
+      : `Requests £${l.amount.toFixed(2)} credit. Expected price stays at ${l.expectedPrice}.`
     case 'accept': return l.kind === 'qty'
-      ? `You will pay for ${l.billedQty}. Stock stays at ${l.receivedQty}.`
-      : `You will pay ${l.billedPrice} per pack. Expected price stays at ${l.expectedPrice}.`
-    case 'confirmPrice': return 'The invoice stays open until Bidfood confirms the price.'
+      ? `Accepts the £${l.amount.toFixed(2)} charge. Stock stays at ${l.receivedQty}.`
+      : `Accepts the £${l.amount.toFixed(2)} charge.`
+    case 'confirmPrice': return `Checks ${l.billedPrice} with Bidfood. Invoice stays open.`
     default: return null
   }
 }
@@ -561,7 +575,13 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
   const matched = d.matched || []
   return (
     <Card>
-      <CardHead title="Bidfood invoice #4902" action={{ label: 'View original', fn: () => {} }} />
+      <div className="ac-head">
+        <button className="doc-title" onClick={() => {}}>
+          <Doc size={16} className="doc-ico" />
+          <span className="doc-name">Bidfood invoice #4902</span>
+          <ExtLink size={12} className="doc-ext" />
+        </button>
+      </div>
       <div className="ac-body">
         <div className="compare-cols">
           <div className="compare-col">
@@ -589,22 +609,19 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           </>)}
         </div>
         <div className="ir-grid ir-headrow">
-          <div>Item</div><div>What does not match</div><div className="ir-impact">Difference</div><div>Action</div>
+          <div>Item</div><div>Mismatch</div><div>Action</div>
         </div>
         {lines.map((l, i) => (
           <div key={i} className="ir-row">
             <div className="ir-item">{l.name}</div>
             <div className="ir-issue">
-              {l.kind === 'qty' ? (<>
-                <div className="src-line"><span className="src-label">Invoice</span>{l.billedQty} billed</div>
-                <div className="src-line"><span className="src-label">Delivery receipt</span>{l.receivedQty} received</div>
-              </>) : (<>
-                <div className="src-line"><span className="src-label">Invoice price</span>{l.billedPrice}</div>
-                <div className="src-line"><span className="src-label">Expected price</span>{l.expectedPrice}</div>
-                <div className="src-line"><span className="src-label">Quantity</span>{l.qtyStr}</div>
-              </>)}
+              <div className="mis-vals">{l.kind === 'qty'
+                ? `${l.billedQty} billed · ${l.receivedQty} received`
+                : `${l.billedPrice} billed · ${l.expectedPrice} expected`}</div>
+              <div className={`mis-delta ${status === 'proposed' || ['credit', 'confirmPrice'].includes(l.resolution) ? 'is-open' : ''}`}>{l.kind === 'qty'
+                ? `${l.short} ${l.unit} short · £${l.amount.toFixed(2)}`
+                : `£${(l.amount / (l.packs || 24)).toFixed(2)} more per pack · £${l.amount.toFixed(2)}`}</div>
             </div>
-            <div className="ir-impact">{l.kind === 'qty' ? `${l.short} ${l.unit} · £${l.amount.toFixed(2)}` : `£${l.amount.toFixed(2)}`}</div>
             <div className="ir-res">
               {status === 'proposed' ? (<>
                 <select className="ir-select" value={l.resolution} onChange={e => setLine(i, { resolution: e.target.value })}>
@@ -638,7 +655,6 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           <div key={`m${i}`} className="ir-row muted sub">
             <div className="ir-item">{m.name}</div>
             <div className="ir-issue">{m.qty} {m.unit} × £{m.price.toFixed(2)}</div>
-            <div className="ir-impact">—</div>
             <div className="ir-res">Matched</div>
           </div>
         ))}

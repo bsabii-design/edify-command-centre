@@ -256,7 +256,7 @@ export default function App() {
     }))
     const lines = [...qtyLines, {
       kind: 'price', name: 'Butter 250g', amount: 7.20, resolution: 'confirmPrice',
-      billedPrice: '£5.15', expectedPrice: '£4.85', qtyStr: '24 packs'
+      billedPrice: '£5.15', expectedPrice: '£4.85', qtyStr: '24 packs', packs: 24
     }]
     const mismatched = new Set(lines.map(l => l.name.split(' 250g')[0]))
     const matched = [...RECEIVE_LINES, ...RECEIVE_MORE]

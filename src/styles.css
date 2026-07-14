@@ -1924,3 +1924,36 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* The confirmed footer stays at the bottom in both states; when the
    details expand above it, a stroke separates the two sections. */
 .ac-body + .confirmed-summary { border-top: 1px solid var(--border); }
+
+/* ---- Compact mismatch table: Item | Mismatch | Action. Two lines per
+   mismatch — values, then the discrepancy with its cost. The words billed /
+   received / expected carry the source; no repeated labels. Red marks only
+   a discrepancy that is still unresolved. ---- */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 22fr) minmax(0, 42fr) minmax(0, 36fr); }
+.mis-vals { font-size: 13px; font-weight: 400; color: var(--text); }
+.mis-delta { font-size: 13px; font-weight: 500; color: var(--text); }
+.mis-delta.is-open { color: var(--accent); }
+
+/* The invoice title is the document: icon + name form one clickable control.
+   The doc icon says "document"; hover and focus say "opens". */
+.doc-title { display: inline-flex; align-items: center; gap: var(--sp-1); background: none; padding: 0; cursor: pointer; }
+.doc-title .doc-name { font-size: 13px; font-weight: 500; color: var(--text); transition: color 0.13s; }
+.doc-title .doc-ico, .doc-title .doc-ext { color: var(--text-2); transition: color 0.13s; }
+.doc-title:hover .doc-name, .doc-title:focus-visible .doc-name { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.doc-title:hover .doc-ico, .doc-title:hover .doc-ext,
+.doc-title:focus-visible .doc-ico, .doc-title:focus-visible .doc-ext { color: var(--blue); }
+
+/* "How Edify worked this out": source row, calculation sentence, result
+   sentence. Document names are the only clickable things. */
+.how-line { font-size: 13px; color: var(--text-2); padding: var(--sp-0) 0; }
+.how-docs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-0) 0; }
+.how-doc { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 13px; font-weight: 500; color: var(--text); background: none; padding: 0; text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 2px; transition: color 0.13s; }
+.how-doc svg { color: var(--text-2); transition: color 0.13s; }
+.how-doc:hover { color: var(--blue); text-decoration-color: currentColor; }
+.how-doc:hover svg { color: var(--blue); }
+.how-sep { font-size: 13px; color: var(--text-3); }
+.how-strong { font-weight: 500; color: var(--text); }
+
+/* Single-item confirmed table: the item name is context, not the emphasis.
+   Medium stays with the title, the changed value and the new total. */
+.change-row .ch-name { font-weight: 400; }

@@ -7,7 +7,7 @@ import {
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
-import { Back, Check, Clock, Chevron, ChevDown, Spinner, Notes } from './Icons.jsx'
+import { Back, Check, Clock, Chevron, ChevDown, Spinner, Notes, ExtLink } from './Icons.jsx'
 import {
   getSupplier, detectSupplierIntent, detectSupplierSwitch, existingSupplierNames,
   parseSupplierInput, parseDeliveryDays, mergeSupplierDraft, emptyDraft, formatSupplierName, confirmationText
@@ -86,11 +86,9 @@ const WORKING_STEPS = {
     { t: 'Testing the crate/litre pattern', r: 'matches' }
   ],
   invoiceClose: [
-    { t: 'Order #2231', r: 'what Ferra ordered' },
-    { t: 'Delivery note #912', r: 'what was recorded as received' },
-    { t: 'Bidfood prices', r: 'expected price per item' },
-    { t: 'Expected from receipt', r: 'received quantities × expected prices' },
-    { t: 'Lines compared', r: '6 matched · 2 need review' }
+    { t: 'Order #2231' },
+    { t: 'Delivery note #912' },
+    { t: 'Bidfood price list' }
   ],
   supplierDraft: [
     { t: 'Reading what you sent', r: 'email + days' },
@@ -101,7 +99,27 @@ const WORKING_STEPS = {
   supplierAdd: [{ t: 'Checking your other sites', r: 'found on 2' }, { t: 'Copying the setup across' }]
 }
 
-function WorkingSteps({ steps, done, label }) {
+// The invoice fold answers three questions in three lines: which records,
+// how the expected amount was built, what the comparison found. Only the
+// document names are clickable — sentences stay plain.
+const WORKING_CUSTOM = {
+  invoiceClose: (
+    <>
+      <div className="how-line">Compared with:</div>
+      <div className="how-docs">
+        <button className="how-doc">Order #2231<ExtLink size={12} /></button>
+        <span className="how-sep">·</span>
+        <button className="how-doc">Delivery note #912<ExtLink size={12} /></button>
+        <span className="how-sep">·</span>
+        <button className="how-doc">Bidfood price list<ExtLink size={12} /></button>
+      </div>
+      <div className="how-line">Expected from receipt uses received quantities and saved Bidfood prices.</div>
+      <div className="how-line">6 of 8 lines matched. <span className="how-strong">2 need review.</span></div>
+    </>
+  )
+}
+
+function WorkingSteps({ steps, done, label, card }) {
   const settled = done >= steps.length
   // Granola-style: while working, ONE live line names the source being read
   // right now. When the card lands it becomes a quiet collapsed line; opening
@@ -129,7 +147,7 @@ function WorkingSteps({ steps, done, label }) {
           <motion.div key="list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease }} style={{ overflow: 'hidden' }}>
             <div className="wsrc-list">
-              {steps.map((s, i) => {
+              {WORKING_CUSTOM[card] || steps.map((s, i) => {
                 const step = typeof s === 'string' ? { t: s } : s
                 return (
                   <div key={i} className="wsrc">
@@ -227,7 +245,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       // Show Edify doing the work, one step at a time, then hand over the card.
       const wid = nid()
       setTimeout(() => {
-        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card] }])
+        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card], card: step.card }])
         let i = 0
         const tick = () => {
           i += 1
@@ -573,7 +591,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                 }
                 if (e.kind === 'working') return (
                   <motion.div key={e.id} className="msg" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} />
+                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} card={e.card} />
                   </motion.div>
                 )
                 if (e.kind === 'supplierPick') {
