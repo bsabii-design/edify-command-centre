@@ -37,8 +37,8 @@
   --navy-hover: #333130;
   --accent: #ce4023;
   --accent-hover: #b23519;
-  --blue: #2f63d3;   /* THE blue — one value everywhere */
-  --blue-soft: #2f63d3; /* retired: same as --blue, kept for old references */
+  --blue: #2563eb;   /* THE blue — one value everywhere */
+  --blue-soft: #2563eb; /* retired: same as --blue, kept for old references */
   --blue-bg: #eef1fa;
   --blue-border: #d8def2;
   --scroll: #d8d7d1;
@@ -1920,3 +1920,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 
 /* Chat timestamps sit on their own muted line above the message. */
 .msg-meta { font-size: 11px; color: var(--text-2); margin-bottom: var(--sp-1); }
+
+/* The confirmed footer stays at the bottom in both states; when the
+   details expand above it, a stroke separates the two sections. */
+.ac-body + .confirmed-summary { border-top: 1px solid var(--border); }

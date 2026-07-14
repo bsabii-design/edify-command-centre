@@ -93,7 +93,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
-      <div className="sum-first"><span className="done-check"><Check size={12} stroke={2.5} /></span>Sent to Bidfood — {60 + add} L oat milk included</div>
+      <div className="sum-first"><span className="done-check"><Check size={12} /></span>Sent to Bidfood — {60 + add} L oat milk included</div>
       <div className="sum-line quiet">Basket £1,240.60 → £{(1240.6 + add * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
     </div>
   )
@@ -170,8 +170,8 @@ export function OrderDiffCard({ entry, patch, resolve }) {
     return (
       <Card>
         {confirmedHead}
-        {confirmedSummary}
         {expanded && tableBody}
+        {confirmedSummary}
       </Card>
     )
   }
@@ -446,13 +446,13 @@ export function ReceivingCard({ entry, patch, resolve }) {
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
       {summary.diffs > 0 ? (<>
-        <div className="sum-first"><span className="done-check"><Check size={12} stroke={2.5} /></span>{summary.shortLines[0].name} — {summary.shortLines[0].invoiced} {summary.shortLines[0].unit} ordered · {summary.shortLines[0].received} {summary.shortLines[0].unit} received · {summary.shortLines[0].short} {summary.shortLines[0].unit} short</div>
+        <div className="sum-first"><span className="done-check"><Check size={12} /></span>{summary.shortLines[0].name} — {summary.shortLines[0].invoiced} {summary.shortLines[0].unit} ordered · {summary.shortLines[0].received} {summary.shortLines[0].unit} received · {summary.shortLines[0].short} {summary.shortLines[0].unit} short</div>
         {summary.shortLines.slice(1).map(l => (
           <div key={l.name} className="sum-line">{l.name} — {l.invoiced} {l.unit} ordered · {l.received} {l.unit} received · {l.short} {l.unit} short</div>
         ))}
         <div className="sum-line quiet">{8 - summary.diffs} other items matched. Stock has been updated.</div>
       </>) : (<>
-        <div className="sum-first"><span className="done-check"><Check size={12} stroke={2.5} /></span>All 8 items matched order #2231</div>
+        <div className="sum-first"><span className="done-check"><Check size={12} /></span>All 8 items matched order #2231</div>
         <div className="sum-line quiet">Stock has been updated</div>
       </>)}
     </div>
@@ -476,8 +476,8 @@ export function ReceivingCard({ entry, patch, resolve }) {
     return (
       <Card>
         {confirmedHead}
-        {confirmedSummary}
         {expanded && tableBody}
+        {confirmedSummary}
       </Card>
     )
   }
