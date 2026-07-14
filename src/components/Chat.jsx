@@ -100,42 +100,44 @@ const WORKING_STEPS = {
   supplierAdd: [{ t: 'Checking your other sites', r: 'found on 2' }, { t: 'Copying the setup across' }]
 }
 
-function WorkingSteps({ steps, done, label }) {
+function WorkingSteps({ steps, done, label, coverage }) {
   const settled = done >= steps.length
-  // Live run: the list stays open through the ticking, then folds to one quiet
-  // line as the card lands. Revisits start folded — the evidence is a tap away.
-  const [open, setOpen] = useState(!settled)
-  useEffect(() => {
-    if (settled) { const t = setTimeout(() => setOpen(false), 600); return () => clearTimeout(t) }
-  }, [settled])
-  const rows = steps.map((s, i) => {
-    const step = typeof s === 'string' ? { t: s } : s
-    return (
-      <div key={i} className={`wstep ${i < done ? 'done' : i === done ? 'active' : 'todo'}`}>
-        <span className="wstep-mark">{i < done ? <Check size={16} /> : i === done ? <span className="wpulse" /> : <span className="wdot" />}</span>
-        {i === done
-          ? <span className="shimmer">{step.t}</span>
-          : <span>{step.t}{i < done && step.r ? <span className="wres">: {step.r}</span> : null}</span>}
-      </div>
-    )
-  })
+  // Granola-style: while working, ONE live line names the source being read
+  // right now. When the card lands it becomes a quiet collapsed line; opening
+  // it reveals the sources with what each one gave, plus the coverage note.
+  const [open, setOpen] = useState(false)
   const ease = [0.25, 0.1, 0.25, 1]
+  const cur = steps[Math.min(done, steps.length - 1)]
+  const curT = typeof cur === 'string' ? cur : cur.t
   return (
     <div className="wsteps">
-      <AnimatePresence initial={false}>
-        {settled && (
+      <AnimatePresence initial={false} mode="wait">
+        {!settled ? (
+          <motion.div key="live" className="wlive" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            <span className="shimmer">{curT}…</span>
+          </motion.div>
+        ) : (
           <motion.button key="fold" className="wfold-toggle" onClick={() => setOpen(o => !o)}
-            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-            transition={{ duration: 0.28, ease }} style={{ overflow: 'hidden' }}>
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
             <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} />{label || 'How Edify worked this out'}
           </motion.button>
         )}
       </AnimatePresence>
       <AnimatePresence initial={false}>
-        {(!settled || open) && (
+        {settled && open && (
           <motion.div key="list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease }} style={{ overflow: 'hidden' }}>
-            {rows}
+            {steps.map((s, i) => {
+              const step = typeof s === 'string' ? { t: s } : s
+              return (
+                <div key={i} className="wsrc">
+                  <span className="wsrc-t">{step.t}</span>
+                  {step.r && <span className="wsrc-r">{step.r}</span>}
+                </div>
+              )
+            })}
+            {coverage && <div className="w-coverage"><b>Coverage:</b> {coverage}</div>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -146,6 +148,18 @@ function WorkingSteps({ steps, done, label }) {
 // One disclosure label across the flow — the map stays for future
 // per-card overrides but is intentionally empty.
 const WORKING_LABELS = {}
+
+// Granola-style provenance: the fold ends by declaring what was read and
+// how completely — the answer signs its own evidence base.
+const WORKING_COVERAGE = {
+  orderDiff: 'The full Saturday basket, 4 warm weekends of POS sales and the weather feed — read in full.',
+  invoiceMatch: 'Invoice #4821, the signed delivery note and expected prices — compared line by line.',
+  gpBreakdown: 'A full week of POS sales and every recipe costing — read in full.',
+  muffinPlan: 'The last 4 Mondays of production and sell-through — read in full.',
+  receiving: 'Order #2231 and the delivery manifest — read in full.',
+  countFix: "Yesterday's count sheet, POS usage and Thursday's delivery — read in full.",
+  invoiceClose: 'Invoice #4902 against order #2231, delivery note #912 and expected prices — every line compared.'
+}
 
 const CARD_MAP = {
   orderDiff: OrderDiffCard, gpBreakdown: GpCard, invoiceMatch: InvoiceCard, countFix: CountFixCard, muffinPlan: MuffinCard,
@@ -224,7 +238,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       // Show Edify doing the work, one step at a time, then hand over the card.
       const wid = nid()
       setTimeout(() => {
-        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card] }])
+        setEntries(es => [...es, { id: wid, kind: 'working', steps, done: 0, label: WORKING_LABELS[step.card], coverage: WORKING_COVERAGE[step.card] }])
         let i = 0
         const tick = () => {
           i += 1
@@ -563,7 +577,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                 }
                 if (e.kind === 'working') return (
                   <motion.div key={e.id} className="msg" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} />
+                    <WorkingSteps steps={e.steps} done={e.done} label={e.label} coverage={e.coverage} />
                   </motion.div>
                 )
                 if (e.kind === 'supplierPick') {

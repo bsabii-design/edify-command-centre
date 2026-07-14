@@ -31,7 +31,7 @@
   --border: #f1efe9;
   --border-strong: #e5e3db;
   --text: #191919;
-  --text-2: #64625b;
+  --text-2: #9b998f;
   --text-3: #9b998f;
   --navy: #191919;
   --navy-hover: #333130;
@@ -1798,3 +1798,15 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .done-head { gap: var(--sp-2); }
 .done-sub, .done-note { padding-left: calc(16px + var(--sp-2)); }
 
+
+/* Coverage line — the fold's last word, Granola-style: what was read and
+   how completely. Quiet, factual, no icon. */
+.w-coverage { font-size: 11px; color: var(--text-3); padding: var(--sp-2) 0 var(--sp-1); }
+.w-coverage b { font-weight: 500; color: var(--text-2); }
+
+/* Evidence, Granola-style: one live line naming the source being read;
+   afterwards a collapsed line that opens into source rows — name left,
+   what it gave right — ending on the coverage note. */
+.wlive { font-size: 13px; color: var(--text-2); padding: var(--sp-1) 0; }
+.wsrc { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4); font-size: 13px; color: var(--text-2); padding: var(--sp-1) 0; }
+.wsrc-r { flex-shrink: 0; font-variant-numeric: tabular-nums; }
