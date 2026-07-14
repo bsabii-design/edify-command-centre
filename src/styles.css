@@ -37,8 +37,8 @@
   --navy-hover: #333130;
   --accent: #ce4023;
   --accent-hover: #b23519;
-  --blue: #2563eb;   /* the confirmed moment — tuned to sit next to #ce4023 */
-  --blue-soft: #5a87ee; /* the receipt check — success without shouting */
+  --blue: #2f63d3;   /* THE blue — one value everywhere */
+  --blue-soft: #2f63d3; /* retired: same as --blue, kept for old references */
   --blue-bg: #eef1fa;
   --blue-border: #d8def2;
   --scroll: #d8d7d1;
@@ -1906,3 +1906,14 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 
 /* Confirmed check sits flush on the summary text — no extra air. */
 .confirmed-summary .done-check { margin: 0; }
+
+/* Expanded confirmed order: emphasis only where the change lives — the
+   new quantity and the new totals read Medium, everything else Regular.
+   The confirmed summary puts the check inline with the first line (8px
+   gap), following lines flush under the text, zero vertical air. */
+.change-row .ch-cost { font-weight: 400; }
+.change-row.total .ch-name { font-weight: 400; }
+.change-row.total .ch-new { font-weight: 500; }
+.sum-first { display: flex; align-items: center; gap: var(--sp-2); font-size: 13px; color: var(--text); }
+.confirmed-summary .sum-line { padding: 0; margin-left: calc(16px + var(--sp-2)); }
+.confirmed-summary .sum-first + .sum-line, .confirmed-summary .sum-line + .sum-line { margin-top: 0; }

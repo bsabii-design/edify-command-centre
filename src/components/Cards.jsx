@@ -91,18 +91,12 @@ export function OrderDiffCard({ entry, patch, resolve }) {
     <CardHead title="Order updated" sub="Bidfood · order #2231 · delivery Sat 07:30"
       action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
   )
-  if (status === 'applied' && !expanded) {
-    return (
-      <Card>
-        {confirmedHead}
-        <div className="ac-body confirmed-summary">
-          <span className="done-check"><Check size={12} /></span>
-          <div className="sum-line">Sent to Bidfood — {60 + add} L oat milk included</div>
-          <div className="sum-line quiet">Basket £1,240.60 → £{(1240.6 + add * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
-        </div>
-      </Card>
-    )
-  }
+  const confirmedSummary = (
+    <div className="ac-body confirmed-summary">
+      <div className="sum-first"><span className="done-check"><Check size={12} stroke={2.5} /></span>Sent to Bidfood — {60 + add} L oat milk included</div>
+      <div className="sum-line quiet">Basket £1,240.60 → £{(1240.6 + add * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+    </div>
+  )
   // One label, one press: the button disables briefly while the send runs.
   const [confirming, setConfirming] = useState(false)
   const runConfirm = () => {
@@ -114,15 +108,9 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   const total = 1240.6 + add * 1.42
   const setQty = (q) => patch({ add: Math.max(0, Math.min(999, q)) - 60 })
 
-  return (
-    <Card>
-      {status === 'applied' ? confirmedHead : (
-        <CardHead title="Proposed order change"
-          sub="Bidfood · order #2231 · delivery Sat 07:30" status={status} />
-      )}
-      {/* No table furniture. Three rows on one grid; old → new is the only
-          pattern (grey → ink), the stepper is the only outlined = editable
-          thing, and the total is the only bold number. */}
+  // Progressive disclosure: expanded adds the read-only table below the
+  // confirmation summary — it never replaces it.
+  const tableBody = (
       <div className="ac-body">
         <div className="change-row ch-headrow">
           <span className="ch-name">Item</span>
@@ -177,7 +165,21 @@ export function OrderDiffCard({ entry, patch, resolve }) {
           </span>
         </div>
       </div>
-      {/* The decision comes before the evidence — the working sits quietly under it. */}
+  )
+  if (status === 'applied') {
+    return (
+      <Card>
+        {confirmedHead}
+        {confirmedSummary}
+        {expanded && tableBody}
+      </Card>
+    )
+  }
+  return (
+    <Card>
+      <CardHead title="Proposed order change"
+        sub="Bidfood · order #2231 · delivery Sat 07:30" status={status} />
+      {tableBody}
       {status === 'proposed' && (<>
         <div className="ac-footer">
           <button className="btn btn-primary" disabled={add === 0 || confirming} onClick={runConfirm}>Update basket</button>
@@ -443,32 +445,19 @@ export function ReceivingCard({ entry, patch, resolve }) {
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
-      <span className="done-check"><Check size={12} /></span>
       {summary.diffs > 0 ? (<>
-        {summary.shortLines.map(l => (
+        <div className="sum-first"><span className="done-check"><Check size={12} stroke={2.5} /></span>{summary.shortLines[0].name} — {summary.shortLines[0].invoiced} {summary.shortLines[0].unit} ordered · {summary.shortLines[0].received} {summary.shortLines[0].unit} received · {summary.shortLines[0].short} {summary.shortLines[0].unit} short</div>
+        {summary.shortLines.slice(1).map(l => (
           <div key={l.name} className="sum-line">{l.name} — {l.invoiced} {l.unit} ordered · {l.received} {l.unit} received · {l.short} {l.unit} short</div>
         ))}
         <div className="sum-line quiet">{8 - summary.diffs} other items matched. Stock has been updated.</div>
       </>) : (<>
-        <div className="sum-line">All 8 items matched order #2231</div>
+        <div className="sum-first"><span className="done-check"><Check size={12} stroke={2.5} /></span>All 8 items matched order #2231</div>
         <div className="sum-line quiet">Stock has been updated</div>
       </>)}
     </div>
   )
-  if (compact && !expanded) {
-    return (
-      <Card>
-        {confirmedHead}
-        {confirmedSummary}
-      </Card>
-    )
-  }
-  return (
-    <Card>
-      {status === 'applied' ? confirmedHead : (
-        <CardHead title="Check in Bidfood delivery"
-          sub={`Order #2231 · expected 07:30 · arrived ${arrivedAt}`} />
-      )}
+  const tableBody = (
       <div className="ac-body recv-body">
         <div className="recv-grid recv-headrow">
           <div>Item</div><div className="recv-exp">Ordered</div><div className="recv-got">Received</div><div className="recv-diffc">Difference</div>
@@ -482,6 +471,21 @@ export function ReceivingCard({ entry, patch, resolve }) {
           </div>
         )}
       </div>
+  )
+  if (status === 'applied') {
+    return (
+      <Card>
+        {confirmedHead}
+        {confirmedSummary}
+        {expanded && tableBody}
+      </Card>
+    )
+  }
+  return (
+    <Card>
+      <CardHead title="Check in Bidfood delivery"
+        sub={`Order #2231 · expected 07:30 · arrived ${arrivedAt}`} />
+      {tableBody}
       {status === 'proposed' && (
         <div className="ac-footer">
           <button className="btn btn-primary" disabled={confirming}
