@@ -7,7 +7,7 @@ import {
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
-import { Back, Check, Clock, Chevron, ChevDown } from './Icons.jsx'
+import { Back, Check, Clock, Chevron, ChevDown, Spinner, Notes } from './Icons.jsx'
 import {
   getSupplier, detectSupplierIntent, detectSupplierSwitch, existingSupplierNames,
   parseSupplierInput, parseDeliveryDays, mergeSupplierDraft, emptyDraft, formatSupplierName, confirmationText
@@ -107,20 +107,19 @@ function WorkingSteps({ steps, done, label, coverage }) {
   // it reveals the sources with what each one gave, plus the coverage note.
   const [open, setOpen] = useState(false)
   const ease = [0.25, 0.1, 0.25, 1]
-  const cur = steps[Math.min(done, steps.length - 1)]
-  const curT = typeof cur === 'string' ? cur : cur.t
   return (
     <div className="wsteps">
       <AnimatePresence initial={false} mode="wait">
         {!settled ? (
           <motion.div key="live" className="wlive" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-            <span className="shimmer">{curT}…</span>
+            <Spinner size={16} className="wspin" /><span>Working…</span>
           </motion.div>
         ) : (
-          <motion.button key="fold" className="wfold-toggle" onClick={() => setOpen(o => !o)}
+          <motion.button key="fold" className="wfold-chip" onClick={() => setOpen(o => !o)}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
-            <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} />{label || 'How Edify worked this out'}
+            <Notes size={16} />{label || 'How Edify worked this out'}
+            <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} />
           </motion.button>
         )}
       </AnimatePresence>
@@ -128,16 +127,18 @@ function WorkingSteps({ steps, done, label, coverage }) {
         {settled && open && (
           <motion.div key="list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease }} style={{ overflow: 'hidden' }}>
-            {steps.map((s, i) => {
-              const step = typeof s === 'string' ? { t: s } : s
-              return (
-                <div key={i} className="wsrc">
-                  <span className="wsrc-t">{step.t}</span>
-                  {step.r && <span className="wsrc-r">{step.r}</span>}
-                </div>
-              )
-            })}
-            {coverage && <div className="w-coverage"><b>Coverage:</b> {coverage}</div>}
+            <div className="wsrc-list">
+              {steps.map((s, i) => {
+                const step = typeof s === 'string' ? { t: s } : s
+                return (
+                  <div key={i} className="wsrc">
+                    <span className="wsrc-t">{step.t}</span>
+                    {step.r && <span className="wsrc-r">{step.r}</span>}
+                  </div>
+                )
+              })}
+              {coverage && <div className="w-coverage"><b>Coverage:</b> {coverage}</div>}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -28,8 +28,8 @@
   --surface: #ffffff;
   --surface-2: #f2f1ec;
   --hover: #f8f7f4;       /* lighter than surface-2 — a wash, not a fill */
-  --border: #f1efe9;
-  --border-strong: #e5e3db;
+  --border: rgba(60, 58, 48, 0.055);
+  --border-strong: rgba(60, 58, 48, 0.11);
   --text: #191919;
   --text-2: #9b998f;
   --text-3: #9b998f;
@@ -1814,3 +1814,18 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* The helper carries no padding of its own — the surrounding insets
    (body bottom, footer top) already give it exactly 16 each side. */
 .card-helper { padding: 0; }
+
+/* Granola 1:1 — a spinning arc says "Working…", then the evidence lands
+   as a chip (icon · label · trailing chevron). Opening it reveals the
+   sources behind a left rule: name in ink, value in grey, one type size
+   throughout, coverage as the last line. */
+@keyframes wspin { to { transform: rotate(360deg); } }
+.wspin { animation: wspin 0.9s linear infinite; }
+.wlive { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 13px; color: var(--text-2); padding: var(--sp-1) 0; }
+.wfold-chip { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 13px; color: var(--text-2); background: var(--hover); border-radius: var(--r-md); padding: var(--sp-1) var(--sp-2); transition: color 0.13s; }
+.wfold-chip:hover { color: var(--text); }
+.wfold-chip .wf-chev { transition: transform 0.18s; }
+.wfold-chip .wf-chev.open { transform: rotate(90deg); }
+.wsrc-list { border-left: 1px solid var(--border-strong); margin-top: var(--sp-2); margin-left: var(--sp-2); padding-left: var(--sp-3); }
+.wsrc-t { color: var(--text); }
+.w-coverage { font-size: 13px; }
