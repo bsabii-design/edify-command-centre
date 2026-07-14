@@ -87,6 +87,10 @@ export default function App() {
       case 'decline':
         setInterrupt(null)
         markResolved(scenarioId)
+        // Declining the change is not cancelling the order — the 60 L
+        // standing order still arrives Saturday, so the case keeps moving
+        // through delivery and invoice on the original numbers.
+        patchThread(threadId, { caseState: 'awaiting_delivery', orderAdd: 0 })
         // The promise to keep watching is visible, not just spoken.
         setWatching(w => [...w, { id: 'wforecast', title: 'Saturday order — watching until it locks', sub: 'You kept 60 L — anything that changes this call comes straight back', chip: 'until 16:00', threadId }])
         // Recorded in the thread and History, but not paraded in Done today —
@@ -210,7 +214,7 @@ export default function App() {
   const fireDelivery = () => {
     const t = orderThread
     if (!t) return
-    patchThread(t.id, { caseState: 'receiving', pendingSteps: SCENARIOS.delivery.steps.map(s => ({ ...s, scenarioId: 'delivery' })) })
+    patchThread(t.id, { caseState: 'receiving', pendingSteps: SCENARIOS.delivery.steps.map(s => (s.type === 'card' ? { ...s, scenarioId: 'delivery', data: { orderAdd: t.orderAdd ?? 20 } } : { ...s, scenarioId: 'delivery' })) })
     announce({ icon: 'truck', threadId: t.id, title: 'Bidfood delivery due now', cta: 'Receive' })
   }
 
@@ -242,11 +246,14 @@ export default function App() {
     const diffLabel = qtyN === 0 ? `${priceN} price difference${priceN === 1 ? '' : 's'}`
       : priceN === 0 ? `${qtyN} quantity difference${qtyN === 1 ? '' : 's'}`
       : `${n} differences`
+    // The invoiced total follows the order that actually stands — £1,240.60
+    // if the change was declined, £1,269.00 with the extra 20 L.
+    const invoiced = 1240.6 + (t.orderAdd ?? 20) * 1.42
     patchThread(t.id, {
       caseState: 'invoice_decision',
       pendingSteps: [
         { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and your expected prices I found **${diffLabel}**, and proposed a resolution for each. Nothing is sent until you confirm.` },
-        { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched, diffLabel } }
+        { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched, diffLabel, invoiced } }
       ]
     })
     announce({ icon: 'invoice', threadId: t.id, title: `Invoice #4902 has ${diffLabel}`, cta: 'Review' })
@@ -333,7 +340,7 @@ export default function App() {
 
   // ---- Home data -----------------------------------------------------------
   const needsItems = [
-    ...(orderThread?.caseState === 'receiving' ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery ready to check in', why: 'Order #2231 — 8 items, including 80 L oat milk.', cta: 'Receive delivery' }] : []),
+    ...(orderThread?.caseState === 'receiving' ? [{ id: 'recv', tier: 'urgent', urgent: true, stake: '8', stakeUnit: 'items', pressure: 'due now', threadId: orderThread.id, title: 'Bidfood delivery ready to check in', why: `Order #2231 — 8 items, including ${60 + (orderThread.orderAdd ?? 20)} L oat milk.`, cta: 'Receive delivery' }] : []),
     ...(orderThread?.caseState === 'invoice_decision' ? [{ id: 'inv2', tier: 'important', urgent: true, stake: `£${((orderThread.diffLines || []).reduce((a, l) => a + l.value, 0) + 7.20).toFixed(2)}`, stakeUnit: 'over', threadId: orderThread.id, title: 'Invoice #4902 has differences to review', why: 'Edify proposed a resolution for each.', cta: 'Review' }] : []),
     ...BRIEF.needsCall.filter(i => !resolved.has(i.scenario) && !deferred[i.id] && !dismissed.has(i.id))
   ]

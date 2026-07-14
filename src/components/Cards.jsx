@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { INVOICE_LINES, INVOICE_TOTALS, RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
 import { CURRENT_SITE, WEEK_DAYS, formatDays } from '../suppliers.js'
-import { GrainSwatch } from './Recipes.jsx'
 import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Eye } from './Icons.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
@@ -104,10 +103,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
           <span className="ch-cost">Cost</span>
         </div>
         <div className="change-row">
-          <span className="ch-name">
-            <span className="line-swatch"><GrainSwatch palette="dairy" seed="Oat milk" /></span>
-            Oat milk
-          </span>
+          <span className="ch-name">Oat milk</span>
           <span className="ch-qty">
             {/* Kept as is → the row shows what IS: 60 L, no arrow, no ghost of
                 the proposal. Only applied cards show old → new. */}
@@ -139,10 +135,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
         </button>
         {showAll && BASKET.filter(b => !b.isOat).map((b, i) => (
           <div key={i} className="change-row sub">
-            <span className="ch-name quiet">
-              <span className="line-swatch sm"><GrainSwatch palette={b.cat} seed={b.name} /></span>
-              {b.name}
-            </span>
+            <span className="ch-name quiet">{b.name}</span>
             <span className="ch-qty quiet">{b.qty} {b.unit}</span>
             <span className="ch-cost quiet">—</span>
           </div>
@@ -413,12 +406,14 @@ function ReceiveRow({ line, i, rec, status, patch }) {
 }
 
 export function ReceivingCard({ entry, patch, resolve }) {
-  const { status = 'proposed', rows = {} } = entry.data || {}
+  const { status = 'proposed', rows = {}, orderAdd = 20 } = entry.data || {}
   const [confirming, setConfirming] = useState(false)
   const setRows = (rowPatch) => patch({ rows: { ...rows, ...rowPatch } })
   // Every delivered line is visible — receiving means checking all of it,
-  // and a hidden row is an unreviewed row.
-  const lines = [...RECEIVE_LINES, ...RECEIVE_MORE]
+  // and a hidden row is an unreviewed row. The oat milk line follows the
+  // order that actually stands: 60 L if the change was declined.
+  const lines = [...RECEIVE_LINES, ...RECEIVE_MORE].map(l =>
+    l.name === 'Oatly Barista oat milk' ? { ...l, expected: 60 + orderAdd } : l)
   const summary = lines.reduce((acc, l, i) => {
     const received = rows[i]?.received ?? l.expected
     const diff = received - l.expected
@@ -520,7 +515,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
   const qtyDiff = lines.filter(l => l.kind === 'qty').reduce((a, l) => a + l.amount, 0)
   const priceDiff = lines.filter(l => l.kind === 'price').reduce((a, l) => a + l.amount, 0)
   const totalDiff = qtyDiff + priceDiff
-  const invoiced = 1269
+  const invoiced = d.invoiced ?? 1269
   const expected = invoiced - totalDiff
   const setRes = (i, resolution) => patch({ lines: lines.map((l, j) => (j === i ? { ...l, resolution } : l)) })
   const matched = d.matched || []
@@ -575,10 +570,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
         )}
         {d.showMatched && matched.map((m, i) => (
           <div key={`m${i}`} className="ir-row muted sub">
-            <div className="ir-item">
-              <span className="line-swatch sm"><GrainSwatch palette={(BASKET.find(b => b.name === m.name) || {}).cat || 'dairy'} seed={m.name} /></span>
-              {m.name}
-            </div>
+            <div className="ir-item">{m.name}</div>
             <div className="ir-issue">{m.qty} {m.unit} × £{m.price.toFixed(2)}</div>
             <div className="ir-impact">—</div>
             <div className="ir-res">Matched</div>
