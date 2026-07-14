@@ -1957,3 +1957,12 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* Single-item confirmed table: the item name is context, not the emphasis.
    Medium stays with the title, the changed value and the new total. */
 .change-row .ch-name { font-weight: 400; }
+
+/* One circle size everywhere: 16px — avatar, nav badge, status discs. */
+.user .avatar, .nav-item .badge, .cs-ico, .cc-check, .toast .t-icon, .interrupt .i-close { width: 16px; height: 16px; }
+
+/* The changed cost is a changed value — Medium. Unchanged cells and old
+   values stay Regular. */
+.change-row .ch-cost { font-weight: 500; }
+.change-row .ch-cost.quiet { font-weight: 400; }
+.ch-old { font-weight: 400; }

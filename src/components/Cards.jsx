@@ -93,7 +93,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
-      <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>Sent to Bidfood — {60 + add} L oat milk included</div>
+      <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>Sent to Bidfood — {60 + add} L Oatly Barista oat milk included</div>
       <div className="sum-line quiet">Basket £1,240.60 → £{(1240.6 + add * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
     </div>
   )
@@ -118,7 +118,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
           <span className="ch-cost">Cost</span>
         </div>
         <div className="change-row">
-          <span className="ch-name">Oat milk</span>
+          <span className="ch-name">Oatly Barista oat milk</span>
           <span className="ch-qty">
             {/* Kept as is → the row shows what IS: 60 L, no arrow, no ghost of
                 the proposal. Only applied cards show old → new. */}
