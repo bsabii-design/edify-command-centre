@@ -127,7 +127,7 @@ function WorkingSteps({ steps, done, label }) {
           <motion.button key="fold" className="wfold-toggle" onClick={() => setOpen(o => !o)}
             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             transition={{ duration: 0.28, ease }} style={{ overflow: 'hidden' }}>
-            <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} /> {label || 'How Edify worked this out'}
+            <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} />{label || 'How Edify worked this out'}
           </motion.button>
         )}
       </AnimatePresence>
@@ -552,7 +552,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                             }} resolve={resolve(e)} />
                             {expanded && (
                               <button className="fold-row" onClick={() => patchEntry(e.id, { reopened: false })}>
-                                <Chevron size={16} className="fold-chev" /> Collapse
+                                <Chevron size={16} className="fold-chev" />Collapse
                               </button>
                             )}
                           </motion.div>

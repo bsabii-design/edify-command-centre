@@ -1764,3 +1764,18 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    status block after confirmation records what HAS happened. */
 .card-helper { font-size: 13px; color: var(--text-2); padding: var(--sp-4) 0 0; }
 .card-helper.inpad { margin: 0 var(--sp-4); }
+
+/* LOCKUP LAW — icon to its text is always 4px; a status disc is 16px with
+   a 14px glyph inside; a heading sits 4px above its subline; quiet text
+   actions use the CTA type size (11px). And no drop shadows anywhere —
+   surfaces separate by border, not by float. */
+:root { --shadow-sm: none; --shadow-md: none; --shadow-lg: none; }
+.done-head { gap: var(--sp-1); }
+.done-check { width: 16px; height: 16px; }
+.done-sub { padding-left: calc(16px + var(--sp-1)); margin-top: var(--sp-1); }
+.done-note { padding-left: calc(16px + var(--sp-1)); margin-top: var(--sp-1); }
+.action-card .ac-sub { margin-top: var(--sp-1); }
+.done-action { font-size: 11px; }
+.interrupt { gap: var(--sp-1); }
+.asrow .ch-name { display: inline-flex; align-items: center; gap: var(--sp-1); }
+.wfold-toggle, .more-toggle { gap: var(--sp-1); }

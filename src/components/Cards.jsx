@@ -60,7 +60,7 @@ function ConfirmStrip({ label, sub, details, note, action }) {
       <div className="done-head">
         <motion.span className="done-check" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 480, damping: 16, delay: 0.12 }}>
-          <Check size={16} />
+          <Check size={14} />
         </motion.span>
         <span className="done-line">{label}</span>
         {action && <button className="done-action" onClick={action.fn}>{action.label}</button>}
@@ -129,7 +129,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
         </div>
 
         <button className="change-row asrow" onClick={() => patch({ showAll: !showAll })}>
-          <span className="ch-name quiet"><Chevron size={16} style={{ transform: showAll ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> {showAll ? 'Hide unchanged items' : 'Show 7 unchanged items'}</span>
+          <span className="ch-name quiet"><Chevron size={16} style={{ transform: showAll ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} />{showAll ? 'Hide unchanged items' : 'Show 7 unchanged items'}</span>
         </button>
         {showAll && BASKET.filter(b => !b.isOat).map((b, i) => (
           <div key={i} className="change-row sub">
@@ -312,7 +312,7 @@ export function InvoiceCard({ entry, patch, resolve }) {
               </tr>
             ))}
             <tr className="more-row" onClick={() => patch({ showMatched: !showMatched })}>
-              <td colSpan={4}><span className="more-toggle"><Chevron size={16} style={{ transform: showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> {showMatched ? 'Hide matched items' : `${matched.length} other items matched`}</span></td>
+              <td colSpan={4}><span className="more-toggle"><Chevron size={16} style={{ transform: showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} />{showMatched ? 'Hide matched items' : `${matched.length} other items matched`}</span></td>
             </tr>
             {showMatched && matched.map((l, i) => (
               <tr key={`m${i}`} className="sub-row">
@@ -553,7 +553,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
         ))}
         {matched.length > 0 && (
           <button className="ir-more" onClick={() => patch({ showMatched: !d.showMatched })}>
-            <span className="more-toggle"><Chevron size={16} style={{ transform: d.showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> {d.showMatched ? 'Hide matched lines' : `Show ${matched.length} matched lines`}</span>
+            <span className="more-toggle"><Chevron size={16} style={{ transform: d.showMatched ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} />{d.showMatched ? 'Hide matched lines' : `Show ${matched.length} matched lines`}</span>
           </button>
         )}
         {d.showMatched && matched.map((m, i) => (
