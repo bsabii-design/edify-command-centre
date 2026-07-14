@@ -37,8 +37,8 @@
   --navy-hover: #333130;
   --accent: #ce4023;
   --accent-hover: #b23519;
-  --blue: #2f63d3;   /* the confirmed moment — tuned to sit next to #ce4023 */
-  --blue-soft: #5d83dd; /* the receipt check — success without shouting */
+  --blue: #2563eb;   /* the confirmed moment — tuned to sit next to #ce4023 */
+  --blue-soft: #5a87ee; /* the receipt check — success without shouting */
   --blue-bg: #eef1fa;
   --blue-border: #d8def2;
   --scroll: #d8d7d1;
@@ -1896,3 +1896,10 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .wfold-chip { background: none; padding: 0; border-radius: 0; }
 .confirmed-summary .done-check { margin: var(--sp-1) 0 var(--sp-2); }
 .recv-item .ws-item-name, .recv-item .ws-item-sub { margin: 0; }
+
+/* Emphasis carries information: received values read Regular unless they
+   differ from the order; only real differences are Medium (short = red).
+   View/Hide details reads Regular like the metadata beside it. */
+.recv-final { font-weight: 400; }
+.recv-final.changed { font-weight: 500; }
+.head-action { font-weight: 400; }

@@ -404,7 +404,7 @@ function ReceiveRow({ line, i, rec, status, patch }) {
               </span>
               <button onClick={() => setQty(received + 1)} aria-label="More"><Plus size={16} /></button>
             </span>
-          ) : (<span className="recv-final">{received} {line.unit}</span>)}
+          ) : (<span className={`recv-final ${diff !== 0 ? 'changed' : ''}`}>{received} {line.unit}</span>)}
         </div>
         <div className={`recv-diffc ${diff < 0 ? 'is-short' : diff === 0 ? 'is-none' : ''}`}>
           {diff < 0 ? `${-diff} ${line.unit} short` : diff > 0 ? `+${diff} ${line.unit} extra` : '—'}
