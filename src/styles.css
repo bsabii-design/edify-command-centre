@@ -1870,3 +1870,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ir-headrow > div { font-size: 11px; font-weight: 400; color: var(--text-2); }
 .ir-select { appearance: none; -webkit-appearance: none; background-color: var(--surface); background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a887e' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--sp-2) center; padding-right: var(--sp-8); }
 .done-action { font-size: 11px; font-weight: 500; }
+
+/* The badge digit reads like the menu text next to it; the Action header
+   sits flush on its column — statuses and dropdowns start there too. */
+.nav-item .badge { font-size: 13px; font-weight: 500; }
+.ir-headrow > :last-child { padding-left: 0; }
