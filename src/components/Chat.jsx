@@ -80,7 +80,7 @@ const WORKING_STEPS = {
   ],
   receiving: [
     { t: 'Order #2231', r: '8 items' },
-    { t: 'Expected delivery', r: 'Saturday 07:30' }
+    { t: 'Expected delivery', r: 'Sat 07:30' }
   ],
   countFix: [
     { t: "Reading yesterday's count", r: '22 L' },
@@ -127,7 +127,7 @@ function WorkingSteps({ steps, done, label }) {
           <motion.button key="fold" className="wfold-toggle" onClick={() => setOpen(o => !o)}
             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             transition={{ duration: 0.28, ease }} style={{ overflow: 'hidden' }}>
-            <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} /> {label || 'How Edify checked this'}
+            <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} /> {label || 'How Edify worked this out'}
           </motion.button>
         )}
       </AnimatePresence>
@@ -143,8 +143,9 @@ function WorkingSteps({ steps, done, label }) {
   )
 }
 
-// The fold line names what the work WAS, per card.
-const WORKING_LABELS = { receiving: 'How Edify prepared this' }
+// One disclosure label across the flow — the map stays for future
+// per-card overrides but is intentionally empty.
+const WORKING_LABELS = {}
 
 const CARD_MAP = {
   orderDiff: OrderDiffCard, gpBreakdown: GpCard, invoiceMatch: InvoiceCard, countFix: CountFixCard, muffinPlan: MuffinCard,

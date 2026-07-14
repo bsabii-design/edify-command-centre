@@ -92,7 +92,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   return (
     <Card>
       <CardHead title="Proposed order change"
-        sub="Bidfood — delivers Saturday 07:30" status={status} />
+        sub="Bidfood · delivery Sat 07:30" status={status} />
       {/* No table furniture. Three rows on one grid; old → new is the only
           pattern (grey → ink), the stepper is the only outlined = editable
           thing, and the total is the only bold number. */}
@@ -129,9 +129,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
         </div>
 
         <button className="change-row asrow" onClick={() => patch({ showAll: !showAll })}>
-          <span className="ch-name quiet"><Chevron size={16} style={{ transform: showAll ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> 7 other items</span>
-          <span className="ch-qty quiet">Unchanged</span>
-          <span className="ch-cost quiet">—</span>
+          <span className="ch-name quiet"><Chevron size={16} style={{ transform: showAll ? 'rotate(90deg)' : 'none', transition: 'transform 0.18s' }} /> {showAll ? 'Hide unchanged items' : 'Show 7 unchanged items'}</span>
         </button>
         {showAll && BASKET.filter(b => !b.isOat).map((b, i) => (
           <div key={i} className="change-row sub">
@@ -158,7 +156,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
           <span className="cs-ico"><Eye size={16} /></span>
           <div className="cs-copy">
             <div className="cs-title">1 change proposed</div>
-            <div className="cs-body">Confirming sends the updated basket to Bidfood. Keeping it leaves oat milk at <b>60 L</b> — nothing is sent.</div>
+            <div className="cs-body">Updating sends the edited basket to Bidfood. Keeping it as is leaves oat milk at <b>60 L</b>.</div>
           </div>
         </div>
         <div className="ac-footer">
@@ -428,7 +426,7 @@ export function ReceivingCard({ entry, patch, resolve }) {
   return (
     <Card>
       <CardHead title="Receive Bidfood delivery"
-        sub="Order #2231 — expected Sat 07:30" status={status === 'proposed' ? null : 'applied'} />
+        sub="Order #2231 · expected Sat 07:30" status={status === 'proposed' ? null : 'applied'} />
       <div className="ac-body recv-body">
         <div className="recv-grid recv-headrow">
           <div>Item</div><div className="recv-exp">Ordered</div><div className="recv-got">Received</div><div className="recv-diffc">Difference</div>
@@ -438,10 +436,11 @@ export function ReceivingCard({ entry, patch, resolve }) {
           <div className="card-summary">
             <span className="cs-ico"><Eye size={16} /></span>
             <div className="cs-copy">
-              <div className="cs-title">{summary.diffs > 0 ? `${summary.diffs} difference${summary.diffs === 1 ? '' : 's'} found` : 'All items match the order'}</div>
+              <div className="cs-title">{summary.diffs > 0 ? `${summary.diffs} difference${summary.diffs === 1 ? '' : 's'} recorded` : 'All items match'}</div>
               <div className="cs-body">
-                Confirming will update stock using the received quantities.
-                {summary.diffs > 0 && <> Edify will check {summary.diffs === 1 ? 'this difference' : 'these differences'} against the invoice when it arrives.</>}
+                {summary.diffs > 0
+                  ? <>Stock will update from received quantities. Edify will check {summary.diffs === 1 ? 'this' : 'these'} against the invoice when it arrives.</>
+                  : <>Confirming will update stock using the received quantities.</>}
               </div>
             </div>
           </div>
@@ -455,8 +454,8 @@ export function ReceivingCard({ entry, patch, resolve }) {
       )}
       {status === 'applied' && (summary.diffs > 0 ? (
         <ConfirmStrip label="Delivery confirmed"
-          sub={<>8 items received, {summary.diffs} difference{summary.diffs === 1 ? '' : 's'} recorded. Stock has been updated.</>}
-          note={`Edify will check the difference${summary.diffs === 1 ? '' : 's'} against Bidfood's invoice when it arrives.`} />
+          sub={<>8 items received. {summary.diffs} difference{summary.diffs === 1 ? '' : 's'} recorded. Stock has been updated.</>}
+          note={`Edify will check ${summary.diffs === 1 ? 'this' : 'these'} against Bidfood's invoice when it arrives.`} />
       ) : (
         <ConfirmStrip label="Delivery confirmed"
           sub="8 items received. Stock has been updated."
@@ -588,12 +587,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       {status === 'proposed' && accepting && (
         <div className="ir-confirm">
           <div className="cs-title">Accept invoice as billed?</div>
-          <div className="cs-body">
-            {lines.some(l => l.kind === 'price') && !lines.some(l => l.kind === 'qty')
-              ? 'This will accept Bidfood invoice #4902 without asking the supplier to confirm the higher butter price.'
-              : <>This will accept Bidfood invoice #4902 without requesting corrections.{lines.some(l => l.kind === 'qty') && ' No credit notes will be requested.'}</>}
-            {' '}Expected supplier prices will not be updated.
-          </div>
+          <div className="cs-body">This will accept Bidfood invoice #4902 without requesting corrections. No credit notes will be requested. Expected supplier prices will not be updated.</div>
           <div className="ir-confirm-actions">
             <button className="btn btn-primary" onClick={() => resolve('invoiceAcceptAll', { totalDiff })}>Accept invoice</button>
             <button className="btn btn-secondary" onClick={() => patch({ accepting: false })}>Cancel</button>
@@ -602,12 +596,12 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
       )}
       {status === 'applied' && (d.resolution === 'acceptedAll' ? (
         <ConfirmStrip label="Invoice accepted as billed"
-          sub="No supplier confirmation was requested. Expected supplier price was not updated."
+          sub="No supplier correction was requested. Expected supplier prices were not updated."
           note="Invoice #4902 was closed." />
       ) : (
         <ConfirmStrip label={n === 1 ? 'Resolution confirmed' : 'Resolutions confirmed'}
           sub={invoiceOutcome(lines)}
-          note="Invoice #4902 is waiting for supplier response. Expected supplier price was not updated. Stock remains based on received quantities." />
+          note="Invoice #4902 is waiting for supplier response. Expected supplier prices were not updated. Stock remains based on received quantities." />
       ))}
     </Card>
   )

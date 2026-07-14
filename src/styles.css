@@ -1687,3 +1687,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* Spec columns: Item 26 / Issue 36 / Impact 10 / Resolution 28. The
    selected resolution must read in full — labels are sized to fit. */
 .ir-grid, .ir-row { grid-template-columns: minmax(0, 26fr) minmax(0, 34fr) minmax(0, 10fr) minmax(0, 30fr); }
+
+/* Disclosure rows read as interactive, not disabled: medium grey at rest,
+   darker on hover. One label system — "How Edify worked this out". */
+.wfold-toggle { color: var(--text-2); }
+.wfold-toggle:hover { color: var(--text); }

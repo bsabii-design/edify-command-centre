@@ -42,12 +42,12 @@ export const SCENARIOS = {
     sub: 'One case: order → delivery → invoice',
     userText: null,
     steps: [
-      { type: 'assistant', text: "Saturday's **oat milk** looks short. You ordered **60 L**, but I expect **~78 L** — Saturday is warmer than usual. The order locks at **16:00** today." },
-      { type: 'assistant', text: "I prepared a change to **80 L**. Nothing is sent until you confirm." },
+      { type: 'assistant', text: "Saturday's **oat milk** looks short. You ordered **60 L**, but I expect about **78 L** — Saturday is warmer than usual. The order locks at **16:00** today." },
+      { type: 'assistant', text: "I prepared a change. You can adjust the amount before confirming." },
       { type: 'card', card: 'orderDiff' }
     ],
     resolutions: {
-      confirm: [{ type: 'assistant', text: "Done — Bidfood accepted the update at {time}. Delivery expected **Saturday 07:30**, and I'll remind you when it arrives." }],
+      confirm: [{ type: 'assistant', text: "Next, I'll prompt you when the delivery is ready to check in." }],
       decline: [{ type: 'assistant', text: "No changes made — oat milk stays at **60 L**, nothing was sent. Until the order locks at **16:00** I keep watching everything that could change this call — prices, stock, the forecast, the supplier. If anything shifts, it comes straight back to you the moment it does. Otherwise you won't hear about this again." }]
     }
   },
@@ -62,7 +62,7 @@ export const SCENARIOS = {
       { type: 'card', card: 'orderDiff' }
     ],
     resolutions: {
-      confirm: [{ type: 'assistant', text: "Sent — Bidfood accepted the updated basket at {time}. Delivery lands **Saturday 07:30**. This case now sits in In progress on your Home — I'm watching it, and I'll ping you when the van arrives so you can check it in. Nothing else needed from you until then." }],
+      confirm: [{ type: 'assistant', text: "Next, I'll prompt you when the delivery is ready to check in." }],
       decline: [{ type: 'assistant', text: "Left as is — the basket stays at **60 L**, nothing was sent. Until the order locks at **16:00** I keep watching everything that could change this call — prices, stock, the forecast, the supplier. If anything shifts, it comes straight back to you the moment it does. Otherwise you won't hear about this again." }]
     }
   },
@@ -75,21 +75,20 @@ export const SCENARIOS = {
     sub: 'Receiving',
     userText: null,
     steps: [
-      { type: 'assistant', text: "**Saturday, 07:28.** Bidfood delivery is ready to check in — I pre-filled it from order **#2231**. Only change the quantities that don't match:" },
+      { type: 'assistant', text: "**Saturday, 07:28.** Bidfood delivery is ready to check in — I pre-filled it from order **#2231**. Only change the quantities that don't match." },
       { type: 'card', card: 'receiving' }
     ],
     resolutions: {
+      // The card carries the confirmation — the narrative below only says
+      // what happens next, never the same thing twice.
       receipt: (p) => {
-        // Receiving records facts. The money conversation happens when the
-        // invoice lands — Edify brings a drafted claim there.
         if (!p || p.diffs <= 0) {
-          return [{ type: 'assistant', text: "Delivery confirmed — **8** items received, stock updated. I'll match the invoice when it arrives." }]
+          return [{ type: 'assistant', text: "I'll match the invoice when it arrives." }]
         }
-        const n = p.diffs
-        return [{ type: 'assistant', text: `Delivery confirmed — **8** items received, **${n} difference${n === 1 ? '' : 's'}** recorded. Stock is updated with what actually arrived, and I'll check the difference${n === 1 ? '' : 's'} against Bidfood's invoice when it lands. If they billed for the full order, I'll bring you a drafted credit claim.` }]
+        return [{ type: 'assistant', text: "I'll check the recorded differences against Bidfood's invoice when it arrives." }]
       },
-      invoiceResolutions: (p) => [{ type: 'assistant', text: `Confirmed — **${(p?.lines || []).length} resolution${(p?.lines || []).length === 1 ? '' : 's'}** sent to Bidfood. Invoice #4902 waits for their response — stock stays based on received quantities and no expected prices were changed. I'll close the case when they reply.` }],
-      invoiceAcceptAll: () => [{ type: 'assistant', text: `Accepted as billed — invoice #4902 posts at **£1,269.00**, no corrections requested. Case closed — the whole story is one thread in Journal.` }]
+      invoiceResolutions: () => [{ type: 'assistant', text: "I'll close the case when Bidfood replies." }],
+      invoiceAcceptAll: () => [{ type: 'assistant', text: 'Case closed — the whole story is one thread in Journal.' }]
     }
   },
 

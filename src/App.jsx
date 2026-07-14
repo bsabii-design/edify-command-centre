@@ -252,7 +252,7 @@ export default function App() {
     patchThread(t.id, {
       caseState: 'invoice_decision',
       pendingSteps: [
-        { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and your expected prices I found **${diffLabel}**, and proposed a resolution for each. Nothing is sent until you confirm.` },
+        { type: 'assistant', scenarioId: 'delivery', text: `**Monday, 06:40.** Bidfood invoice **#4902** is in. Against order #2231, delivery note #912 and expected prices, I found **${diffLabel}** and proposed a resolution for each. Nothing is sent until you confirm.` },
         { type: 'card', card: 'invoiceClose', scenarioId: 'delivery', data: { lines, matched, diffLabel, invoiced } }
       ]
     })
