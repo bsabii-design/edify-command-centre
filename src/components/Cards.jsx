@@ -96,6 +96,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
       <Card>
         {confirmedHead}
         <div className="ac-body confirmed-summary">
+          <span className="done-check"><Check size={12} /></span>
           <div className="sum-line">Sent to Bidfood — {60 + add} L oat milk included</div>
           <div className="sum-line quiet">Basket £1,240.60 → £{(1240.6 + add * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
         </div>
@@ -441,6 +442,7 @@ export function ReceivingCard({ entry, patch, resolve }) {
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
+      <span className="done-check"><Check size={12} /></span>
       {summary.diffs > 0 ? (<>
         {summary.shortLines.map(l => (
           <div key={l.name} className="sum-line">{l.name} — {l.invoiced} {l.unit} ordered · {l.received} {l.unit} received · {l.short} {l.unit} short</div>

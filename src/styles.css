@@ -1884,3 +1884,15 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .confirmed-summary .sum-line { font-size: 13px; color: var(--text); padding: var(--sp-0) 0; }
 .confirmed-summary .sum-line.quiet { color: var(--text-2); }
 .head-action { display: inline-flex; align-items: center; gap: var(--sp-1); flex-shrink: 0; }
+
+/* The back arrow and the live deadline lie flat on the page background —
+   no plates. The disclosure chip is a tertiary text action: no plate,
+   hover darkens the text. The confirmed check sits on its own status row,
+   summary text stays on the card's normal left edge. Item names sit flush
+   on their unit sublines in every table. */
+.chat-back { background: transparent; border-color: transparent; }
+.chat-back:hover { background: var(--hover); }
+.deadline-chip.chat-deadline { background: transparent; border-color: transparent; }
+.wfold-chip { background: none; padding: 0; border-radius: 0; }
+.confirmed-summary .done-check { margin: var(--sp-1) 0 var(--sp-2); }
+.recv-item .ws-item-name, .recv-item .ws-item-sub { margin: 0; }
