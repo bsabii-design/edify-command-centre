@@ -2004,3 +2004,15 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* User messages sit on a warm beige wash, ink text, evenly rounded —
    quiet like the rest of the surface, not a dark pill. */
 .msg-user-bubble { background: var(--surface-2); color: var(--text); border-radius: var(--r-lg); }
+
+/* ---- TABLE GRID LAW: three-column card tables share one grid.
+   Name 24 · Data 40 · Outcome 36 — the data column starts at the same x
+   in every card. Text and controls align left; a purely numeric outcome
+   column (Cost) aligns right. Wider tables (receiving, 4 cols) are the
+   sized exception. ---- */
+.change-row:not(.total), .ir-grid, .ir-row, .cnt-row { grid-template-columns: minmax(0, 24fr) minmax(0, 40fr) minmax(0, 36fr); gap: var(--sp-4); }
+.change-row .ch-qty { justify-self: start; }
+.change-row .ch-cost { text-align: right; justify-self: end; }
+.cnt-val { text-align: left; }
+/* Disclosure rows span the full card width — they are not data rows. */
+.change-row.asrow { grid-template-columns: minmax(0, 1fr); }
