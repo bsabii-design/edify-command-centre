@@ -124,7 +124,7 @@ input, textarea { font-family: inherit; font-size: 13px; color: var(--text); }
 .nav-item {
   /* The pill reaches to 8px from the sidebar walls; content stays put. */
   display: flex; align-items: center; gap: var(--sp-2); width: calc(100% + 2 * var(--sp-1)); margin: 0 calc(-1 * var(--sp-1)); height: 28px; padding: 0 var(--sp-3);
-  border-radius: var(--r-md); color: var(--text-2); font-size: 13px; font-weight: 500;
+  border-radius: var(--r-md); color: var(--text-2); font-size: 11px; font-weight: 500;
   transition: background 0.12s, color 0.12s; position: relative; text-align: left;
 }
 .nav-item svg { color: var(--text-3); flex-shrink: 0; }
@@ -675,7 +675,7 @@ input, textarea { font-family: inherit; font-size: 13px; color: var(--text); }
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--text-2);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   transition: background 0.13s, color 0.13s, border-color 0.13s;
 }
@@ -1317,7 +1317,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .row-slab { display: flex; align-items: center; gap: var(--sp-5); }
 .row-stake { width: 72px; flex-shrink: 0; }
 .stake-value { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; }
-.stake-unit { font-size: 13px; color: var(--text-3); }
+.stake-unit { font-size: 11px; color: var(--text-3); }
 .row-bar { width: 3px; align-self: stretch; border-radius: var(--r-full); background: var(--border-strong); flex-shrink: 0; }
 .brief-row.is-urgent .row-bar { background: var(--accent); }
 .row-main { flex: 1; min-width: 0; }
@@ -2292,11 +2292,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .bg-count { flex: 1; font-size: 13px; font-weight: 400; color: var(--text); }
 .bg-chev { color: var(--text-3); transition: transform 0.18s; }
 .bg-chev.open { transform: rotate(180deg); }
-.bg-item { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-1); width: 100%; text-align: left; padding: var(--sp-2) var(--sp-4); }
+.bg-item { display: flex; flex-direction: column; align-items: flex-start; gap: 0; width: 100%; text-align: left; padding: var(--sp-2) var(--sp-4); }
 .bg-item.clickable { cursor: pointer; }
 .bg-item.clickable:hover { background: var(--hover); }
 .bg-title { font-size: 13px; color: var(--text); }
-.bg-meta { font-size: 11px; color: var(--text-2); }
+.bg-meta { font-size: 13px; color: var(--text-2); }
 
 /* ==== Supplier suggestion options — compact selectable cards ========== */
 .sup-options { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
@@ -2514,7 +2514,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 
 /* ==== New-supplier form: days on one line, currency select, time input = */
 .sup-form .day-chips { flex-wrap: nowrap; gap: var(--sp-1); }
-.sup-form .day-chip { min-width: 0; height: 28px; padding: 0 var(--sp-1); display: inline-flex; align-items: center; justify-content: center; }
+.sup-form .day-chip { flex: 1 1 0; min-width: 0; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 
 .sup-money { display: flex; gap: var(--sp-2); min-width: 0; }
 .sup-money .sup-input { flex: 1; min-width: 0; }
