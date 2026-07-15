@@ -75,13 +75,22 @@ export function PrimaryObjectCell({ initial, name, sub }) {
   )
 }
 
-// Status: quiet by default, red only when attention is genuinely required.
+// Status: quiet plain text — used for numeric variance, not workflow states.
 export function StatusCell({ label, tone = 'default' }) {
   return <span className={`scell ${tone}`}>{label}</span>
 }
 
-// Convenience directory page: header + tabs/search + table, with tab and
-// text filtering handled here so pages stay declarative.
+// One reusable status chip across every directory table. Compact pill, soft
+// tint + matching text, Medium label, sentence case. Semantic tones only:
+//   active (blue) · success (green) · waiting (amber) · attention (red) ·
+//   neutral (grey). Informational — never a button.
+export function StatusChip({ label, tone = 'neutral' }) {
+  return <span className={`chip chip-${tone}`}>{label}</span>
+}
+
+// Convenience directory page: header + tabs/search at the page gutter, then a
+// full-width table (full-bleed strokes/hover) whose row content keeps the
+// gutter. Pages stay declarative — labels, widths, row content only.
 export function DirectoryPage({ title, description, action, tabs, cols, template, rows, searchable = true }) {
   const [tab, setTab] = useState(tabs?.[0]?.key || 'all')
   const [query, setQuery] = useState('')
@@ -90,13 +99,15 @@ export function DirectoryPage({ title, description, action, tabs, cols, template
     (!tabs?.length || tab === 'all' || (r.tags || []).includes(tab)) &&
     (!q || (r.search || '').toLowerCase().includes(q)))
   return (
-    <PageShell>
-      <PageHeader title={title} description={description} action={action} />
-      <PageToolbar tabs={tabs} tab={tab} onTab={setTab} searchable={searchable} query={query} onQuery={setQuery} />
+    <div className="dir-view">
+      <div className="dir-head">
+        <PageHeader title={title} description={description} action={action} />
+        <PageToolbar tabs={tabs} tab={tab} onTab={setTab} searchable={searchable} query={query} onQuery={setQuery} />
+      </div>
       <DirectoryTable template={template} cols={cols}>
         {shown.map(r => <DirectoryRow key={r.key} cells={r.cells} cols={cols} onClick={r.onClick} />)}
       </DirectoryTable>
-      {shown.length === 0 && <div className="page-empty">{q ? `No results for “${query}”.` : 'Nothing here yet.'}</div>}
-    </PageShell>
+      {shown.length === 0 && <div className="dir-head page-empty">{q ? `No results for “${query}”.` : 'Nothing here yet.'}</div>}
+    </div>
   )
 }

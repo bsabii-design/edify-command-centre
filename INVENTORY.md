@@ -73,6 +73,11 @@ Prompt (short): "Which supplier are you adding? / I'll first check whether they'
   - **Invoice** (`ir-row`): Item 1–2 · Mismatch 2–4 (begins 25 %; two compact lines, amount in the delta line) · Action 4–6 (begins 70 %) — dropdowns one anchor, one width.
   - **Figure/count** (`cnt-row`): Figure 1–2 · Value 2–3 right (begins 25 %) · Basis 3–6 (begins 55 %).
   - Verified anchors (live): Change/Ordered/Basis all begin at 55 %; Mismatch/Value begin at 25 %; Received/Action begin at 70 %; Cost/Difference end at 100 %. Headers share their content's placement and alignment; numbers tabular; no space-between, no auto columns.
+
+### Directory pages — full-width surface + status chips
+
+- **Full-bleed** (like Journal): `DirectoryPage` header/search/filters sit at the page gutter (`.dir-head`), but the table spans the full main content area — rows, the header divider and hover run edge-to-edge while row content keeps the `sp-8` gutter (first column on the title's left anchor, last column near the right gutter). No centred wrapper, no outer card. Applies to Suppliers/Orders/Deliveries/Inventory/Invoices/Chats.
+- **StatusChip** (`Page.jsx`) — one compact pill (20px, `r-full`, 11 Medium, soft tint + matching text, no border/shadow, not clickable) with a small semantic system: **active** blue (Confirmed, Expected), **success** green (Completed, Received, Resolved, Matched, Posted), **waiting** amber (Waiting for supplier/approval — never red), **attention** red `--red-bg`/`--accent` (Due now, Needs check-in, Needs review, Late), **neutral** grey (Draft, Dismissed, Cancelled). Tokens: `--chip-blue-bg`, `--chip-green-bg/-text`, `--chip-amber-bg/-text`. Only the chip is coloured — never the object name or row. Inventory **variance** stays plain text (muted `—` / red `−2 L`), not a workflow chip.
 - **Chat prose**: Regular, no bold fragments; leading dates become a muted `.msg-meta` line.
 - **Disclosure toggles** («Show N …») — Regular, quiet, chevron 16 px.
 - **Evidence fold** (Granola): spinner «Working…» → chip «How Edify worked this out» → three lines: sources (clickable doc names + ↗), one calculation sentence, one result sentence.
