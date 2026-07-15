@@ -89,7 +89,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   const expanded = !!(entry.data || {}).expanded
   const confirmedHead = (
     <CardHead title="Order updated" sub="Bidfood · order #2231 · delivery Sat 07:30"
-      action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
+      action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
@@ -335,7 +335,7 @@ export function ReceivingCard({ entry, patch, resolve }) {
   const arrivedAt = (entry.data || {}).arrivedAt || '07:42'
   const confirmedHead = (
     <CardHead title="Delivery confirmed" sub={`Order #2231 · arrived ${arrivedAt}`}
-      action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
+      action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
@@ -602,7 +602,7 @@ export function CountFixCard({ entry, resolve, patch }) {
     return (
       <Card>
         <CardHead title={title} sub="Whole milk · Fitzroy Espresso · posted 07:20"
-          action={{ label: expanded ? 'Hide details' : 'View details', chev: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
+          action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
         <AnimatePresence initial={false}>
           {expanded && (
             <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}

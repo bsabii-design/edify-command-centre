@@ -2140,3 +2140,9 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    pulling it off the Received stepper instead of hugging its left edge. */
 .recv-exp { justify-self: start; text-align: left; }
 .recv-headrow .recv-exp { justify-self: start; text-align: left; }
+
+/* Detail toggles are quiet: hidden until the card is hovered or focused,
+   and no chevron — the label alone carries the affordance. Focus-within
+   keeps it reachable by keyboard; hovering back reveals the collapse. */
+.head-action { opacity: 0; transition: opacity 0.15s; }
+.action-card:hover .head-action, .action-card:focus-within .head-action { opacity: 1; }
