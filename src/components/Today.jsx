@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PROMISE, cutoffLabel, DAY } from '../data.js'
 import { RecipeCover } from './Recipes.jsx'
 import Composer from './Composer.jsx'
-import { Chevron, ChevDown, Clock, Truck, Sun, TrendDown, Dots } from './Icons.jsx'
+import { ChevDown, Clock, Truck, Sun, TrendDown, Dots } from './Icons.jsx'
 import { DeadlineChip } from './Controls.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
@@ -59,14 +59,13 @@ function ContinueRow({ item, onOpen }) {
   return (
     <motion.div layout className="continue-row" onClick={() => item.threadId && onOpen(item)}
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}>
-      <span className="progress-pulse draft" />
       <div className="continue-main">
         <div className="q-title">{item.title}</div>
         {item.sub && <div className="q-sub">{item.sub}</div>}
       </div>
       {/* Revealed on hover. The ⋯ is a placeholder for now — no menu wired up. */}
       <div className="continue-actions">
-        <span className="continue-resume">Resume <Chevron size={16} /></span>
+        <span className="continue-resume">Resume</span>
         <button className="continue-more" aria-label="More" onClick={e => e.stopPropagation()}>
           <Dots size={16} />
         </button>

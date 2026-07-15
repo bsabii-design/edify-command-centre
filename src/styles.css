@@ -2580,11 +2580,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 }
 .continue-row:hover { background: var(--surf-continue); }
 .continue-main { flex: 1; min-width: 0; }
-.continue-row .q-title { font-size: 13px; font-weight: 500; color: var(--text); }
-.continue-row .q-sub { font-size: 13px; color: var(--text-3); margin-top: var(--sp-0); }
+/* Title and subtitle read as one size — no bold, no gap between the lines. */
+.continue-row .q-title { font-size: 13px; font-weight: 400; color: var(--text); }
+.continue-row .q-sub { font-size: 13px; color: var(--text-3); margin-top: 0; }
 .continue-actions { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; opacity: 0; transition: opacity 0.13s; }
 .continue-row:hover .continue-actions, .continue-row:focus-within .continue-actions { opacity: 1; }
-.continue-resume { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 13px; font-weight: 500; color: var(--text-2); white-space: nowrap; }
-.continue-resume svg { color: var(--text-3); }
+.continue-resume { font-size: 13px; font-weight: 500; color: var(--text-2); white-space: nowrap; }
 .continue-more { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--r-sm); color: var(--text-3); transition: background 0.13s, color 0.13s; }
 .continue-more:hover { background: var(--surf-continue-hover); color: var(--text); }
