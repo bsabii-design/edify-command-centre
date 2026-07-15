@@ -47,8 +47,8 @@ export function parseSupplierInput(text, name) {
   if (email) draft.orderEmail = email[0].toLowerCase()
   const cut = text.match(/cut[- ]?off[^\d]*(\d{1,2}[:.]\d{2})/i) || text.match(/\b(\d{1,2}:\d{2})\b/)
   if (cut) draft.cutoff = cut[1].replace('.', ':')
-  const min = text.match(/(?:min(?:imum)?[^£\d]*)?£\s*([\d,]+)/i)
-  if (min) draft.minimumOrder = `£${min[1]}`
+  const min = text.match(/(?:min(?:imum)?[^£€$\d]*)?([£€$])\s*([\d,]+)/i)
+  if (min) { draft.currency = min[1]; draft.minAmount = min[2]; draft.minimumOrder = `${min[1]}${min[2]}` }
   const days = parseDeliveryDays(text)
   if (days.length) draft.deliveryDays = days
   return draft

@@ -825,12 +825,18 @@ export function SupplierDraftCard({ entry, patch, resolve }) {
           <DayChips value={d.deliveryDays} onToggle={toggleDay} />
         </SupplierField>
         <SupplierField label="Cut-off" required>
-          <input className="sup-input" value={d.cutoff || ''} placeholder="16:00" aria-label="Cut-off"
+          <input type="time" className="sup-input sup-time" value={d.cutoff || ''} aria-label="Cut-off"
             onChange={e => set('cutoff', e.target.value)} />
         </SupplierField>
         <SupplierField label="Minimum order">
-          <input className="sup-input" value={d.minimumOrder || ''} placeholder="£200" aria-label="Minimum order"
-            onChange={e => set('minimumOrder', e.target.value)} />
+          <span className="sup-money">
+            <select className="sup-cur" value={d.currency || '£'} aria-label="Currency"
+              onChange={e => patch({ draft: { ...d, currency: e.target.value, minimumOrder: d.minAmount ? `${e.target.value}${d.minAmount}` : '' } })}>
+              <option value="£">£</option><option value="€">€</option><option value="$">$</option>
+            </select>
+            <input className="sup-input" value={d.minAmount || ''} placeholder="200" inputMode="numeric" aria-label="Minimum order amount"
+              onChange={e => { const v = e.target.value.replace(/[^\d,]/g, ''); patch({ draft: { ...d, minAmount: v, minimumOrder: v ? `${d.currency || '£'}${v}` : '' } }) }} />
+          </span>
         </SupplierField>
       </div>
       {confirmingDiscard ? (
@@ -843,13 +849,9 @@ export function SupplierDraftCard({ entry, patch, resolve }) {
           </div>
         </div>
       ) : (
-        <div className="ac-footer sup-footer">
-          {!ready && <div className="sup-foot-helper">Complete {missing} required field{missing === 1 ? '' : 's'} to continue.</div>}
-          <div className="sup-foot-actions">
-            <button className="btn btn-primary" disabled={!ready} onClick={() => resolve('supplierCreateConfirm')}>Create supplier</button>
-            <div className="spacer" />
-            <button className="sup-discard" onClick={() => (hasData ? patch({ confirmingDiscard: true }) : resolve('supplierDiscard'))}>Discard draft</button>
-          </div>
+        <div className="ac-footer">
+          <button className="btn btn-primary" disabled={!ready} onClick={() => resolve('supplierCreateConfirm')}>Create supplier</button>
+          <button className="btn btn-secondary" onClick={() => (hasData ? patch({ confirmingDiscard: true }) : resolve('supplierDiscard'))}>Discard draft</button>
         </div>
       )}
     </Card>

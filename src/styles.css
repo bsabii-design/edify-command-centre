@@ -2493,3 +2493,14 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .continue-section { margin-top: var(--sp-8); }
 .home-divider { border-top: 1px solid var(--border); }
 .continue-heading { font-size: 13px; font-weight: 500; color: var(--text-2); margin: var(--sp-5) 0 var(--sp-2); }
+
+/* ==== New-supplier form: days on one line, currency select, time input = */
+.sup-form .day-chips { flex-wrap: nowrap; gap: var(--sp-1); }
+.sup-form .day-chip { min-width: 0; height: 28px; padding: 0 var(--sp-1); display: inline-flex; align-items: center; justify-content: center; }
+
+.sup-money { display: flex; gap: var(--sp-2); min-width: 0; }
+.sup-money .sup-input { flex: 1; min-width: 0; }
+.sup-cur { flex-shrink: 0; width: 54px; height: 30px; border: 1px solid var(--border-strong); border-radius: var(--r-md); background-color: var(--surface); color: var(--text); font-size: 13px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a887e' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right var(--sp-1) center; padding: 0 var(--sp-5) 0 var(--sp-2); }
+.sup-cur:focus { border-color: var(--blue); }
+
+.sup-time { font-variant-numeric: tabular-nums; }
