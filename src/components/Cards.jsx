@@ -499,7 +499,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           </>)}
         </div>
         <div className="ir-grid ir-headrow">
-          <div>Item</div><div>Mismatch</div><div>Action</div>
+          <div>Item</div><div>Mismatch</div><div className="ir-amt">Difference</div><div>Action</div>
         </div>
         {lines.map((l, i) => (
           <div key={i} className="ir-row">
@@ -509,9 +509,10 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
                 ? `${l.billedQty} billed · ${l.receivedQty} received`
                 : `${l.billedPrice} billed · ${l.expectedPrice} expected`}</div>
               <div className={`mis-delta ${status === 'proposed' || ['credit', 'confirmPrice'].includes(l.resolution) ? 'is-open' : ''}`}>{l.kind === 'qty'
-                ? `${l.short} ${l.unit} short · £${l.amount.toFixed(2)}`
-                : `£${(l.amount / (l.packs || 24)).toFixed(2)} more per pack · £${l.amount.toFixed(2)}`}</div>
+                ? `${l.short} ${l.unit} short`
+                : `£${(l.amount / (l.packs || 24)).toFixed(2)} more per pack`}</div>
             </div>
+            <div className={`ir-amt ${status === 'proposed' || ['credit', 'confirmPrice'].includes(l.resolution) ? 'is-open' : ''}`}>£{l.amount.toFixed(2)}</div>
             <div className="ir-res">
               {status === 'proposed' ? (<>
                 <select className="ir-select" value={l.resolution} onChange={e => setLine(i, { resolution: e.target.value })}>
@@ -545,6 +546,7 @@ export function InvoiceCloseCard({ entry, resolve, patch }) {
           <div key={`m${i}`} className="ir-row muted sub">
             <div className="ir-item">{m.name}</div>
             <div className="ir-issue">{m.qty} {m.unit} × £{m.price.toFixed(2)}</div>
+            <div className="ir-amt">—</div>
             <div className="ir-res">Matched</div>
           </div>
         ))}

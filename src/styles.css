@@ -2016,3 +2016,28 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .cnt-val { text-align: left; }
 /* Disclosure rows span the full card width — they are not data rows. */
 .change-row.asrow { grid-template-columns: minmax(0, 1fr); }
+
+/* ==== TABLE SYSTEM — three reusable templates, one rhythm. ==============
+   A comparison: subject 22 · detail flexible · amount narrow right · action
+   B quantity:   subject flexible · numeric columns fixed, right-aligned
+   C figure:     figure 26 · value narrow right · basis flexible
+   Headers share their column's anchor; numbers are tabular and line up. */
+
+/* A — invoice matching (both invoices) */
+.ir-grid, .ir-row { grid-template-columns: minmax(0, 22fr) minmax(0, 32fr) minmax(0, 12fr) minmax(0, 34fr); gap: var(--sp-4); }
+.ir-amt { text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text); }
+.ir-amt.is-open { color: var(--accent); font-weight: 500; }
+.ir-row.muted .ir-amt { color: var(--text-3); }
+.ir-headrow .ir-amt { font-size: 11px; font-weight: 400; color: var(--text-2); }
+
+/* A without the action column — the order change table shares the anchors */
+.change-row:not(.total):not(.asrow) { grid-template-columns: minmax(0, 22fr) minmax(0, 58fr) minmax(0, 20fr); }
+
+/* B — delivery check-in / confirmed */
+.recv-grid { grid-template-columns: minmax(0, 1fr) 72px 116px 96px; }
+.recv-diffc { text-align: right; }
+.recv-headrow .recv-exp, .recv-headrow .recv-got, .recv-headrow .recv-diffc { text-align: right; justify-self: end; }
+
+/* C — count / variance explanation */
+.cnt-row { grid-template-columns: minmax(0, 26fr) minmax(0, 14fr) minmax(0, 44fr); }
+.cnt-val { text-align: right; }

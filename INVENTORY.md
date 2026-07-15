@@ -20,7 +20,11 @@ state of every flow. Updated 15 Jul 2026 after the case-unification pass.
 - **Edify proposes, the operator confirms.** Facts read-only; proposals editable inline; nothing sends without a labelled tap.
 - **Confirmed object** = same card, three states: editable → collapsed (header + footer) → expanded (header + details + footer). Footer is persistent: 16 px check disc inline with the first summary line, 8 px gap, lines 0 px apart. Expanding adds details, never replaces the summary.
 - **TABLE LAW**: 16 px outer/row spacing, 8 px header-to-content, 11 px grey Regular headers, borderless sub-rows, dividers `--border`.
-- **TABLE GRID LAW**: three-column card tables share one grid — Name 24 · Data 40 · Outcome 36 (`change-row`, `ir-grid/ir-row`, `cnt-row`). The data column starts at the same x in every card; text and controls align left, a purely numeric outcome column (Cost) aligns right. Disclosure rows span the full width. Exceptions only when a table genuinely needs more columns (receiving, 4 cols) or more room.
+- **TABLE SYSTEM** — three reusable templates, one rhythm; no per-card layouts:
+  - **A comparison** (`ir-grid/ir-row`, both invoices): Subject 22 · Detail 32 · Amount 12 right · Action 34. Mismatch cell is two compact lines without the amount; amounts line up on one vertical; dropdowns start from one anchor. The order table shares A's anchors without the action column (`change-row` 22 · 58 · 20 right).
+  - **B quantity** (`recv-grid`, check-in + confirmed): Subject flexible · Ordered 72px right · Received 116px (stepper lives inside the same width as the read-only value) · Difference 96px far right.
+  - **C figure** (`cnt-row`, count/variance): Figure 26 · Value 14 right · Basis 44 left.
+  - Headers share their column's anchor and alignment; numbers are tabular; text/controls left, pure numbers right; disclosure rows span the full width.
 - **Chat prose**: Regular, no bold fragments; leading dates become a muted `.msg-meta` line.
 - **Disclosure toggles** («Show N …») — Regular, quiet, chevron 16 px.
 - **Evidence fold** (Granola): spinner «Working…» → chip «How Edify worked this out» → three lines: sources (clickable doc names + ↗), one calculation sentence, one result sentence.
