@@ -7,7 +7,8 @@ import {
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
-import { Back, Check, Clock, Chevron, ChevDown, Spinner, Notes, ExtLink } from './Icons.jsx'
+import { Check, Clock, Chevron, ChevDown, Spinner, Notes, ExtLink } from './Icons.jsx'
+import { BackIconButton, DeadlineChip } from './Controls.jsx'
 import {
   getSupplier, detectSupplierIntent, detectSupplierSwitch, existingSupplierNames,
   parseSupplierInput, parseDeliveryDays, mergeSupplierDraft, emptyDraft, formatSupplierName, CURRENT_SITE
@@ -185,7 +186,7 @@ const CARD_TITLES = {
   supplierAdd: 'Supplier setup', supplierDraft: 'Supplier draft', supplierUpdate: 'Supplier update'
 }
 
-export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
+export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title }) {
   // The checklist is the card's evidence — it stays while the decision is
   // open, and folds away with the card once the case is settled.
   // Revisits show the thread exactly as it was left — evidence folds and
@@ -347,7 +348,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       else {
         pushPick("Which supplier are you adding?\n\nI'll first check whether they're already used at another Ferra site.", [
           { label: 'Caravan Coffee', hint: 'New supplier' },
-          { label: 'Bidfood', hint: 'Used at other sites' }
+          { label: 'Bidfood', hint: 'Used at 3 sites' }
         ])
         setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
       }
@@ -461,7 +462,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       // Back to selection, still inside the same Add supplier conversation.
       pushPick("Which supplier are you adding?\n\nI'll first check whether they're already used at another Ferra site.", [
         { label: 'Caravan Coffee', hint: 'New supplier' },
-        { label: 'Bidfood', hint: 'Used at other sites' }
+        { label: 'Bidfood', hint: 'Used at 3 sites' }
       ])
       setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
     } else if (action === 'supplierDiscard') {
@@ -553,10 +554,13 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
   return (
     <div className="chat-layout">
       <div className="chat-col">
-        {/* No header bar — a floating pill, like Granola. The case names itself
-            in the conversation; the deadline floats opposite while it's live. */}
-        <button className="chat-back" onClick={onBack} aria-label="Home"><Back size={16} /></button>
-        {orderLive && <span className="deadline-chip chat-deadline"><Clock size={16} /> {cutoffLabel()}</span>}
+        {/* A quiet sticky header: back, the task's own name, and its live
+            deadline — the same title and urgency shown on the Home card. */}
+        <div className="task-header">
+          <BackIconButton onClick={onBack} />
+          <div className="task-title">{title || thread.title}</div>
+          {orderLive && <DeadlineChip />}
+        </div>
         <div className="chat-scroll" ref={scrollRef} onScroll={onScroll}>
           <div className="chat-thread">
             <AnimatePresence initial={false}>
@@ -621,11 +625,12 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
                 if (e.kind === 'supplierPick') {
                   if (e.data?.used) return null
                   return (
-                    <motion.div key={e.id} className="suggestions supplier-pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <motion.div key={e.id} className="sup-options" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                       {e.options.map(opt => (
-                        <button key={opt.label} className="suggestion pick-chip"
+                        <button key={opt.label} className="sup-option"
                           onClick={() => { patchEntry(e.id, { used: true }); handleSupplierMessage(opt.label) }}>
-                          {opt.label}{opt.hint && <span className="pick-hint">{opt.hint}</span>}
+                          <span className="sup-option-name">{opt.label}</span>
+                          {opt.hint && <span className="sup-option-sub">{opt.hint}</span>}
                         </button>
                       ))}
                     </motion.div>

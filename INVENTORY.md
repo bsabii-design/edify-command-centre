@@ -49,6 +49,16 @@ Prompt (short): "Which supplier are you adding? / I'll first check whether they'
 - **Path B — new** (`SupplierDraftCard`): narrative "I created a draft for <name>. Add the missing details below, paste them here, or attach a supplier document." → structured draft shown immediately (read-only Supplier/Site; required Order email, Delivery days, Cut-off; optional Minimum order). Meta counts down `N required details missing` → `Ready to review`. All input methods write the same draft: direct fields, chat sentence, or pasted email (`parseSupplierInput`). Composer placeholder: "Paste supplier details or attach a file — I'll fill the draft." Primary **Create supplier** disabled until required complete, with helper "Complete the required fields to create this supplier."; quiet **Discard draft** → one message "Supplier draft discarded.", card removed, thread kept. Confirm → confirmed card as Path A.
 - One card = all states; no separate proposal/cancelled/success cards. Required helper `requiredMissing()/draftReady()` live in suppliers.js.
 
+## Shared controls (`Controls.jsx`)
+
+- **CompactIconButton** — one 28×28 circular container for every icon-only utility control; `secondary` (subtle standing bg/border — **BackIconButton**, persistent nav) vs `tertiary` (transparent, bg on hover — **CloseIconButton**, quiet dismiss). Shared radius, 16px icon, focus ring.
+- **DeadlineChip** — one chip on Home, notifications and task headers; all read the same `DEADLINE_TS` so the time stays synced; muted by default, red only when ≤30 min out.
+- **Task-chat header** (`.task-header`) — quiet sticky surface per opened conversation: `[Back] [task title] [DeadlineChip]`. Title is the task's own name (from `taskTitle(thread)` in App), not the chat message; back stable at left, title ellipsis, deadline right, soft fade beneath, first message clears the header.
+- **Interrupt** — stable flex row `[status icon] [text] [action] [CloseIconButton]`; close never absolute, kept off the edge; clicking body/action opens the task, close only dismisses the notification (never resolves or alters the task).
+- **Background monitoring** (`BackgroundSummary`) — one compact expandable component (no section heading): pulsing blue dot (2.6s, reduced-motion aware) + "N background task(s)" + down-chevron that rotates up; two-line rows (object title / meta · Waiting for …, sentence case, never red), clickable to the object.
+- **Supplier options** — compact selectable cards (`.sup-option`, radius 8px not pill): Medium name + muted sub, equal height, hover/active states, not chat bubbles.
+- **Demo timeline** — quiet service card in `.sidebar-bottom` above the account row: eyebrow "Demo timeline" + one line for the current step (clickable when it advances the world), aligned to the account-row gutters.
+
 ## Laws
 
 - **Edify proposes, the operator confirms.** Facts read-only; proposals editable inline; nothing sends without a labelled tap.

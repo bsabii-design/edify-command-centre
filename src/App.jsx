@@ -4,6 +4,7 @@ import { SCENARIOS, JOURNAL_SEED, BRIEF, cutoffLabel, DAY, RECEIVE_LINES, RECEIV
 import { requiredMissing, CURRENT_SITE, formatDays } from './suppliers.js'
 import { Sidebar, Toasts, Interrupt, SpacePage, SuppliersPage, ChatsPage } from './components/Shell.jsx'
 import RecipesPage from './components/Recipes.jsx'
+import { Clock } from './components/Icons.jsx'
 import Home from './components/Today.jsx'
 import Chat, { matchScenario } from './components/Chat.jsx'
 import Journal from './components/Journal.jsx'
@@ -375,21 +376,66 @@ export default function App() {
       sub: missing === 0 ? 'Ready to review' : `${missing} required detail${missing === 1 ? '' : 's'} missing` }]
   })
 
-  // Running in background — waiting states. None of these count toward the
-  // Home badge; they are collapsed into one compact summary.
+  // Background monitoring — waiting states. None count toward the Home badge;
+  // each is a two-line row (object title · what it's waiting for).
   const backgroundItems = [
-    { id: 'bg-estate', label: `${DAY.supplier} ${DAY.orderNo}`, wait: 'waiting for delivery' },
-    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'bg-order', threadId: orderThread.id, label: 'Order #2231', wait: 'waiting for delivery' }] : []),
-    ...(orderThread && orderThread.caseState === 'awaiting_invoice' ? [{ id: 'bg-order', threadId: orderThread.id, label: 'Order #2231', wait: 'waiting for invoice' }] : []),
-    ...watching.map(w => ({ id: w.id, threadId: w.threadId, label: w.title, wait: (w.helper || w.status || 'in progress').replace(/^Waiting for/i, 'waiting for').toLowerCase() }))
+    { id: 'bg-estate', title: `${DAY.supplier} delivery`, meta: DAY.orderNo, wait: 'Waiting for delivery' },
+    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'bg-order', threadId: orderThread.id, title: 'Bidfood delivery', meta: 'Order #2231', wait: 'Waiting for delivery' }] : []),
+    ...(orderThread && orderThread.caseState === 'awaiting_invoice' ? [{ id: 'bg-order', threadId: orderThread.id, title: 'Bidfood delivery', meta: 'Delivery #912', wait: 'Waiting for invoice' }] : []),
+    ...watching.map(w => ({ id: w.id, threadId: w.threadId, title: w.title, meta: (w.sub || 'Fitzroy Espresso').split('·')[0].trim(), wait: w.helper || w.status || 'In progress' }))
   ]
 
   const activeThread = threads.find(t => t.id === activeId)
   const needsCount = needsItems.length
 
+  // The opened task keeps the name it had on Home — evolving only when the
+  // object's state genuinely changes (order → delivery → invoice).
+  const taskTitle = (t) => {
+    if (!t) return ''
+    if (isOrder(t)) {
+      const cs = t.caseState
+      if (cs === 'invoice_decision' || cs === 'awaiting_credit' || cs === 'closed') return 'Review Bidfood invoice #4902'
+      if (cs === 'delivery_due' || cs === 'receiving') return 'Check in Bidfood delivery'
+      if (cs === 'awaiting_invoice') return 'Bidfood order #2231'
+      if (cs === 'awaiting_delivery') return "Saturday's oat milk order"
+      return "Saturday's oat milk order needs review"
+    }
+    if (t.scenarioId === 'invoice') return 'Review Bidfood invoice #4821'
+    if (t.scenarioId === 'count') return 'Check whole milk count'
+    if (t.scenarioId === 'gp') return 'Why is GP% down this week?'
+    if (t.scenarioId === 'muffins') return "Monday's muffin bake"
+    if (t.scenarioId === 'supplier') {
+      const f = t.supplierFlow || {}
+      if (!f.supplierName) return f.action === 'update' ? 'Update supplier' : 'Add supplier'
+      return `${f.action === 'update' ? 'Update' : 'Add'} ${f.supplierName}${f.action === 'update' ? '' : ' to ' + CURRENT_SITE}`
+    }
+    return t.title || 'New chat'
+  }
+
+  // Demo timeline — a quiet service card pinned to the bottom of the sidebar,
+  // just above the account row. One line for the current step; if the step
+  // has a world event, the whole line advances it.
+  const demoLines = []
+  if (demoStage === 0) demoLines.push({ text: "Confirm Saturday's order to unlock" })
+  if (demoStage === 1) demoLines.push({ text: 'Sat 07:30 — the van arrives', fn: fireDelivery })
+  if (demoStage === 1.4 || demoStage === 1.5) demoLines.push({ text: 'Receive the delivery to continue' })
+  if (demoStage === 2) demoLines.push({ text: 'Mon 06:40 — the invoice lands', fn: fireInvoice })
+  if (gpThread && !countFired) demoLines.push({ text: 'Thu 18:05 — Marco closes the count', fn: fireCount })
+  if (demoStage === 2.5) demoLines.push({ text: 'Review the invoice to continue' })
+  if (demoStage === 2.8) demoLines.push({ text: 'Unresolved lines stay open — demo ends here' })
+  if (demoStage === 3) demoLines.push({ text: 'Demo complete — one thread in Journal' })
+  const demoNode = demoLines.length > 0 && (
+    <div className="demo-card">
+      <div className="demo-eyebrow"><Clock size={14} /> Demo timeline</div>
+      {demoLines.map((l, i) => (l.fn
+        ? <button key={i} className="demo-line action" onClick={l.fn}>{l.text}</button>
+        : <div key={i} className="demo-line">{l.text}</div>))}
+    </div>
+  )
+
   return (
     <div className="app">
-      <Sidebar view={view} space={space} setView={setView} openSpace={(id) => { setSpace(id); setView('space') }} needsCount={needsCount} />
+      <Sidebar view={view} space={space} setView={setView} openSpace={(id) => { setSpace(id); setView('space') }} needsCount={needsCount} demo={demoNode} />
       <div className="main">
         <motion.div key={view + (view === 'chat' ? activeId : '') + (view === 'space' ? space : '')} className={['journal', 'space', 'chats'].includes(view) ? 'scroll-area' : 'view-wrap'}
           style={!['journal', 'space', 'chats'].includes(view) ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : {}}
@@ -402,7 +448,7 @@ export default function App() {
           {view === 'chat' && activeThread && (
             <Chat key={activeThread.id} thread={activeThread} persist={persistThread(activeThread.id)}
               onEvent={handleChatEvent} onBack={() => setView('today')}
-              onSwitch={handleCaseSwitch} />
+              onSwitch={handleCaseSwitch} title={taskTitle(activeThread)} />
           )}
           {view === 'journal' && <Journal entries={journal} onOpenChat={openThread} />}
           {view === 'space' && (space === 'suppliers'
@@ -411,17 +457,6 @@ export default function App() {
             ? <RecipesPage onCreate={() => handleSend('New recipe')} />
             : <SpacePage spaceId={space} />)}
         </motion.div>
-      </div>
-
-      <div className="demo-ctl">
-        {demoStage === 0 && <span className="demo-hint">Demo timeline — confirm Saturday's order to unlock</span>}
-        {demoStage === 1 && <button className="demo-btn" onClick={fireDelivery}>⏩ Sat 07:30 — the van arrives</button>}
-        {(demoStage === 1.4 || demoStage === 1.5) && <span className="demo-hint">Receive the delivery in its case to continue</span>}
-        {demoStage === 2 && <button className="demo-btn" onClick={fireInvoice}>⏩ Mon 06:40 — the invoice lands</button>}
-        {gpThread && !countFired && <button className="demo-btn" onClick={fireCount}>⏩ Thu 18:05 — Marco closes the count</button>}
-        {demoStage === 2.5 && <span className="demo-hint">Review the invoice in its case to continue</span>}
-        {demoStage === 2.8 && <span className="demo-hint">✓ Demo ends here — Edify keeps unresolved lines open and links Bidfood's reply to invoice #4902</span>}
-        {demoStage === 3 && <span className="demo-hint">✓ Demo complete — the whole case is one thread in Journal</span>}
       </div>
 
       <Toasts toasts={toasts} dismiss={dismissToast} />

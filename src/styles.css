@@ -2250,3 +2250,65 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .j-row.muted .j-event-name { color: var(--text-2); }
 .j-expand { font-size: 11px; color: var(--text-3); margin-top: var(--sp-1); }
 .j-row .dc.dc-mut { align-self: start; }
+
+/* ==== Compact icon-button system — one 28×28 container ================ */
+.cbtn { width: 28px; height: 28px; border-radius: var(--r-full); display: grid; place-items: center; flex-shrink: 0; color: var(--text-2); transition: background 0.13s, border-color 0.13s, color 0.13s; }
+.cbtn.secondary { background: var(--surface); border: 1px solid var(--border); }
+.cbtn.secondary:hover { background: var(--surface-2); border-color: var(--border-strong); color: var(--text); }
+.cbtn.tertiary { background: none; border: 1px solid transparent; color: var(--text-3); }
+.cbtn.tertiary:hover { background: var(--surface-2); color: var(--text); }
+.cbtn:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+/* ==== One deadline chip everywhere ==================================== */
+.deadline-chip2 { display: inline-flex; align-items: center; gap: var(--sp-1); height: 28px; padding: 0 var(--sp-2); font-size: 11px; font-weight: 500; border-radius: var(--r-full); border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2); white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.deadline-chip2 svg { flex-shrink: 0; }
+.deadline-chip2.urgent { color: var(--accent); border-color: var(--red-border); }
+
+/* ==== Sticky task-chat header ========================================= */
+.chat-col::before { display: none; }
+.task-header { flex-shrink: 0; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5); position: relative; z-index: 6; background: var(--bg); }
+.task-header::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: var(--sp-5); background: linear-gradient(to bottom, var(--bg), rgba(250, 250, 248, 0)); pointer-events: none; }
+.task-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ==== Interrupt notification — stable horizontal layout =============== */
+.interrupt { padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-3); gap: var(--sp-2); }
+.interrupt .i-ico { display: flex; flex-shrink: 0; color: var(--text-3); }
+.interrupt .i-body { min-width: 0; font-size: 13px; font-weight: 500; color: var(--text); background: none; padding: 0; text-align: left; white-space: nowrap; }
+.interrupt .i-act { flex-shrink: 0; font-size: 13px; font-weight: 500; color: var(--text-2); background: none; padding: 0 var(--sp-1); transition: color 0.13s; }
+.interrupt .i-act:hover { color: var(--text); }
+
+/* ==== Running-in-background — one compact expandable component ======== */
+.bg-head { display: flex; align-items: center; gap: var(--sp-3); width: 100%; padding: var(--sp-3) var(--sp-4); text-align: left; transition: background 0.13s; }
+.bg-head:hover { background: var(--hover); }
+.pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); flex-shrink: 0; animation: pulsedot 2.6s ease-in-out infinite; }
+@keyframes pulsedot { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.18); } }
+@media (prefers-reduced-motion: reduce) { .pulse-dot { animation: none; opacity: 0.8; } }
+.bg-count { flex: 1; font-size: 13px; font-weight: 400; color: var(--text); }
+.bg-chev { color: var(--text-3); transition: transform 0.18s; }
+.bg-chev.open { transform: rotate(180deg); }
+.bg-item { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-1); width: 100%; text-align: left; padding: var(--sp-2) var(--sp-4); }
+.bg-item.clickable { cursor: pointer; }
+.bg-item.clickable:hover { background: var(--hover); }
+.bg-title { font-size: 13px; color: var(--text); }
+.bg-meta { font-size: 11px; color: var(--text-2); }
+
+/* ==== Supplier suggestion options — compact selectable cards ========== */
+.sup-options { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+.sup-option { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-1); text-align: left; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); cursor: pointer; transition: background 0.13s, border-color 0.13s; }
+.sup-option:hover { border-color: var(--text-3); background: var(--hover); }
+.sup-option:active { border-color: var(--blue); }
+.sup-option:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.sup-option-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.sup-option-sub { font-size: 11px; font-weight: 400; color: var(--text-2); }
+
+/* ==== Demo timeline — a quiet service card above the account row ====== */
+.sidebar-bottom { padding: 0 var(--sp-1); margin-bottom: var(--sp-2); }
+.demo-card { display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
+.demo-eyebrow { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 11px; color: var(--text-3); }
+.demo-line { font-size: 13px; color: var(--text); line-height: 1.35; text-align: left; }
+.demo-line.action { cursor: pointer; transition: color 0.13s; }
+.demo-line.action:hover { color: var(--blue); }
+
+/* ==== Composer bottom alignment ====================================== */
+.chat-composer-wrap { padding-bottom: var(--sp-2); }
+.cmd-toolbar { padding-top: var(--sp-2); padding-bottom: 0; }

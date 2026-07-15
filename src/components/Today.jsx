@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PROMISE, cutoffLabel, DAY } from '../data.js'
 import { RecipeCover } from './Recipes.jsx'
 import Composer from './Composer.jsx'
-import { Chevron, Clock, Truck, Sun, TrendDown } from './Icons.jsx'
+import { Chevron, ChevDown, Clock, Truck, Sun, TrendDown } from './Icons.jsx'
+import { DeadlineChip } from './Controls.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
 
@@ -41,10 +42,11 @@ function NeedsRow({ item, onOpen }) {
           <div className="row-title">{item.title}</div>
           <div className="row-sub">{item.why}</div>
         </div>
-        {/* A time appears only when it's a deadline that can be missed. */}
-        {(item.deadlineTs || item.pressure) && (
-          <div className="row-press"><Clock size={16} /> {item.deadlineTs ? cutoffLabel() : item.pressure}</div>
-        )}
+        {/* A time appears only when it's a deadline that can be missed —
+            the same DeadlineChip shown in the task header and notification. */}
+        {item.deadlineTs
+          ? <DeadlineChip />
+          : item.pressure ? <div className="row-press"><Clock size={16} /> {item.pressure}</div> : null}
       </div>
     </motion.div>
   )
@@ -67,26 +69,27 @@ function ContinueRow({ item, onOpen }) {
   )
 }
 
-// Running in background — one compact summary, expandable into quiet
-// one-liners. Never large cards, never a badge on Home.
+// Background monitoring — one compact expandable component that IS the whole
+// section (no separate heading). Quieter than Needs your review: a pulsing
+// dot for active monitoring, a down chevron that rotates up, two-line rows.
 function BackgroundSummary({ items, onOpen }) {
   const [open, setOpen] = useState(false)
+  const n = items.length
   return (
     <div className="bg-summary">
       <button className="bg-head" onClick={() => setOpen(o => !o)}>
-        <span className="progress-pulse" />
-        <span className="bg-count">{items.length} running in background</span>
-        <Chevron size={16} className={`chev-quiet ${open ? 'open' : ''}`} />
+        <span className="pulse-dot" aria-hidden />
+        <span className="bg-count">{n} background task{n === 1 ? '' : 's'}</span>
+        <ChevDown size={16} className={`bg-chev ${open ? 'open' : ''}`} />
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div className="bg-list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
             {items.map(it => (
-              <button key={it.id} className="bg-item" onClick={() => it.threadId && onOpen(it)}
-                style={{ cursor: it.threadId ? 'pointer' : 'default' }}>
-                <span className="bg-label">{it.label}</span>
-                <span className="bg-wait">{it.wait}</span>
+              <button key={it.id} className={`bg-item ${it.threadId ? 'clickable' : ''}`} onClick={() => it.threadId && onOpen(it)}>
+                <span className="bg-title">{it.title}</span>
+                <span className="bg-meta">{it.meta} · {it.wait}</span>
               </button>
             ))}
           </motion.div>
@@ -199,7 +202,6 @@ export default function Home({ needsItems, continueItems, backgroundItems, deliv
 
           {backgroundItems.length > 0 && (
             <div className="brief-section spaced">
-              <div className="block-title">Running in background</div>
               <BackgroundSummary items={backgroundItems} onOpen={onOpen} />
             </div>
           )}

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Home, Journal as JournalIcon, ChatIcon, Search, ChevDown, Chevron, Cart, Truck, Box, Building, Check, X, Clock, Alert, Doc } from './Icons.jsx'
 import { GrainSwatch } from './Recipes.jsx'
 import { DirectoryPage, PrimaryObjectCell, StatusCell } from './Page.jsx'
+import { CloseIconButton } from './Controls.jsx'
 
 // Spaces hold persistent business objects — destinations, not actions.
 export const SPACES = [
@@ -41,7 +42,7 @@ function NavGroup({ title, items, view, space, openSpace }) {
 // Only persistent destinations live here — never actions or commands. Home is
 // what needs attention now, Chats is what we discussed, Journal is what
 // happened, Spaces are the business objects.
-export function Sidebar({ view, space, setView, openSpace, needsCount }) {
+export function Sidebar({ view, space, setView, openSpace, needsCount, demo }) {
   return (
     <div className="sidebar">
       <button className="search-box"><Search size={16} /> Search <span className="kbd">⌘K</span></button>
@@ -61,6 +62,7 @@ export function Sidebar({ view, space, setView, openSpace, needsCount }) {
 
       <div className="spacer" />
 
+      {demo && <div className="sidebar-bottom">{demo}</div>}
       <div className="user">
         <span className="u-hit">
           <span className="avatar"><GrainSwatch palette="fruit" seed="Priya Naidoo" /></span>
@@ -247,13 +249,10 @@ export function Interrupt({ data, onAction, onDismiss }) {
         <motion.div className="interrupt" initial={{ opacity: 0, y: -18, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }}
           transition={{ type: 'spring', stiffness: 380, damping: 30 }}>
-          <Ico size={16} className="i-ico" />
-          {data.meta && (
-            <span className="deadline-chip i-meta">{data.meta}</span>
-          )}
-          <span className="i-title">{data.title}</span>
-          <button className="i-act" onClick={onAction}>{data.cta}</button>
-          <button className="i-close" onClick={() => onDismiss('close')}><X size={16} /></button>
+          <span className="i-ico"><Ico size={16} /></span>
+          <button className="i-body" onClick={onAction}>{data.title}</button>
+          {data.cta && <button className="i-act" onClick={onAction}>{data.cta}</button>}
+          <CloseIconButton onClick={() => onDismiss('close')} />
         </motion.div>
       )}
     </AnimatePresence>
