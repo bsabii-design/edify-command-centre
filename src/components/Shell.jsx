@@ -17,7 +17,7 @@ export const SPACES = [
 export const ALL_PAGES = [...SPACES]
 
 function NavGroup({ title, items, view, space, openSpace }) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   return (
     <>
       <button className={`spaces-header ${open ? '' : 'collapsed'}`} onClick={() => setOpen(o => !o)}>
@@ -202,8 +202,8 @@ const SPACE_LISTS = {
     tabs: [{ key: 'all', label: 'All' }, { key: 'review', label: 'Needs review' }, { key: 'waiting', label: 'Waiting' }, { key: 'resolved', label: 'Resolved' }],
     cols: [{ label: 'Invoice' }, { label: 'Supplier' }, { label: 'Amount', align: 'right' }, { label: 'Status', align: 'right' }],
     rows: [
-      { id: '#4902', supplier: 'Bidfood', amount: '£1,269.00', status: 'Waiting for supplier', tone: 'waiting', tag: 'waiting' },
-      { id: '#4821', supplier: 'Bidfood', amount: '£1,249.60', status: 'Waiting for supplier', tone: 'waiting', tag: 'waiting' },
+      { id: '#4902', supplier: 'Bidfood', amount: '£1,269.00', status: 'Waiting for supplier', tone: 'neutral', tag: 'waiting' },
+      { id: '#4821', supplier: 'Bidfood', amount: '£1,249.60', status: 'Waiting for supplier', tone: 'neutral', tag: 'waiting' },
       { id: '#4790', supplier: 'Fitzroy Bakehouse', amount: '£212.40', status: 'Resolved', tone: 'muted', tag: 'resolved' }
     ].map(r => ({ key: r.id, tags: [r.tag], search: `${r.id} ${r.supplier} ${r.status}`, cells: [
       <PrimaryObjectCell key="i" name={r.id} />, num(r.supplier), num(r.amount), <StatusChip key="s" label={r.status} tone={r.tone} />] }))
@@ -214,7 +214,7 @@ export function SpacePage({ spaceId }) {
   const s = ALL_PAGES.find(x => x.id === spaceId) || SPACES[0]
   const list = SPACE_LISTS[spaceId]
   if (!list) return null
-  return <DirectoryPage title={s.name} description={list.desc} tabs={list.tabs} rows={list.rows} template={list.template} cols={list.cols} />
+  return <DirectoryPage title={s.name} description={list.desc} tabs={list.tabs} searchable={!!list.tabs} rows={list.rows} template={list.template} cols={list.cols} />
 }
 
 export function Toasts({ toasts, dismiss }) {

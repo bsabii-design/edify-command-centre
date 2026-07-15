@@ -2485,3 +2485,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 @media (max-width: 560px) {
   .sup-form .sup-row { grid-template-columns: 1fr; gap: var(--sp-1); }
 }
+
+/* ==== Home lower groups — active work vs saved drafts ================= *
+ * Background monitor sits directly under the review card (compact gap, no
+ * heading). Continue is set apart by a full-width divider + quiet heading. */
+.bg-slot { margin-top: var(--sp-4); }
+.continue-section { margin-top: var(--sp-8); }
+.home-divider { border-top: 1px solid var(--border); }
+.continue-heading { font-size: 13px; font-weight: 500; color: var(--text-2); margin: var(--sp-5) 0 var(--sp-2); }

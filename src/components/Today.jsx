@@ -187,20 +187,25 @@ export default function Home({ needsItems, continueItems, backgroundItems, deliv
             </div>
           )}
 
+          {/* Active work — the background monitor sits directly under the
+              review card, a compact gap, no separate heading. */}
+          {backgroundItems.length > 0 && (
+            <div className="bg-slot">
+              <BackgroundSummary items={backgroundItems} onOpen={onOpen} />
+            </div>
+          )}
+
+          {/* Saved unfinished work — set apart by a full-width divider and a
+              quieter heading. */}
           {continueItems.length > 0 && (
-            <div className="brief-section spaced">
-              <div className="block-title">Continue</div>
+            <div className="continue-section">
+              <div className="home-divider" />
+              <div className="continue-heading">Continue</div>
               <div className="watch-list">
                 <AnimatePresence initial={false}>
                   {continueItems.map(item => <ContinueRow key={item.id} item={item} onOpen={onOpen} />)}
                 </AnimatePresence>
               </div>
-            </div>
-          )}
-
-          {backgroundItems.length > 0 && (
-            <div className="brief-section spaced">
-              <BackgroundSummary items={backgroundItems} onOpen={onOpen} />
             </div>
           )}
         </div>
