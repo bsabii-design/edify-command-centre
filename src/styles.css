@@ -2510,7 +2510,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .bg-slot { margin-top: var(--sp-4); }
 .continue-section { margin-top: var(--sp-8); }
 .home-divider { border-top: 1px solid var(--border); }
-.continue-heading { font-size: 13px; font-weight: 500; color: var(--text-2); margin: var(--sp-5) 0 var(--sp-2); }
+.continue-heading { font-size: 11px; font-weight: 500; color: var(--text-3); margin: var(--sp-5) 0 var(--sp-2); }
 
 /* ==== New-supplier form: days on one line, currency select, time input = */
 .sup-form .day-chips { flex-wrap: nowrap; gap: var(--sp-1); }
@@ -2579,6 +2579,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
   cursor: pointer; transition: background 0.13s;
 }
 .continue-row:hover { background: var(--surf-continue); }
+.continue-ini { width: 24px; height: 24px; border-radius: var(--r-md); background: var(--surface-2); color: var(--text-3); display: grid; place-items: center; flex-shrink: 0; }
 .continue-main { flex: 1; min-width: 0; }
 /* Title and subtitle read as one size — no bold, no gap between the lines. */
 .continue-row .q-title { font-size: 13px; font-weight: 400; color: var(--text); }

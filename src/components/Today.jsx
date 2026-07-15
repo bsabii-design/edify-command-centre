@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PROMISE, cutoffLabel, DAY } from '../data.js'
 import { RecipeCover } from './Recipes.jsx'
 import Composer from './Composer.jsx'
-import { ChevDown, Clock, Truck, Sun, TrendDown, Dots } from './Icons.jsx'
+import { ChevDown, Clock, Truck, Sun, TrendDown, Dots, Building } from './Icons.jsx'
 import { DeadlineChip } from './Controls.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
@@ -59,6 +59,8 @@ function ContinueRow({ item, onOpen }) {
   return (
     <motion.div layout className="continue-row" onClick={() => item.threadId && onOpen(item)}
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}>
+      {/* Placeholder object icon — same rounded tile as a supplier row. */}
+      <span className="continue-ini" aria-hidden><Building size={14} /></span>
       <div className="continue-main">
         <div className="q-title">{item.title}</div>
         {item.sub && <div className="q-sub">{item.sub}</div>}
