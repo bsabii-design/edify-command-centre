@@ -167,8 +167,8 @@ const SPACE_LISTS = {
     template: 'minmax(0,0.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)',
     cols: [{ label: 'Order' }, { label: 'Supplier' }, { label: 'Delivery' }, { label: 'Status', align: 'right' }],
     rows: [
-      { id: '#2231', supplier: 'Bidfood', delivery: 'Sat 07:30', status: 'Confirmed', tone: 'active' },
-      { id: '#2208', supplier: 'Bidfood', delivery: 'Thu 07:30', status: 'Completed', tone: 'success' },
+      { id: '#2231', supplier: 'Bidfood', delivery: 'Sat 07:30', status: 'Confirmed', tone: 'neutral' },
+      { id: '#2208', supplier: 'Bidfood', delivery: 'Thu 07:30', status: 'Completed', tone: 'muted' },
       { id: '#5117', supplier: 'Estate Dairy', delivery: 'Today 14:30', status: 'Due now', tone: 'attention' }
     ].map(r => ({ key: r.id, search: `${r.id} ${r.supplier} ${r.status}`, cells: [
       <PrimaryObjectCell key="i" name={r.id} />, num(r.supplier), num(r.delivery), <StatusChip key="s" label={r.status} tone={r.tone} />] }))
@@ -178,9 +178,9 @@ const SPACE_LISTS = {
     template: 'minmax(0,0.7fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,0.9fr)',
     cols: [{ label: 'Delivery' }, { label: 'Supplier' }, { label: 'Timing' }, { label: 'Status', align: 'right' }],
     rows: [
-      { id: '#912', supplier: 'Bidfood', timing: 'Arrived Sat 07:42', status: 'Received', tone: 'success' },
+      { id: '#912', supplier: 'Bidfood', timing: 'Arrived Sat 07:42', status: 'Received', tone: 'muted' },
       { id: '#5117', supplier: 'Estate Dairy', timing: 'Due today 14:30', status: 'Needs check-in', tone: 'attention' },
-      { id: '#889', supplier: 'Fitzroy Bakehouse', timing: 'Arrived Fri 06:20', status: 'Received', tone: 'success' }
+      { id: '#889', supplier: 'Fitzroy Bakehouse', timing: 'Arrived Fri 06:20', status: 'Received', tone: 'muted' }
     ].map(r => ({ key: r.id, search: `${r.id} ${r.supplier} ${r.timing} ${r.status}`, cells: [
       <PrimaryObjectCell key="i" name={r.id} />, num(r.supplier), num(r.timing), <StatusChip key="s" label={r.status} tone={r.tone} />] }))
   },
@@ -204,7 +204,7 @@ const SPACE_LISTS = {
     rows: [
       { id: '#4902', supplier: 'Bidfood', amount: '£1,269.00', status: 'Waiting for supplier', tone: 'waiting', tag: 'waiting' },
       { id: '#4821', supplier: 'Bidfood', amount: '£1,249.60', status: 'Waiting for supplier', tone: 'waiting', tag: 'waiting' },
-      { id: '#4790', supplier: 'Fitzroy Bakehouse', amount: '£212.40', status: 'Resolved', tone: 'success', tag: 'resolved' }
+      { id: '#4790', supplier: 'Fitzroy Bakehouse', amount: '£212.40', status: 'Resolved', tone: 'muted', tag: 'resolved' }
     ].map(r => ({ key: r.id, tags: [r.tag], search: `${r.id} ${r.supplier} ${r.status}`, cells: [
       <PrimaryObjectCell key="i" name={r.id} />, num(r.supplier), num(r.amount), <StatusChip key="s" label={r.status} tone={r.tone} />] }))
   }

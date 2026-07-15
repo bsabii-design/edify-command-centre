@@ -45,10 +45,10 @@
   --scroll-hover: #c4c3bc;
   --red-bg: #fbefea;
   --red-border: #f0d6ca;
-  /* Status-chip tints — soft background + matching darker text per semantic */
-  --chip-blue-bg: #eaf0fd;
-  --chip-green-bg: #e9f2ec; --chip-green-text: #2f6b45;
-  --chip-amber-bg: #f5efe1; --chip-amber-text: #8a6a35;
+  --ctl-h: 30px;            /* shared page-control height (CTA, Search, filters) */
+  /* Status chips — mostly neutral; warm neutral for waiting; red for attention */
+  --chip-warm-bg: #f5efe1;
+  --chip-red-text: #e12e07;
   --r-xs: 4px;   /* icon-button corners, focus ring */
   --shadow-sm: 0 1px 2px rgba(27, 29, 41, 0.05);
   --shadow-md: 0 2px 8px rgba(27, 29, 41, 0.07), 0 1px 2px rgba(27, 29, 41, 0.05);
@@ -2442,3 +2442,26 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .feed-row:hover { background: var(--surface-2); }
 .feed-title, .feed-ctx, .feed-out { line-height: 1.3; }
 .feed-group { padding: var(--sp-4) var(--sp-8) var(--sp-1); }
+
+/* ==== Status chips — mostly monochrome; red only for attention ======== */
+.chip-neutral { background: var(--surface-2); color: var(--text); }
+.chip-muted { background: var(--surface-2); color: var(--text-2); }
+.chip-waiting { background: var(--chip-warm-bg); color: var(--text-2); }
+.chip-attention { background: var(--red-bg); color: var(--chip-red-text); }
+
+/* ==== Page controls — one shared text style + control height ========== */
+.page-action { height: var(--ctl-h); font-size: 13px; font-weight: 500; }
+.search-inline { height: var(--ctl-h); }
+.search-inline input { font-weight: 400; color: var(--text); }
+.search-inline input::placeholder { color: var(--text-3); font-weight: 400; }
+.ptab { height: var(--ctl-h); display: inline-flex; align-items: center; padding: 0 var(--sp-3); }
+
+/* ==== Align page titles with the sidebar Search line, consistently ==== */
+.page-hdr { padding-top: var(--sp-3); }
+.app.has-notif .page-hdr { padding-top: var(--sp-3); }
+
+/* Composer: 16px from the bottom */
+.home-dock { padding-bottom: var(--sp-4); }
+
+/* Home title on the same search line as the directory pages */
+.today { padding-top: var(--sp-3); }

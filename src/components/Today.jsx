@@ -167,8 +167,6 @@ function DayBar({ deliveries }) {
 export default function Home({ needsItems, continueItems, backgroundItems, deliveries, onOpen, onSend }) {
   return (
     <div className="home-layout">
-      {/* pinned above the scroll, like the menu bar it borrows from */}
-      <DayBar deliveries={deliveries} />
       <div className="home-scroll">
         <div className="today">
           <h1 className="page-title">Needs your review</h1>
