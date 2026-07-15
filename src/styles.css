@@ -2149,11 +2149,10 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .recv-exp { justify-self: start; text-align: left; }
 .recv-headrow .recv-exp { justify-self: start; text-align: left; }
 
-/* Detail toggles are quiet: hidden until the card is hovered or focused,
-   and no chevron — the label alone carries the affordance. Focus-within
-   keeps it reachable by keyboard; hovering back reveals the collapse. */
-.head-action { opacity: 0; transition: opacity 0.15s; }
-.action-card:hover .head-action, .action-card:focus-within .head-action { opacity: 1; }
+/* Detail toggle is a quiet, always-present chevron — same affordance as the
+   background-task accordion on Home. It rotates when the snapshot is open. */
+.head-action { padding: var(--sp-1); margin: calc(var(--sp-1) * -1); border-radius: var(--r-sm); }
+.head-action:hover .bg-chev { color: var(--text-2); }
 
 /* ==== Chats — recoverable conversation threads ======================= */
 .chats-list { display: flex; flex-direction: column; margin-top: var(--sp-5); }

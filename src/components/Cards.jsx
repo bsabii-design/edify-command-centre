@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
 import { CURRENT_SITE, WEEK_DAYS, formatDays, requiredMissing, draftReady } from '../suppliers.js'
-import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Doc, ExtLink } from './Icons.jsx'
+import { Check, CheckCircle, Chevron, ChevDown, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Doc, ExtLink } from './Icons.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
 
@@ -46,8 +46,10 @@ function CardHead({ title, sub, status, deadline, action }) {
       </div>
       {/* A live deadline outranks any status; once decided, the chip retires. */}
       {action && (
-        <button className="done-action head-action" onClick={action.fn}>
+        <button className="done-action head-action" onClick={action.fn}
+          aria-label={action.open ? 'Hide details' : 'View details'}>
           {action.label}
+          {action.icon && <ChevDown size={16} className={`bg-chev ${action.open ? 'open' : ''}`} />}
           {action.chev && <Chevron size={16} className={`wf-chev ${action.open ? 'open' : ''}`} />}
         </button>
       )}
@@ -89,7 +91,7 @@ export function OrderDiffCard({ entry, patch, resolve }) {
   const expanded = !!(entry.data || {}).expanded
   const confirmedHead = (
     <CardHead title="Order updated" sub="Bidfood · order #2231 · delivery Sat 07:30"
-      action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
+      action={{ icon: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
@@ -321,7 +323,7 @@ export function ReceivingCard({ entry, patch, resolve }) {
   const arrivedAt = (entry.data || {}).arrivedAt || '07:42'
   const confirmedHead = (
     <CardHead title="Delivery confirmed" sub={`Order #2231 · arrived ${arrivedAt}`}
-      action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
+      action={{ icon: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
   )
   const confirmedSummary = (
     <div className="ac-body confirmed-summary">
@@ -588,7 +590,7 @@ export function CountFixCard({ entry, resolve, patch }) {
     return (
       <Card>
         <CardHead title={title} sub="Whole milk · Fitzroy Espresso · posted 07:20"
-          action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
+          action={{ icon: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
         <AnimatePresence initial={false}>
           {expanded && (
             <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
@@ -665,7 +667,7 @@ export function MuffinCard({ entry, patch, resolve }) {
   if (status === 'applied') return (
     <Card>
       <CardHead title="Production change requested" sub="Blueberry muffins · Hub kitchen"
-        action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
+        action={{ icon: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div key="d" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
@@ -730,7 +732,7 @@ function SupplierConfirmed({ entry, patch, name, rows }) {
   return (
     <Card>
       <CardHead title="Supplier added" sub={`${name} · ${CURRENT_SITE}`}
-        action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
+        action={{ icon: true, open: expanded, fn: () => patch({ expanded: !expanded }) }} />
       <AnimatePresence initial={false}>
         {expanded && (
           <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
