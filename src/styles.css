@@ -2465,3 +2465,23 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 
 /* Home title on the same search line as the directory pages */
 .home-scroll .today { padding-top: var(--sp-3); }
+
+/* ==== New-supplier form — two-column grid, fixed right control column == */
+.sup-form .sup-row { grid-template-columns: minmax(0, 1fr) 260px; align-items: center; }
+.sup-form .sup-value { font-weight: 400; }
+.req-star { color: var(--chip-red-text); font-size: 13px; margin-left: 2px; }
+
+/* Footer: one helper line, then one action row (Create primary, Discard right) */
+.ac-footer.sup-footer { flex-direction: column; align-items: stretch; gap: var(--sp-2); flex-wrap: nowrap; }
+.sup-foot-helper { font-size: 11px; color: var(--text-2); }
+.sup-foot-actions { display: flex; align-items: center; gap: var(--sp-3); }
+.sup-discard { font-size: 13px; font-weight: 400; color: var(--text-2); background: none; padding: 0; transition: color 0.13s; }
+.sup-discard:hover { color: var(--text); }
+
+/* Discarded final state */
+.sup-disc-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.sup-disc-sub { font-size: 13px; color: var(--text-2); margin-top: var(--sp-0); }
+
+@media (max-width: 560px) {
+  .sup-form .sup-row { grid-template-columns: 1fr; gap: var(--sp-1); }
+}

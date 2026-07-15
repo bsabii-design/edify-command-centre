@@ -438,13 +438,13 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title
       receipt: { status: 'applied' }, closeCase: { status: 'applied' },
       invoiceResolutions: { status: 'applied', resolution: 'sent' },
       supplierAddConfirm: { status: 'applied' }, supplierCreateConfirm: { status: 'applied' },
-      supplierUpdateConfirm: { status: 'applied' },
+      supplierUpdateConfirm: { status: 'applied' }, supplierDiscard: { status: 'discarded' },
       supplierCancel: { status: 'cancelled' }
     }
     // Some actions remove the card from view rather than settle it: checking
     // in swaps to the receiving form; choosing another supplier or discarding
     // a draft clears the proposal without a discarded card.
-    if (action === 'receiveStart' || action === 'supplierChooseAnother' || action === 'supplierDiscard') {
+    if (action === 'receiveStart' || action === 'supplierChooseAnother') {
       setEntries(es => es.filter(x => x.id !== entry.id))
     } else {
       const patch = { ...(statusByAction[action] || {}) }
@@ -466,7 +466,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title
       ])
       setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
     } else if (action === 'supplierDiscard') {
-      pushAssistant('Supplier draft discarded.')
+      // The card shows the final "Draft discarded" state — no chat echo.
       setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
     } else if (action === 'supplierUpdateConfirm') {
       const s = entry.data.supplier

@@ -363,7 +363,7 @@ export default function App() {
   // card exists; it drops off the moment it's confirmed (applied) or removed.
   const supplierDraftEntry = (t) => (t.entries || []).find(e =>
     e.kind === 'card' && (e.card === 'supplierAdd' || e.card === 'supplierDraft') &&
-    !['applied', 'cancelled'].includes(e.data?.status))
+    !['applied', 'cancelled', 'discarded'].includes(e.data?.status))
   const continueItems = threads.flatMap(t => {
     if (t.scenarioId !== 'supplier') return []
     const e = supplierDraftEntry(t)

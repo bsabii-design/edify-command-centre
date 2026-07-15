@@ -771,11 +771,12 @@ export function SupplierAddCard({ entry, patch, resolve }) {
   )
 }
 
-// A labelled row whose value is an editable control.
-function SupplierField({ label, children }) {
+// A labelled row whose value is an editable control. Required fields carry a
+// small red asterisk after the label — no "Required" text in the input.
+function SupplierField({ label, required, children }) {
   return (
     <div className="sup-row field">
-      <span className="sup-label">{label}</span>
+      <span className="sup-label">{label}{required && <span className="req-star">*</span>}</span>
       <span className="sup-control">{children}</span>
     </div>
   )
@@ -784,7 +785,7 @@ function SupplierField({ label, children }) {
 // Path B — a brand-new supplier. The structured draft appears immediately;
 // chat, paste and direct edits all write to the same draft (source of truth).
 export function SupplierDraftCard({ entry, patch, resolve }) {
-  const { status = 'proposed', draft } = entry.data || {}
+  const { status = 'proposed', draft, confirmingDiscard = false } = entry.data || {}
   const d = { ...draft, site: draft.site || CURRENT_SITE, deliveryDays: draft.deliveryDays || [] }
   const missing = requiredMissing(d)
   const ready = draftReady(d)
@@ -800,35 +801,57 @@ export function SupplierDraftCard({ entry, patch, resolve }) {
     { label: 'Minimum order', value: d.minimumOrder }
   ]
   if (status === 'applied') return <SupplierConfirmed entry={entry} patch={patch} name={d.name} rows={rows} />
-  const missLabel = ready ? 'Ready to review' : `${missing} required detail${missing === 1 ? '' : 's'} missing`
+  if (status === 'discarded') return (
+    <Card>
+      <div className="ac-body sup-discarded">
+        <div className="sup-disc-title">Draft discarded</div>
+        <div className="sup-disc-sub">No supplier was created.</div>
+      </div>
+    </Card>
+  )
+  const hasData = !!(d.orderEmail || d.cutoff || d.minimumOrder || d.deliveryDays.length)
+  const missLabel = ready ? 'Ready to review' : `${missing} required field${missing === 1 ? '' : 's'} missing`
   return (
     <Card>
       <CardHead title={`Add ${d.name} to ${CURRENT_SITE}`} sub={`New supplier · ${missLabel}`} />
       <div className="ac-body sup-form">
-        <div className="sup-row"><span className="sup-label">Supplier</span><span className="sup-value">{d.name}</span></div>
-        <div className="sup-row"><span className="sup-label">Site</span><span className="sup-value">{d.site}</span></div>
-        <SupplierField label="Order email">
-          <input className="sup-input" value={d.orderEmail || ''} placeholder="Required — orders@…" aria-label="Order email"
+        <div className="sup-row"><span className="sup-label">Supplier</span><span className="sup-control"><span className="sup-value">{d.name}</span></span></div>
+        <div className="sup-row"><span className="sup-label">Site</span><span className="sup-control"><span className="sup-value">{d.site}</span></span></div>
+        <SupplierField label="Order email" required>
+          <input className="sup-input" value={d.orderEmail || ''} placeholder="orders@caravan.co.uk" aria-label="Order email"
             onChange={e => set('orderEmail', e.target.value)} />
         </SupplierField>
-        <SupplierField label="Delivery days">
+        <SupplierField label="Delivery days" required>
           <DayChips value={d.deliveryDays} onToggle={toggleDay} />
         </SupplierField>
-        <SupplierField label="Cut-off">
-          <input className="sup-input" value={d.cutoff || ''} placeholder="Required — 16:00" aria-label="Cut-off"
+        <SupplierField label="Cut-off" required>
+          <input className="sup-input" value={d.cutoff || ''} placeholder="16:00" aria-label="Cut-off"
             onChange={e => set('cutoff', e.target.value)} />
         </SupplierField>
         <SupplierField label="Minimum order">
-          <input className="sup-input" value={d.minimumOrder || ''} placeholder="Optional — £200" aria-label="Minimum order"
+          <input className="sup-input" value={d.minimumOrder || ''} placeholder="£200" aria-label="Minimum order"
             onChange={e => set('minimumOrder', e.target.value)} />
         </SupplierField>
       </div>
-      <div className="card-helper">Nothing is created until you confirm.</div>
-      <div className="ac-footer supplier-create-footer">
-        <button className="btn btn-primary" disabled={!ready} onClick={() => resolve('supplierCreateConfirm')}>Create supplier</button>
-        {!ready && <div className="supplier-create-helper">Complete the required fields to create this supplier.</div>}
-        <button className="btn btn-ghost sup-discard" onClick={() => resolve('supplierDiscard')}>Discard draft</button>
-      </div>
+      {confirmingDiscard ? (
+        <div className="ir-confirm">
+          <div className="cs-title">Discard this draft?</div>
+          <div className="cs-body">The details you've entered will be removed. No supplier will be created.</div>
+          <div className="ir-confirm-actions">
+            <button className="btn btn-primary" onClick={() => resolve('supplierDiscard')}>Discard draft</button>
+            <button className="btn btn-secondary" onClick={() => patch({ confirmingDiscard: false })}>Keep editing</button>
+          </div>
+        </div>
+      ) : (
+        <div className="ac-footer sup-footer">
+          {!ready && <div className="sup-foot-helper">Complete {missing} required field{missing === 1 ? '' : 's'} to continue.</div>}
+          <div className="sup-foot-actions">
+            <button className="btn btn-primary" disabled={!ready} onClick={() => resolve('supplierCreateConfirm')}>Create supplier</button>
+            <div className="spacer" />
+            <button className="sup-discard" onClick={() => (hasData ? patch({ confirmingDiscard: true }) : resolve('supplierDiscard'))}>Discard draft</button>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }
