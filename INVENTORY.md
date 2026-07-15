@@ -20,12 +20,12 @@ state of every flow. Updated 15 Jul 2026 after the case-unification pass.
 - **Edify proposes, the operator confirms.** Facts read-only; proposals editable inline; nothing sends without a labelled tap.
 - **Confirmed object** = same card, three states: editable → collapsed (header + footer) → expanded (header + details + footer). Footer is persistent: 16 px check disc inline with the first summary line, 8 px gap, lines 0 px apart. Expanding adds details, never replaces the summary.
 - **TABLE LAW**: 16 px outer/row spacing, 8 px header-to-content, 11 px grey Regular headers, borderless sub-rows, dividers `--border`.
-- **12-COLUMN CARD GRID** — every table row sits on the same `repeat(12, minmax(0,1fr))` grid with 8 px gaps; cells take fixed column spans, never content-driven widths. One left gutter, one right gutter (card title, first column, footer button and confirmed footer all start on the same line; last columns end on the same line). Placements:
-  - **Order** (`change-row`): Item 1–5 · Change 7–9 left · Cost 11–12 right; total row Cost 7–13 right; disclosure rows span 1–13.
-  - **Delivery** (`recv-grid`): Item 1–6 · Ordered 7–8 right · Received 9–10 centred (compact stepper lives inside the column; read-only value uses the same cell) · Difference 11–12 right.
-  - **Invoice** (`ir-row`): Item 1–3 · Mismatch 4–8 (two compact lines, amount in the delta line) · Action 9–12 — dropdowns share one anchor and width.
-  - **Figure/count** (`cnt-row`): Figure 1–3 · Value 4–5 right · Basis 7–12.
-  - Headers use exactly the cell placement and alignment of their content; numbers tabular; no space-between, no auto columns.
+- **MASTER GRID** — every table row (header and body) sits on one 5-track grid `25fr 30fr 15fr 15fr 15fr`, 8 px gaps → shared anchors at 0 · 25 · 55 · 70 · 85 · 100 %. Cells take fixed column spans, never content-driven widths; one left gutter, one right gutter across title, rows, totals, footers. Placements:
+  - **Order** (`change-row`): Item 1–3 · Change 3–5 left (begins 55 %) · Cost 5–6 right (ends 100 %); total row Cost 3–6 right; disclosure 1–6.
+  - **Delivery** (`recv-grid`): Item 1–3 · Ordered 3–4 right (begins 55 %) · Received 4–5 centred (stepper and read-only value share the track) · Difference 5–6 right (ends 100 %).
+  - **Invoice** (`ir-row`): Item 1–2 · Mismatch 2–4 (begins 25 %; two compact lines, amount in the delta line) · Action 4–6 (begins 70 %) — dropdowns one anchor, one width.
+  - **Figure/count** (`cnt-row`): Figure 1–2 · Value 2–3 right (begins 25 %) · Basis 3–6 (begins 55 %).
+  - Verified anchors (live): Change/Ordered/Basis all begin at 55 %; Mismatch/Value begin at 25 %; Received/Action begin at 70 %; Cost/Difference end at 100 %. Headers share their content's placement and alignment; numbers tabular; no space-between, no auto columns.
 - **Chat prose**: Regular, no bold fragments; leading dates become a muted `.msg-meta` line.
 - **Disclosure toggles** («Show N …») — Regular, quiet, chevron 16 px.
 - **Evidence fold** (Granola): spinner «Working…» → chip «How Edify worked this out» → three lines: sources (clickable doc names + ↗), one calculation sentence, one result sentence.
