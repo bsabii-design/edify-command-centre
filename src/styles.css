@@ -2312,3 +2312,24 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 /* ==== Composer bottom alignment ====================================== */
 .chat-composer-wrap { padding-bottom: var(--sp-2); }
 .cmd-toolbar { padding-top: var(--sp-2); padding-bottom: 0; }
+
+/* ==== Journal — full-bleed table, gutter-aligned text ================= */
+.journal-view { padding-bottom: var(--sp-16); }
+.jhead { padding: var(--sp-10) var(--sp-8) 0; }
+.jtable { margin-top: var(--sp-4); }
+/* Rows span the full main content area; horizontal padding creates the text
+   gutter, so strokes and hover run edge-to-edge while text stays aligned. */
+.jrow { display: grid; grid-template-columns: minmax(0, 1fr) 180px 96px; gap: var(--sp-4); align-items: baseline; padding: var(--sp-3) var(--sp-8); }
+.jrow.jhd { align-items: center; padding-top: var(--sp-2); padding-bottom: var(--sp-2); border-bottom: 1px solid var(--border); }
+.jrow.jhd span { font-size: 11px; font-weight: 400; color: var(--text-2); }
+.jrow.clickable { cursor: pointer; }
+.jrow.clickable:hover { background: var(--hover); }
+.jgroup { padding: var(--sp-5) var(--sp-8) var(--sp-1); font-size: 11px; color: var(--text-2); }
+.j-event { display: flex; flex-direction: column; min-width: 0; }
+.j-ev-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.j-ev-detail { font-size: 11px; color: var(--text-2); }
+.j-hot { color: var(--accent); }
+.jrow.muted .j-ev-name { color: var(--text-2); }
+.j-area { font-size: 13px; color: var(--text-2); align-self: baseline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.j-time { font-size: 13px; color: var(--text-2); text-align: right; justify-self: end; font-variant-numeric: tabular-nums; align-self: baseline; }
+.j-expand { font-size: 11px; color: var(--text-3); margin-top: var(--sp-1); }

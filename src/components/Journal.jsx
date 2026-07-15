@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Alert, Minus } from './Icons.jsx'
-import { PageShell, PageHeader, PageToolbar } from './Page.jsx'
+import { PageHeader, PageToolbar } from './Page.jsx'
 
 /**
- * Journal — confirmed changes and system actions, on the shared page shell
- * but grouped by date. One clear meaning per column: Event · Area · Time.
- * Icons appear only for states that carry meaning (flagged, dismissed).
+ * Journal — confirmed changes and system actions. Header and filters sit at
+ * the normal page gutter; the table is full-bleed: its strokes and hover run
+ * edge-to-edge across the main content area, while row text keeps the gutter.
+ * No leading icons — the issue reads through copy and restrained colour.
  */
 const domain = (source) => (source || '').includes('—') ? source.split('—').pop().trim() : (source || '')
 
@@ -26,35 +26,37 @@ const matchFilter = (e, f) => {
   return true
 }
 
+// Colour only a leading "£X higher" fragment red — never the whole line.
+function detailNodes(detail) {
+  const m = (detail || '').match(/^(£[\d.,]+ higher)(.*)$/)
+  if (!m) return detail
+  return <><span className="j-hot">{m[1]}</span>{m[2]}</>
+}
+
 function Row({ e, onOpenChat }) {
   const [open, setOpen] = useState(false)
   const click = () => (e.threadId ? onOpenChat(e.threadId) : setOpen(o => !o))
-  const icon = e.kind === 'flag' ? <span className="j-ico flag"><Alert size={14} /></span>
-    : e.kind === 'dismissed' ? <span className="j-ico dis"><Minus size={14} /></span> : null
   return (
-    <motion.div layout className={`drow clickable j-row ${e.kind === 'dismissed' ? 'muted' : ''}`} onClick={click}
+    <motion.div layout className={`jrow clickable ${e.kind === 'dismissed' ? 'muted' : ''}`} onClick={click}
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <span className="dc j-event">
-        {icon}
-        <span className="j-event-txt">
-          <span className="j-event-name">{e.title}</span>
-          {e.detail && <span className="j-event-detail">{e.detail}</span>}
-          <AnimatePresence initial={false}>
-            {open && !e.threadId && (
-              <motion.span className="j-expand" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.18 }} style={{ overflow: 'hidden', display: 'block' }}>
-                {e.kind === 'dismissed'
-                  ? `Dismissed at ${e.time}. No action taken — kept here so nothing disappears without a trace.`
-                  : e.by === 'you'
-                  ? `Confirmed at ${e.time}. Every side-effect is listed here — nothing else changed.`
-                  : 'Ran automatically under your standing rules.'}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </span>
+      <span className="j-event">
+        <span className="j-ev-name">{e.title}</span>
+        {e.detail && <span className="j-ev-detail">{detailNodes(e.detail)}</span>}
+        <AnimatePresence initial={false}>
+          {open && !e.threadId && (
+            <motion.span className="j-expand" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.18 }} style={{ overflow: 'hidden', display: 'block' }}>
+              {e.kind === 'dismissed'
+                ? `Dismissed at ${e.time}. No action taken — kept here so nothing disappears without a trace.`
+                : e.by === 'you'
+                ? `Confirmed at ${e.time}. Every side-effect is listed here — nothing else changed.`
+                : 'Ran automatically under your standing rules.'}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </span>
-      <span className="dc dc-mut">{domain(e.source)}</span>
-      <span className="dc num dc-mut">{e.time}</span>
+      <span className="j-area">{domain(e.source)}</span>
+      <span className="j-time">{e.time}</span>
     </motion.div>
   )
 }
@@ -62,27 +64,27 @@ function Row({ e, onOpenChat }) {
 export default function Journal({ entries, onOpenChat }) {
   const [filter, setFilter] = useState('all')
   const shown = entries.filter(e => matchFilter(e, filter))
-  // Grouped by date — the prototype runs on a single day, so one group.
   const groups = [['Today', shown]]
-  const template = 'minmax(0,2fr) minmax(0,0.7fr) minmax(0,0.5fr)'
   return (
-    <PageShell>
-      <PageHeader title="Journal" description="A history of confirmed changes and system actions." />
-      <PageToolbar tabs={FILTERS} tab={filter} onTab={setFilter} searchable={false} />
-      <div className="dtable" style={{ '--cols': template }}>
-        <div className="drow dhead">
-          <span className="dc">Event</span><span className="dc">Area</span><span className="dc num">Time</span>
+    <div className="journal-view">
+      <div className="jhead">
+        <PageHeader title="Journal" description="A history of confirmed changes and system actions." />
+        <PageToolbar tabs={FILTERS} tab={filter} onTab={setFilter} searchable={false} />
+      </div>
+      <div className="jtable">
+        <div className="jrow jhd">
+          <span>Event</span><span className="j-area">Area</span><span className="j-time">Time</span>
         </div>
         {groups.map(([day, rows]) => rows.length > 0 && (
           <div key={day}>
-            <div className="dgroup">{day}</div>
+            <div className="jgroup">{day}</div>
             <AnimatePresence initial={false}>
               {rows.map(e => <Row key={e.id} e={e} onOpenChat={onOpenChat} />)}
             </AnimatePresence>
           </div>
         ))}
       </div>
-      {shown.length === 0 && <div className="page-empty">Nothing here yet.</div>}
-    </PageShell>
+      {shown.length === 0 && <div className="jhead page-empty">Nothing here yet.</div>}
+    </div>
   )
 }
