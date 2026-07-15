@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageHeader, PageToolbar } from './Page.jsx'
+import { Check, Spark, Alert, Minus } from './Icons.jsx'
 
 /**
- * Journal — confirmed changes and system actions. Header and filters sit at
- * the normal page gutter; the table is full-bleed: its strokes and hover run
- * edge-to-edge across the main content area, while row text keeps the gutter.
- * No leading icons — the issue reads through copy and restrained colour.
+ * Journal — a compact chronological activity feed (not a directory table).
+ * Each event: a fixed leading icon slot, the event meaning as the focus
+ * (title / context / outcome, all Regular — hierarchy through colour), and a
+ * quiet Area · Time rail on the right. Full-bleed rows, gutter-aligned text.
  */
-const domain = (source) => (source || '').includes('—') ? source.split('—').pop().trim() : (source || '')
+const area = (source) => (source || '').includes('—') ? source.split('—').pop().trim() : (source || '')
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -26,37 +27,52 @@ const matchFilter = (e, f) => {
   return true
 }
 
-// Colour only a leading "£X higher" fragment red — never the whole line.
-function detailNodes(detail) {
-  const m = (detail || '').match(/^(£[\d.,]+ higher)(.*)$/)
-  if (!m) return detail
-  return <><span className="j-hot">{m[1]}</span>{m[2]}</>
+// One fixed slot, one icon system: system handled / confirmed / flagged /
+// dismissed. Neutral by default; a flagged event is the only red one.
+function EventIcon({ e }) {
+  if (e.kind === 'flag') return <span className="feed-ico flag"><Alert size={16} /></span>
+  if (e.kind === 'dismissed') return <span className="feed-ico"><Minus size={16} /></span>
+  if (e.by === 'you') return <span className="feed-ico"><Check size={16} /></span>
+  return <span className="feed-ico"><Spark size={16} /></span>
 }
 
-function Row({ e, onOpenChat }) {
+// For a flagged event, colour only the issue phrase (up to the first “·”).
+function outcomeNodes(detail, flagged) {
+  if (!flagged) return detail
+  const i = detail.indexOf('·')
+  if (i < 0) return <span className="feed-hot">{detail}</span>
+  return <><span className="feed-hot">{detail.slice(0, i).trim()}</span>{' '}{detail.slice(i)}</>
+}
+
+function FeedRow({ e, onOpenChat }) {
   const [open, setOpen] = useState(false)
   const click = () => (e.threadId ? onOpenChat(e.threadId) : setOpen(o => !o))
+  const flagged = e.kind === 'flag'
   return (
-    <motion.div layout className={`jrow clickable ${e.kind === 'dismissed' ? 'muted' : ''}`} onClick={click}
-      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <span className="j-event">
-        <span className="j-ev-name">{e.title}</span>
-        {e.detail && <span className="j-ev-detail">{detailNodes(e.detail)}</span>}
+    <motion.div layout className="feed-row" onClick={click}
+      initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+      <EventIcon e={e} />
+      <div className="feed-main">
+        <div className={`feed-title ${e.kind === 'dismissed' ? 'muted' : ''}`}>{e.title}</div>
+        {e.object && <div className="feed-ctx">{e.object}</div>}
+        {e.detail && <div className="feed-out">{outcomeNodes(e.detail, flagged)}</div>}
         <AnimatePresence initial={false}>
           {open && !e.threadId && (
-            <motion.span className="j-expand" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.18 }} style={{ overflow: 'hidden', display: 'block' }}>
+            <motion.div className="feed-expand" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.18 }} style={{ overflow: 'hidden' }}>
               {e.kind === 'dismissed'
                 ? `Dismissed at ${e.time}. No action taken — kept here so nothing disappears without a trace.`
                 : e.by === 'you'
                 ? `Confirmed at ${e.time}. Every side-effect is listed here — nothing else changed.`
                 : 'Ran automatically under your standing rules.'}
-            </motion.span>
+            </motion.div>
           )}
         </AnimatePresence>
-      </span>
-      <span className="j-area">{domain(e.source)}</span>
-      <span className="j-time">{e.time}</span>
+      </div>
+      <div className="feed-meta">
+        <span className="feed-area">{area(e.source)}</span>
+        <span className="feed-time">{e.time}</span>
+      </div>
     </motion.div>
   )
 }
@@ -71,15 +87,12 @@ export default function Journal({ entries, onOpenChat }) {
         <PageHeader title="Journal" description="A history of confirmed changes and system actions." />
         <PageToolbar tabs={FILTERS} tab={filter} onTab={setFilter} searchable={false} />
       </div>
-      <div className="jtable">
-        <div className="jrow jhd">
-          <span>Event</span><span className="j-area">Area</span><span className="j-time">Time</span>
-        </div>
+      <div className="feed">
         {groups.map(([day, rows]) => rows.length > 0 && (
           <div key={day}>
-            <div className="jgroup">{day}</div>
+            <div className="feed-group">{day}</div>
             <AnimatePresence initial={false}>
-              {rows.map(e => <Row key={e.id} e={e} onOpenChat={onOpenChat} />)}
+              {rows.map(e => <FeedRow key={e.id} e={e} onOpenChat={onOpenChat} />)}
             </AnimatePresence>
           </div>
         ))}

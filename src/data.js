@@ -255,9 +255,9 @@ export const BRIEF = {
 
 // ---- History seed --------------------------------------------------------
 export const JOURNAL_SEED = [
-  { id: 'js1', time: '14:00', by: 'edify', kind: 'auto', title: 'Production plan sent to Hub kitchen', detail: 'Saturday plan · 240 units across 14 lines', source: 'Production' },
-  { id: 'js2', time: '12:30', by: 'edify', kind: 'auto', title: 'Recipes recosted after flour price change', detail: 'Shipton Mill +3.1% · 4 recipes updated', source: 'Costing' },
-  { id: 'js3', time: '11:42', by: 'edify', kind: 'flag', title: 'Invoice #4821 flagged for review', detail: '£13.40 higher than delivery · 2 differences found', source: 'Invoices' },
-  { id: 'js4', time: '10:15', by: 'edify', kind: 'auto', title: 'Invoice #4790 matched and posted', detail: 'Fitzroy Bakehouse · 18 lines · no differences', source: 'Invoices' },
-  { id: 'js5', time: '07:05', by: 'you', kind: 'action', title: 'Opening checks completed', detail: '5 of 5 checks done · fridge temps in range', source: 'Opening' }
+  { id: 'js1', time: '14:00', by: 'edify', kind: 'auto', title: 'Production plan sent to Hub kitchen', object: 'Hub kitchen', detail: 'Saturday plan · 240 units across 14 lines', source: 'Production' },
+  { id: 'js2', time: '12:30', by: 'edify', kind: 'auto', title: 'Recipes recosted after flour price change', object: 'Shipton Mill', detail: 'Price +3.1% · 4 recipes updated', source: 'Costing' },
+  { id: 'js3', time: '11:42', by: 'edify', kind: 'flag', title: 'Invoice #4821 flagged for review', object: 'Bidfood', detail: '£13.40 over delivery · 2 differences found', source: 'Invoices' },
+  { id: 'js4', time: '10:15', by: 'edify', kind: 'auto', title: 'Invoice #4790 matched and posted', object: 'Fitzroy Bakehouse', detail: '18 lines · no differences', source: 'Invoices' },
+  { id: 'js5', time: '07:05', by: 'you', kind: 'action', title: 'Opening checks completed', object: 'Fitzroy Espresso', detail: '5 of 5 checks done · fridge temperatures in range', source: 'Opening' }
 ]
