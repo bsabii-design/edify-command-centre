@@ -2573,10 +2573,12 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .bg-item:hover { background: var(--surface-2); }
 /* Continue — quiet list rows, not cards (Granola's list pattern). No fill at
    rest; hover tints the row and reveals its actions (Resume + a ⋯ menu). */
+/* Content sits flush with the "Continue" heading; the padded hover extends
+   AROUND it via matching negative margins (Granola's row pattern). */
 .continue-row {
   display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4); border-radius: var(--r-lg);
-  cursor: pointer; transition: background 0.13s;
+  padding: var(--sp-3) var(--sp-4); margin: 0 calc(-1 * var(--sp-4));
+  border-radius: var(--r-lg); cursor: pointer; transition: background 0.13s;
 }
 .continue-row:hover { background: var(--surf-continue); }
 .continue-ini { width: 24px; height: 24px; border-radius: var(--r-md); background: var(--surface-2); color: var(--text-3); display: grid; place-items: center; flex-shrink: 0; }
