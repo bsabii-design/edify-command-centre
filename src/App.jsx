@@ -415,27 +415,35 @@ export default function App() {
   }
 
   // Demo timeline — a quiet service card pinned to the bottom of the sidebar,
-  // just above the account row. One line for the current step; if the step
-  // has a world event, the whole line advances it.
-  const demoLines = []
-  if (demoStage === 0) demoLines.push({ text: "Confirm Saturday's order to unlock" })
-  if (demoStage === 1) demoLines.push({ text: 'Sat 07:30 — the van arrives', fn: fireDelivery })
-  if (demoStage === 1.4 || demoStage === 1.5) demoLines.push({ text: 'Receive the delivery to continue' })
-  if (demoStage === 2) demoLines.push({ text: 'Mon 06:40 — the invoice lands', fn: fireInvoice })
-  if (gpThread && !countFired) demoLines.push({ text: 'Thu 18:05 — Marco closes the count', fn: fireCount })
-  if (demoStage === 2.5) demoLines.push({ text: 'Review the invoice to continue' })
-  if (demoStage === 2.8) demoLines.push({ text: 'Unresolved lines stay open — demo ends here' })
-  if (demoStage === 3) demoLines.push({ text: 'Demo complete — one thread in Journal' })
-  const hasAction = demoLines.some(l => l.fn)
-  const demoNode = demoLines.length > 0 && (
+  // just above the account row. Split by scenario so it's clear which step
+  // belongs to which case; a step with a world event advances it on click.
+  const demoScenarios = []
+  let orderStep = null
+  if (demoStage === 0) orderStep = { text: "Confirm Saturday's order to unlock" }
+  else if (demoStage === 1) orderStep = { text: 'Sat 07:30 — the van arrives', fn: fireDelivery }
+  else if (demoStage === 1.4 || demoStage === 1.5) orderStep = { text: 'Receive the delivery to continue' }
+  else if (demoStage === 2) orderStep = { text: 'Mon 06:40 — the invoice lands', fn: fireInvoice }
+  else if (demoStage === 2.5) orderStep = { text: 'Review the invoice to continue' }
+  else if (demoStage === 2.8) orderStep = { text: 'Unresolved lines stay open — demo ends here' }
+  else if (demoStage === 3) orderStep = { text: 'Demo complete — one thread in Journal' }
+  if (orderStep) demoScenarios.push({ name: 'Oat milk order', step: orderStep })
+  if (gpThread && !countFired) demoScenarios.push({ name: 'GP & stocktake', step: { text: 'Thu 18:05 — Marco closes the count', fn: fireCount } })
+
+  const anyClickable = demoScenarios.some(s => s.step.fn)
+  const demoNode = demoScenarios.length > 0 && (
     <div className="demo-card">
       <div className="demo-eyebrow"><Clock size={14} /> Demo timeline</div>
-      {hasAction && <div className="demo-nudge">Click to jump ahead</div>}
-      {demoLines.map((l, i) => (l.fn
-        ? <button key={i} className="demo-line action" onClick={l.fn}>
-            <span>{l.text}</span><ArrowRight size={15} />
-          </button>
-        : <div key={i} className="demo-line">{l.text}</div>))}
+      {anyClickable && <div className="demo-nudge">Click to jump ahead</div>}
+      {demoScenarios.map((s, i) => {
+        const inner = (<>
+          <span className="demo-scenario">{s.name}</span>
+          <span className="demo-step">{s.step.text}</span>
+          {s.step.fn && <ArrowRight size={15} className="demo-arrow" />}
+        </>)
+        return s.step.fn
+          ? <button key={i} className="demo-scn action" onClick={s.step.fn}>{inner}</button>
+          : <div key={i} className="demo-scn">{inner}</div>
+      })}
     </div>
   )
 
