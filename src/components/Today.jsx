@@ -95,8 +95,11 @@ function BackgroundSummary({ items, onOpen }) {
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
             {items.map(it => (
               <button key={it.id} className={`bg-item ${it.threadId ? 'clickable' : ''}`} onClick={() => it.threadId && onOpen(it)}>
-                <span className="bg-title">{it.title}</span>
-                <span className="bg-meta">{it.meta} · {it.wait}</span>
+                <span className="continue-ini" aria-hidden><Building size={14} /></span>
+                <span className="bg-text">
+                  <span className="bg-title">{it.title}</span>
+                  <span className="bg-meta">{it.meta} · {it.wait}</span>
+                </span>
               </button>
             ))}
           </motion.div>

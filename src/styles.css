@@ -2292,7 +2292,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .bg-count { flex: 1; font-size: 13px; font-weight: 400; color: var(--text); }
 .bg-chev { color: var(--text-3); transition: transform 0.18s; }
 .bg-chev.open { transform: rotate(180deg); }
-.bg-item { display: flex; flex-direction: column; align-items: flex-start; gap: 0; width: 100%; text-align: left; padding: var(--sp-2) var(--sp-4); }
+.bg-item { display: flex; flex-direction: row; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; padding: var(--sp-2) var(--sp-4); }
+.bg-text { display: flex; flex-direction: column; gap: 0; min-width: 0; }
 .bg-item.clickable { cursor: pointer; }
 .bg-item.clickable:hover { background: var(--hover); }
 .bg-title { font-size: 13px; color: var(--text); }
