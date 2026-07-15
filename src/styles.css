@@ -2510,7 +2510,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .bg-slot { margin-top: var(--sp-4); }
 .continue-section { margin-top: var(--sp-8); }
 .home-divider { border-top: 1px solid var(--border); }
-.continue-heading { font-size: 11px; font-weight: 500; color: var(--text-3); margin: var(--sp-5) 0 var(--sp-2); }
+.continue-heading { font-size: 11px; font-weight: 500; color: var(--text-3); margin: var(--sp-5) 0 var(--sp-1); }
 
 /* ==== New-supplier form: days on one line, currency select, time input = */
 .sup-form .day-chips { flex-wrap: nowrap; gap: var(--sp-1); }
@@ -2577,8 +2577,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    AROUND it via matching negative margins (Granola's row pattern). */
 .continue-row {
   display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4); margin: 0 calc(-1 * var(--sp-4));
-  border-radius: var(--r-lg); cursor: pointer; transition: background 0.13s;
+  padding: var(--sp-1); margin: 0 calc(-1 * var(--sp-1));
+  border-radius: var(--r-md); cursor: pointer; transition: background 0.13s;
 }
 .continue-row:hover { background: var(--surf-continue); }
 .continue-ini { width: 24px; height: 24px; border-radius: var(--r-md); background: var(--surface-2); color: var(--text-3); display: grid; place-items: center; flex-shrink: 0; }
