@@ -22,7 +22,7 @@ state of every flow. Updated 15 Jul 2026 after the case-unification pass.
 - **TABLE LAW**: 16 px outer/row spacing, 8 px header-to-content, 11 px grey Regular headers, borderless sub-rows, dividers `--border`.
 - **MASTER GRID** — every table row (header and body) sits on one 5-track grid `25fr 30fr 15fr 15fr 15fr`, 8 px gaps → shared anchors at 0 · 25 · 55 · 70 · 85 · 100 %. Cells take fixed column spans, never content-driven widths; one left gutter, one right gutter across title, rows, totals, footers. Placements:
   - **Order** (`change-row`): Item 1–3 · Change 3–5 left (begins 55 %) · Cost 5–6 right (ends 100 %); total row Cost 3–6 right; disclosure 1–6.
-  - **Delivery** (`recv-grid`): Item 1–3 · Ordered 3–4 right (begins 55 %) · Received 4–5 centred (stepper and read-only value share the track) · Difference 5–6 right (ends 100 %).
+  - **Delivery** (`recv-grid`): Item 1–3 · Ordered 3–4 **left** (begins 55 %, same anchor as the order card's Change — kept off the Received stepper) · Received 4–5 centred (stepper and read-only value share the track) · Difference 5–6 right (ends 100 %).
   - **Invoice** (`ir-row`): Item 1–2 · Mismatch 2–4 (begins 25 %; two compact lines, amount in the delta line) · Action 4–6 (begins 70 %) — dropdowns one anchor, one width.
   - **Figure/count** (`cnt-row`): Figure 1–2 · Value 2–3 right (begins 25 %) · Basis 3–6 (begins 55 %).
   - Verified anchors (live): Change/Ordered/Basis all begin at 55 %; Mismatch/Value begin at 25 %; Received/Action begin at 70 %; Cost/Difference end at 100 %. Headers share their content's placement and alignment; numbers tabular; no space-between, no auto columns.

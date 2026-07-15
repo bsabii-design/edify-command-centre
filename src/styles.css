@@ -2135,3 +2135,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ac-body .change-row.total, .ac-body .change-row.asrow {
   grid-template-columns: minmax(0, 25fr) minmax(0, 30fr) minmax(0, 15fr) minmax(0, 15fr) minmax(0, 15fr);
 }
+
+/* Ordered aligns to the same left anchor (55%) as the order card's Change,
+   pulling it off the Received stepper instead of hugging its left edge. */
+.recv-exp { justify-self: start; text-align: left; }
+.recv-headrow .recv-exp { justify-self: start; text-align: left; }
