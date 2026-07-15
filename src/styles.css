@@ -2333,3 +2333,13 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .j-area { font-size: 13px; color: var(--text-2); align-self: baseline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .j-time { font-size: 13px; color: var(--text-2); text-align: right; justify-self: end; font-variant-numeric: tabular-nums; align-self: baseline; }
 .j-expand { font-size: 11px; color: var(--text-3); margin-top: var(--sp-1); }
+
+/* ==== Interrupt controls — centred X, Review reads as the action ====== */
+/* Block SVGs centre exactly in the 28×28 hover circle (no baseline gap). */
+.cbtn svg { display: block; }
+/* Equal breathing room around the close button on every side. */
+.interrupt { padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); }
+/* Review is the primary action here — blue, with a quiet hover pill —
+   not passive text like the notification body. */
+.interrupt .i-act { color: var(--blue); padding: var(--sp-1) var(--sp-2); border-radius: var(--r-md); }
+.interrupt .i-act:hover { color: var(--blue); background: var(--surface-2); }
