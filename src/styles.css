@@ -27,6 +27,9 @@
   --sidebar: #f4f3ef;     /* a touch darker than bg */
   --surface: #ffffff;
   --surface-2: #f2f1ec;
+  /* Home work-section surfaces — barely-there tints per semantic layer */
+  --surf-bg: #f8faff;      --surf-bg-hover: #eef2fc;   /* running in background — cool */
+  --surf-continue: #f7f6f2; --surf-continue-hover: #efece5; /* continue — warm neutral */
   --hover: #f8f7f4;       /* lighter than surface-2 — a wash, not a fill */
   --border: rgba(60, 58, 48, 0.055);
   --border-strong: rgba(60, 58, 48, 0.11);
@@ -2543,3 +2546,13 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .muf-basis { color: var(--text-2); }
 .muf-meta { font-size: 13px; color: var(--text-2); line-height: 1.45; }
 .muf-save { color: var(--text); }
+
+/* ==== Home work sections — subtle semantic surfaces =================== *
+ * Review = pure white (highest priority); Running in background = barely
+ * cool; Continue = barely warm neutral. One shared neutral border. */
+.brief-block { background: var(--surface); }
+.bg-summary { background: var(--surf-bg); }
+.bg-head:hover { background: var(--surf-bg-hover); }
+.bg-item:hover { background: var(--surf-bg-hover); }
+.continue-section .progress-row { background: var(--surf-continue); }
+.continue-section .progress-row:hover { background: var(--surf-continue-hover); }

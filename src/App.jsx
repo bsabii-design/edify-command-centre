@@ -333,7 +333,9 @@ export default function App() {
       setInterrupt(i => (i && (i.scenario === 'cutoff' || i.threadId === activeIdRef.current) ? null : i))
       return
     }
-    if (view === 'today') return
+    // Home is the place to review work directly — no floating notification
+    // over it. It re-arms and reappears the next time she's on another view.
+    if (view === 'today') { setInterrupt(null); return }
     if (armedInterrupt.current) {
       setInterrupt(armedInterrupt.current)
       armedInterrupt.current = null
