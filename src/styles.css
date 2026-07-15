@@ -2504,3 +2504,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .sup-cur:focus { border-color: var(--blue); }
 
 .sup-time { font-variant-numeric: tabular-nums; }
+
+/* ==== Filter tabs read like the Search control ======================= *
+ * Default = bordered neutral pill (same as .search-inline); selected =
+ * the hover treatment (subtle fill + darker Medium text). */
+.page-tabs { gap: var(--sp-2); }
+.ptab { border: 1px solid var(--border-strong); background: transparent; color: var(--text-2); font-weight: 400; }
+.ptab:hover { background: var(--surface-2); color: var(--text); }
+.ptab.active { background: var(--surface-2); color: var(--text); font-weight: 500; }
