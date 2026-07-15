@@ -652,7 +652,7 @@ export function MuffinCard({ entry, patch, resolve }) {
       <div className="muf-row muf-head"><span>Plan</span><span className="muf-num">Muffins</span><span>Basis</span></div>
       <div className="muf-row"><span>Current plan</span><span className="muf-num">12</span><span className="muf-basis">Current Monday request</span></div>
       <div className="muf-row"><span>Typical Monday sales</span><span className="muf-num">6–7</span><span className="muf-basis">POS · last four Mondays</span></div>
-      <div className="muf-row"><span>Proposed plan</span><span className="muf-num">8</span><span className="muf-basis">1–2 above typical sales</span></div>
+      <div className="muf-row muf-proposed"><span>Proposed plan</span><span className="muf-num">8</span><span className="muf-basis">1–2 above typical sales</span></div>
     </div>
   )
   if (status === 'applied') return (
@@ -678,10 +678,10 @@ export function MuffinCard({ entry, patch, resolve }) {
     <Card>
       <CardHead title="Monday's production — blueberry muffins" sub="Hub kitchen" />
       {table}
-      <div className="ac-body muf-meta">
-        Keeps a buffer of 1–2 muffins above typical Monday sales. <span className="muf-save">Estimated saving · ~£3/week.</span>
+      <div className="ac-body muf-notes">
+        <div className="muf-summary">Proposed plan keeps a buffer of 1–2 muffins above typical Monday sales. <span className="muf-save">Estimated saving · ~£3/week.</span></div>
+        <div className="muf-secondary">If muffins sell out before 15:00, Edify will flag it and suggest increasing the next Monday plan.</div>
       </div>
-      <div className="ac-note">If muffins sell out before 15:00, Edify will flag it and suggest restoring two next Monday.</div>
       {status === 'proposed' && (
         <div className="ac-footer">
           <button className="btn btn-primary" onClick={() => resolve('muffinConfirm')}>Request 8 muffins</button>
@@ -744,33 +744,86 @@ function SupplierConfirmed({ entry, patch, name, rows }) {
 // confirmed. "Choose another supplier" returns to selection (handled in Chat).
 export function SupplierAddCard({ entry, patch, resolve }) {
   const { status = 'proposed', supplier } = entry.data || {}
+  // Editable working copy, prefilled from the setup reused off other sites.
+  const seed = {
+    name: supplier.name, site: CURRENT_SITE,
+    orderEmail: supplier.orderEmail || '', cutoff: supplier.cutoff || '',
+    deliveryDays: supplier.deliveryDays || [],
+    currency: (supplier.minimumOrder || '£').slice(0, 1),
+    minAmount: (supplier.minimumOrder || '').replace(/[^\d,]/g, ''),
+    minimumOrder: supplier.minimumOrder || ''
+  }
+  const d = { ...seed, ...(entry.data.draft || {}) }
+  const missing = requiredMissing(d)
+  const ready = draftReady(d)
+  const set = (k, v) => patch({ draft: { ...d, [k]: v } })
+  const toggleDay = (day) => {
+    const next = d.deliveryDays.includes(day) ? d.deliveryDays.filter(x => x !== day) : WEEK_DAYS.filter(x => d.deliveryDays.includes(x) || x === day)
+    set('deliveryDays', next)
+  }
   const rows = [
-    { label: 'Used at', value: supplier.usedBy.join(', ') },
-    { label: 'Order email', value: supplier.orderEmail },
-    { label: 'Cut-off', value: supplier.cutoff },
-    { label: 'Delivery days', value: formatDays(supplier.deliveryDays) },
-    { label: 'Minimum order', value: supplier.minimumOrder }
+    { label: 'Order email', value: d.orderEmail },
+    { label: 'Delivery days', value: formatDays(d.deliveryDays) },
+    { label: 'Cut-off', value: d.cutoff },
+    { label: 'Minimum order', value: d.minimumOrder }
   ]
-  if (status === 'applied') return <SupplierConfirmed entry={entry} patch={patch} name={supplier.name} rows={rows} />
+  if (status === 'applied') return <SupplierConfirmed entry={entry} patch={patch} name={d.name} rows={rows} />
+  const u = supplier.usedBy
+  const usedList = u.length > 1 ? `${u.slice(0, -1).join(', ')} and ${u[u.length - 1]}` : u[0]
+  const missLabel = ready ? 'Ready to review' : `${missing} required field${missing === 1 ? '' : 's'} missing`
   return (
     <Card>
-      <CardHead title={`Add ${supplier.name} to ${CURRENT_SITE}`} sub="Existing supplier · ready to review" />
-      <div className="ac-body"><SupplierRows rows={rows} /></div>
+      <CardHead title={`Add ${supplier.name} to ${CURRENT_SITE}`} sub={`Existing supplier · ${missLabel}`} />
+      <div className="ac-body sup-helper">Copied from the setup used at {usedList}. Changes below will apply only to {CURRENT_SITE}.</div>
+      <SupplierFormBody d={d} set={set} toggleDay={toggleDay} patch={patch} />
       <div className="ac-footer">
-        <button className="btn btn-primary" onClick={() => resolve('supplierAddConfirm')}>Add to {CURRENT_SITE}</button>
+        <button className="btn btn-primary" disabled={!ready} onClick={() => resolve('supplierAddConfirm')}>Add to {CURRENT_SITE}</button>
         <button className="btn btn-secondary" onClick={() => resolve('supplierChooseAnother')}>Choose another supplier</button>
       </div>
     </Card>
   )
 }
 
-// A labelled row whose value is an editable control. Required fields carry a
-// small red asterisk after the label — no "Required" text in the input.
+// A labelled row whose value is an editable control. A required field carries a
+// small red asterisk only while it's empty — never when it's already filled.
 function SupplierField({ label, required, children }) {
   return (
     <div className="sup-row field">
       <span className="sup-label">{label}{required && <span className="req-star">*</span>}</span>
       <span className="sup-control">{children}</span>
+    </div>
+  )
+}
+
+// The one supplier form, shared by the new-supplier and existing-supplier
+// paths so they read as two states of the same component. Supplier and Site
+// identify the object and stay read-only; the rest are prefilled and editable.
+function SupplierFormBody({ d, set, toggleDay, patch }) {
+  return (
+    <div className="ac-body sup-form">
+      <div className="sup-row"><span className="sup-label">Supplier</span><span className="sup-control"><span className="sup-value">{d.name}</span></span></div>
+      <div className="sup-row"><span className="sup-label">Site</span><span className="sup-control"><span className="sup-value">{d.site}</span></span></div>
+      <SupplierField label="Order email" required={!d.orderEmail}>
+        <input className="sup-input" value={d.orderEmail || ''} placeholder="orders@caravan.co.uk" aria-label="Order email"
+          onChange={e => set('orderEmail', e.target.value)} />
+      </SupplierField>
+      <SupplierField label="Delivery days" required={!d.deliveryDays.length}>
+        <DayChips value={d.deliveryDays} onToggle={toggleDay} />
+      </SupplierField>
+      <SupplierField label="Cut-off" required={!d.cutoff}>
+        <input type="time" className="sup-input sup-time" value={d.cutoff || ''} aria-label="Cut-off"
+          onChange={e => set('cutoff', e.target.value)} />
+      </SupplierField>
+      <SupplierField label="Minimum order">
+        <span className="sup-money">
+          <select className="sup-cur" value={d.currency || '£'} aria-label="Currency"
+            onChange={e => patch({ draft: { ...d, currency: e.target.value, minimumOrder: d.minAmount ? `${e.target.value}${d.minAmount}` : '' } })}>
+            <option value="£">£</option><option value="€">€</option><option value="$">$</option>
+          </select>
+          <input className="sup-input" value={d.minAmount || ''} placeholder="200" inputMode="numeric" aria-label="Minimum order amount"
+            onChange={e => { const v = e.target.value.replace(/[^\d,]/g, ''); patch({ draft: { ...d, minAmount: v, minimumOrder: v ? `${d.currency || '£'}${v}` : '' } }) }} />
+        </span>
+      </SupplierField>
     </div>
   )
 }
@@ -807,31 +860,7 @@ export function SupplierDraftCard({ entry, patch, resolve }) {
   return (
     <Card>
       <CardHead title={`Add ${d.name} to ${CURRENT_SITE}`} sub={`New supplier · ${missLabel}`} />
-      <div className="ac-body sup-form">
-        <div className="sup-row"><span className="sup-label">Supplier</span><span className="sup-control"><span className="sup-value">{d.name}</span></span></div>
-        <div className="sup-row"><span className="sup-label">Site</span><span className="sup-control"><span className="sup-value">{d.site}</span></span></div>
-        <SupplierField label="Order email" required>
-          <input className="sup-input" value={d.orderEmail || ''} placeholder="orders@caravan.co.uk" aria-label="Order email"
-            onChange={e => set('orderEmail', e.target.value)} />
-        </SupplierField>
-        <SupplierField label="Delivery days" required>
-          <DayChips value={d.deliveryDays} onToggle={toggleDay} />
-        </SupplierField>
-        <SupplierField label="Cut-off" required>
-          <input type="time" className="sup-input sup-time" value={d.cutoff || ''} aria-label="Cut-off"
-            onChange={e => set('cutoff', e.target.value)} />
-        </SupplierField>
-        <SupplierField label="Minimum order">
-          <span className="sup-money">
-            <select className="sup-cur" value={d.currency || '£'} aria-label="Currency"
-              onChange={e => patch({ draft: { ...d, currency: e.target.value, minimumOrder: d.minAmount ? `${e.target.value}${d.minAmount}` : '' } })}>
-              <option value="£">£</option><option value="€">€</option><option value="$">$</option>
-            </select>
-            <input className="sup-input" value={d.minAmount || ''} placeholder="200" inputMode="numeric" aria-label="Minimum order amount"
-              onChange={e => { const v = e.target.value.replace(/[^\d,]/g, ''); patch({ draft: { ...d, minAmount: v, minimumOrder: v ? `${d.currency || '£'}${v}` : '' } }) }} />
-          </span>
-        </SupplierField>
-      </div>
+      <SupplierFormBody d={d} set={set} toggleDay={toggleDay} patch={patch} />
       {confirmingDiscard ? (
         <div className="ir-confirm">
           <div className="cs-title">Discard this draft?</div>

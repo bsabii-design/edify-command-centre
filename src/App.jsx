@@ -185,10 +185,11 @@ export default function App() {
         J('action', 'you', 'Whole milk count accepted as entered', '+14 L will show as an unexplained gain in this week’s difference', 'Case — Stock count')
         break
       case 'supplierAddConfirm': {
-        const s = entry.data.supplier
-        setAddedSuppliers(a => [{ name: s.name, orderEmail: s.orderEmail, cutoff: s.cutoff, deliveryDays: s.deliveryDays, minimumOrder: s.minimumOrder }, ...a])
-        J('action', 'you', `${s.name} added to Fitzroy Espresso`, `Reused the ${s.usedBy[0]} setup — orders to ${s.orderEmail}, cut-off ${s.cutoff}, added by Priya`, 'Suppliers')
-        toast(`${s.name} added`, `Available for ordering at ${CURRENT_SITE}`)
+        const sup = entry.data.supplier
+        const s = entry.data.draft || sup   // the values currently in the editable form
+        setAddedSuppliers(a => [{ name: sup.name, orderEmail: s.orderEmail, cutoff: s.cutoff, deliveryDays: s.deliveryDays, minimumOrder: s.minimumOrder }, ...a])
+        J('action', 'you', `${sup.name} added to Fitzroy Espresso`, `Copied the ${sup.usedBy[0]} setup — orders to ${s.orderEmail}, cut-off ${s.cutoff}, added by Priya`, 'Suppliers')
+        toast(`${sup.name} added`, `Available for ordering at ${CURRENT_SITE}`)
         break
       }
       case 'supplierCreateConfirm': {
