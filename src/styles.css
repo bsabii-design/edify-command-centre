@@ -2000,3 +2000,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .toast .t-action:hover { background: none; color: var(--text); }
 .toast .t-close { opacity: 1; color: var(--text-3); padding: 0; display: grid; place-items: center; border-radius: var(--r-full); }
 .toast .t-close:hover { background: var(--surface-2); color: var(--text); }
+
+/* User messages sit on a warm beige wash, ink text, evenly rounded —
+   quiet like the rest of the surface, not a dark pill. */
+.msg-user-bubble { background: var(--surface-2); color: var(--text); border-radius: var(--r-lg); }
