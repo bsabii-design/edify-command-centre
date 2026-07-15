@@ -2464,4 +2464,4 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .home-dock { padding-bottom: var(--sp-4); }
 
 /* Home title on the same search line as the directory pages */
-.today { padding-top: var(--sp-3); }
+.home-scroll .today { padding-top: var(--sp-3); }
