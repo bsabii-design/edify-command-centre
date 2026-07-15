@@ -43,6 +43,7 @@
   --blue: #2563eb;   /* THE blue — one value everywhere */
   --blue-soft: #2563eb; /* retired: same as --blue, kept for old references */
   --blue-bg: #eef1fa;
+  --blue-bg-hover: #e3e8f7;
   --blue-border: #d8def2;
   --scroll: #d8d7d1;
   --scroll-hover: #c4c3bc;
@@ -2313,8 +2314,18 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .demo-card { display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); }
 .demo-eyebrow { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 11px; color: var(--text-3); }
 .demo-line { font-size: 13px; color: var(--text); line-height: 1.35; text-align: left; }
-.demo-line.action { cursor: pointer; transition: color 0.13s; }
-.demo-line.action:hover { color: var(--blue); }
+.demo-nudge { font-size: 11px; color: var(--text-3); }
+/* Action lines advance the demo. Make them read as a button at rest — not on
+   hover — so a first-time viewer knows exactly where to click to continue. */
+.demo-line.action {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
+  width: 100%; padding: var(--sp-2) var(--sp-3);
+  font-size: 13px; font-weight: 500; color: var(--blue);
+  background: var(--blue-bg); border: 1px solid var(--blue-border); border-radius: var(--r-md);
+  cursor: pointer; transition: background 0.13s, border-color 0.13s;
+}
+.demo-line.action:hover { background: var(--blue-bg-hover); border-color: var(--blue); }
+.demo-line.action svg { flex-shrink: 0; }
 
 /* ==== Composer bottom alignment ====================================== */
 .chat-composer-wrap { padding-bottom: var(--sp-2); }

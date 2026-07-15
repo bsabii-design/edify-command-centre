@@ -4,7 +4,7 @@ import { SCENARIOS, JOURNAL_SEED, BRIEF, cutoffLabel, DAY, RECEIVE_LINES, RECEIV
 import { requiredMissing, CURRENT_SITE, formatDays } from './suppliers.js'
 import { Sidebar, Toasts, Interrupt, SpacePage, SuppliersPage, ChatsPage } from './components/Shell.jsx'
 import RecipesPage from './components/Recipes.jsx'
-import { Clock } from './components/Icons.jsx'
+import { Clock, ArrowRight } from './components/Icons.jsx'
 import Home from './components/Today.jsx'
 import Chat, { matchScenario } from './components/Chat.jsx'
 import Journal from './components/Journal.jsx'
@@ -426,11 +426,15 @@ export default function App() {
   if (demoStage === 2.5) demoLines.push({ text: 'Review the invoice to continue' })
   if (demoStage === 2.8) demoLines.push({ text: 'Unresolved lines stay open — demo ends here' })
   if (demoStage === 3) demoLines.push({ text: 'Demo complete — one thread in Journal' })
+  const hasAction = demoLines.some(l => l.fn)
   const demoNode = demoLines.length > 0 && (
     <div className="demo-card">
       <div className="demo-eyebrow"><Clock size={14} /> Demo timeline</div>
+      {hasAction && <div className="demo-nudge">Click to jump ahead</div>}
       {demoLines.map((l, i) => (l.fn
-        ? <button key={i} className="demo-line action" onClick={l.fn}>{l.text}</button>
+        ? <button key={i} className="demo-line action" onClick={l.fn}>
+            <span>{l.text}</span><ArrowRight size={15} />
+          </button>
         : <div key={i} className="demo-line">{l.text}</div>))}
     </div>
   )
