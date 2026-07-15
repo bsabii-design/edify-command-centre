@@ -100,14 +100,14 @@ export function DirectoryPage({ title, description, action, tabs, cols, template
     (!q || (r.search || '').toLowerCase().includes(q)))
   return (
     <div className="dir-view">
-      <div className="dir-head">
+      <div className="page-hdr">
         <PageHeader title={title} description={description} action={action} />
         <PageToolbar tabs={tabs} tab={tab} onTab={setTab} searchable={searchable} query={query} onQuery={setQuery} />
       </div>
       <DirectoryTable template={template} cols={cols}>
         {shown.map(r => <DirectoryRow key={r.key} cells={r.cells} cols={cols} onClick={r.onClick} />)}
       </DirectoryTable>
-      {shown.length === 0 && <div className="dir-head page-empty">{q ? `No results for “${query}”.` : 'Nothing here yet.'}</div>}
+      {shown.length === 0 && <div className="page-hdr page-empty">{q ? `No results for “${query}”.` : 'Nothing here yet.'}</div>}
     </div>
   )
 }

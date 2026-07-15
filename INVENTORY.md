@@ -40,7 +40,7 @@ Every directory and history view (Suppliers, Orders, Deliveries, Inventory, Invo
 - Journal is a **chronological activity feed, not a table** (directories stay tables). Same page header + quiet filters (All/Confirmed/System handled/Flagged/Dismissed), then full-bleed feed rows grouped by date. No Event/Area/Time header row, no column grid.
   - Row = fixed 20px icon slot · main content · Area·Time rail. One icon system in the slot for every row (Spark = system handled, Check = confirmed, Alert red = flagged, Minus = dismissed) — same stroke, never letter avatars, red only on the flagged row.
   - Event meaning is the focus: title / context (object) / outcome, **all 13 Regular** — hierarchy through colour, not weight (title ink `--text`, context + outcome `--text-2`). Red appears only on the issue phrase of a flagged event (segment up to the first "·"); never the whole row/title.
-  - Compact: `sp-2` vertical padding, `sp-0` line gap; full-bleed `--surface-2` hover hugging the row; every title on one left anchor (the fixed icon slot); Area·Time top-aligned with the first line, Time near the right gutter; metadata drops below the content under 860px.
+  - Compact, not a card: transparent row (no border/radius/shadow), `sp-1` vertical padding, `sp-0` line gap, 1.3 line-height (~63px 3-line rows); hover is a small inset (`sp-3` margin) `--surface-2` fill with an `r-md` radius that hugs the row, not a full-bleed slab. Every title on one left anchor (the fixed 20px icon slot, at the gutter); Area·Time top-aligned with the first line, Time near the right gutter; metadata drops below the content under 860px.
 - All prototype-explanation banners removed — the model reads through page naming, row content, contextual actions and navigation.
 - **Supplier lifecycle**: `/add-supplier` (command, suggested action or free text — one workflow) → Chats only → name entered → Home → Continue (`Add <name> to Fitzroy Espresso`, sub = live "N required details missing" / "Ready to review") → confirmed → Suppliers + Journal, dropped from Continue. Continue is derived from the live supplier card in the thread (source of truth), not remembered chat.
 
@@ -73,6 +73,11 @@ Prompt (short): "Which supplier are you adding? / I'll first check whether they'
   - **Invoice** (`ir-row`): Item 1–2 · Mismatch 2–4 (begins 25 %; two compact lines, amount in the delta line) · Action 4–6 (begins 70 %) — dropdowns one anchor, one width.
   - **Figure/count** (`cnt-row`): Figure 1–2 · Value 2–3 right (begins 25 %) · Basis 3–6 (begins 55 %).
   - Verified anchors (live): Change/Ordered/Basis all begin at 55 %; Mismatch/Value begin at 25 %; Received/Action begin at 70 %; Cost/Difference end at 100 %. Headers share their content's placement and alignment; numbers tabular; no space-between, no auto columns.
+
+### One page-header system (Spaces, Journal, Chats)
+
+- Every page shares `.page-hdr`: intro (`PageHeader` — title left, one-line muted subtitle directly below, optional primary action at the right gutter) then `PageToolbar` (filters left, Search right). Same gutters, heights and rhythm (title → subtitle → toolbar `sp-4` → content). Subtitles on every page; Search sits at one shared right anchor (`sp-8`) even when a page has no filters (Orders/Deliveries/Inventory); Journal has filters and no Search.
+- **Notification safe area**: the app root gets `has-notif` while the interrupt is visible → `.page-hdr` top padding bumps to `sp-16` so the fixed top-right notification never covers the title, action, filters or search. One shared offset, not per-page.
 
 ### Directory pages — full-width surface + status chips
 

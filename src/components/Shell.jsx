@@ -122,7 +122,7 @@ export function ChatsPage({ threads, onOpen }) {
     ]
   }))
   return (
-    <DirectoryPage title="Chats" tabs={CHAT_TABS} rows={rows}
+    <DirectoryPage title="Chats" description="Questions and conversations linked to operational work." tabs={CHAT_TABS} rows={rows}
       template="minmax(0,1.7fr) minmax(0,1fr) minmax(0,0.6fr)"
       cols={[{ label: 'Conversation' }, { label: 'Context' }, { label: 'Updated', align: 'right' }]} />
   )
@@ -151,7 +151,7 @@ export function SuppliersPage({ onAdd, added = [] }) {
     ]
   }))
   return (
-    <DirectoryPage title="Suppliers" tabs={SUPPLIER_TABS} rows={rows}
+    <DirectoryPage title="Suppliers" description="Suppliers available across Ferra sites." tabs={SUPPLIER_TABS} rows={rows}
       action={{ label: 'Add supplier', fn: onAdd }}
       template="minmax(0,1.6fr) minmax(0,1.4fr) minmax(0,0.8fr) minmax(0,0.5fr)"
       cols={[{ label: 'Supplier' }, { label: 'Sites' }, { label: 'Last order' }, { label: 'Orders', align: 'right' }]} />
@@ -163,6 +163,7 @@ export function SuppliersPage({ onAdd, added = [] }) {
 const num = (v) => <span className="dc-mut">{v}</span>
 const SPACE_LISTS = {
   orders: {
+    desc: 'Purchase orders and their delivery status.',
     template: 'minmax(0,0.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)',
     cols: [{ label: 'Order' }, { label: 'Supplier' }, { label: 'Delivery' }, { label: 'Status', align: 'right' }],
     rows: [
@@ -173,6 +174,7 @@ const SPACE_LISTS = {
       <PrimaryObjectCell key="i" name={r.id} />, num(r.supplier), num(r.delivery), <StatusChip key="s" label={r.status} tone={r.tone} />] }))
   },
   deliveries: {
+    desc: 'Track expected, received and overdue deliveries.',
     template: 'minmax(0,0.7fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,0.9fr)',
     cols: [{ label: 'Delivery' }, { label: 'Supplier' }, { label: 'Timing' }, { label: 'Status', align: 'right' }],
     rows: [
@@ -183,6 +185,7 @@ const SPACE_LISTS = {
       <PrimaryObjectCell key="i" name={r.id} />, num(r.supplier), num(r.timing), <StatusChip key="s" label={r.status} tone={r.tone} />] }))
   },
   inventory: {
+    desc: 'Current stock, latest counts and variances.',
     template: 'minmax(0,1.5fr) minmax(0,0.7fr) minmax(0,1fr) minmax(0,0.7fr)',
     cols: [{ label: 'Item' }, { label: 'On hand', align: 'right' }, { label: 'Latest count' }, { label: 'Variance', align: 'right' }],
     rows: [
@@ -194,6 +197,7 @@ const SPACE_LISTS = {
       <StatusCell key="v" label={r.variance} tone={r.variance === '—' ? 'muted' : 'alert'} />] }))
   },
   invoices: {
+    desc: 'Invoices matched against deliveries and expected prices.',
     template: 'minmax(0,0.7fr) minmax(0,1fr) minmax(0,0.8fr) minmax(0,1.1fr)',
     tabs: [{ key: 'all', label: 'All' }, { key: 'review', label: 'Needs review' }, { key: 'waiting', label: 'Waiting' }, { key: 'resolved', label: 'Resolved' }],
     cols: [{ label: 'Invoice' }, { label: 'Supplier' }, { label: 'Amount', align: 'right' }, { label: 'Status', align: 'right' }],
@@ -210,7 +214,7 @@ export function SpacePage({ spaceId }) {
   const s = ALL_PAGES.find(x => x.id === spaceId) || SPACES[0]
   const list = SPACE_LISTS[spaceId]
   if (!list) return null
-  return <DirectoryPage title={s.name} tabs={list.tabs} rows={list.rows} template={list.template} cols={list.cols} />
+  return <DirectoryPage title={s.name} description={list.desc} tabs={list.tabs} rows={list.rows} template={list.template} cols={list.cols} />
 }
 
 export function Toasts({ toasts, dismiss }) {

@@ -83,7 +83,7 @@ export default function Journal({ entries, onOpenChat }) {
   const groups = [['Today', shown]]
   return (
     <div className="journal-view">
-      <div className="jhead">
+      <div className="page-hdr">
         <PageHeader title="Journal" description="A history of confirmed changes and system actions." />
         <PageToolbar tabs={FILTERS} tab={filter} onTab={setFilter} searchable={false} />
       </div>
@@ -97,7 +97,7 @@ export default function Journal({ entries, onOpenChat }) {
           </div>
         ))}
       </div>
-      {shown.length === 0 && <div className="jhead page-empty">Nothing here yet.</div>}
+      {shown.length === 0 && <div className="page-hdr page-empty">Nothing here yet.</div>}
     </div>
   )
 }

@@ -434,7 +434,7 @@ export default function App() {
   )
 
   return (
-    <div className="app">
+    <div className={`app ${interrupt ? 'has-notif' : ''}`}>
       <Sidebar view={view} space={space} setView={setView} openSpace={(id) => { setSpace(id); setView('space') }} needsCount={needsCount} demo={demoNode} />
       <div className="main">
         <motion.div key={view + (view === 'chat' ? activeId : '') + (view === 'space' ? space : '')} className={['journal', 'space', 'chats'].includes(view) ? 'scroll-area' : 'view-wrap'}
