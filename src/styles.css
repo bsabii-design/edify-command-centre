@@ -2343,3 +2343,31 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    not passive text like the notification body. */
 .interrupt .i-act { color: var(--blue); padding: var(--sp-1) var(--sp-2); border-radius: var(--r-md); }
 .interrupt .i-act:hover { color: var(--blue); background: var(--surface-2); }
+
+/* ==== Journal refinement — the reference list pattern ================= *
+ * Denser rows, tighter title/subtitle stack, readable-but-secondary
+ * subtitle, a noticeable-yet-soft hover that hugs the row, and a clear
+ * "Today" section label. Scoped to Journal only for now. */
+.jhead .page-desc { margin-top: var(--sp-1); }
+.jhead .page-toolbar { margin-top: var(--sp-4); }
+.jtable { margin-top: var(--sp-4); }
+
+/* Rows: compact, vertically centred, hover hugs the true row height. */
+.jrow { padding: var(--sp-2) var(--sp-8); align-items: center; }
+.jrow.jhd { padding-top: var(--sp-2); padding-bottom: var(--sp-2); }
+.jrow.clickable:hover { background: var(--surface-2); }
+
+/* Title / subtitle: strong Medium title, secondary subtitle that stays
+   legible (same size, quieter weight + colour), sitting close together. */
+.j-event { gap: var(--sp-0); }
+.j-ev-name { font-size: 13px; font-weight: 500; line-height: 1.3; color: var(--text); }
+.j-ev-detail { font-size: 13px; font-weight: 400; line-height: 1.3; color: var(--text-2); }
+.j-hot { color: var(--accent); }
+
+/* Columns: Event left, Area centred in its region, Time hard right. */
+.jrow .j-area { text-align: center; justify-self: center; }
+.jrow .j-time { text-align: right; justify-self: end; }
+
+/* "Today" — a clear section label: same left gutter as rows, generous gap
+   from the header divider, a smaller deliberate gap to the first row. */
+.jgroup { padding: var(--sp-4) var(--sp-8) var(--sp-2); font-size: 11px; font-weight: 500; color: var(--text-2); }
