@@ -2538,15 +2538,15 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .gp-row.gp-head span { font-size: 11px; font-weight: 400; color: var(--text-2); }
 .gp-driver { font-size: 13px; font-weight: 400; color: var(--text); }
 .gp-evidence { font-size: 13px; font-weight: 400; color: var(--text-2); }
-.gp-impact { font-size: 13px; font-weight: 400; color: var(--accent); text-align: right; justify-self: end; white-space: nowrap; }
-.gp-row.pending .gp-driver, .gp-row.pending .gp-evidence { color: var(--text-2); }
-.gp-row.pending .gp-impact { color: var(--text-2); }
-
-.gp-trust { display: flex; gap: var(--sp-3); background: var(--surface-2); border-radius: var(--r-md); padding: var(--sp-3); margin-top: var(--sp-4); }
-.gp-trust-ico { color: var(--text-3); flex-shrink: 0; display: flex; margin-top: 1px; }
-.gp-trust.resolved .gp-trust-ico { color: var(--text-2); }
-.gp-trust-title { font-size: 13px; font-weight: 500; color: var(--text); }
-.gp-trust-body { font-size: 13px; font-weight: 400; color: var(--text-2); line-height: 1.45; margin-top: var(--sp-0); }
+/* Weight rule, as in the milk case: the meaningful figure carries 500. */
+.gp-impact-cell { display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-1); justify-self: end; }
+.gp-impact { font-size: 13px; font-weight: 500; color: var(--accent); text-align: right; white-space: nowrap; }
+.gp-row.gp-head .gp-impact { font-weight: 400; }
+/* Per-driver impact bar — magnitude of the hit, at a glance. */
+.gp-bar-track { width: 88px; max-width: 100%; height: var(--sp-1); background: var(--surface-2); border-radius: var(--r-full); overflow: hidden; }
+.gp-bar { display: block; height: 100%; border-radius: var(--r-full); background: var(--accent); }
+.gp-bar.pending { background: repeating-linear-gradient(45deg, var(--text-3), var(--text-3) 3px, var(--border-strong) 3px, var(--border-strong) 6px); }
+.gp-row.pending .gp-driver, .gp-row.pending .gp-evidence, .gp-row.pending .gp-impact { color: var(--text-2); }
 
 /* ==== Muffin production review ======================================= */
 .muf-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1.2fr); gap: var(--sp-4); align-items: baseline; padding: var(--sp-3) 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text); }

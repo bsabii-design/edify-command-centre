@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
 import { CURRENT_SITE, WEEK_DAYS, formatDays, requiredMissing, draftReady } from '../suppliers.js'
-import { Check, CheckCircle, Chevron, ChevDown, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Doc, ExtLink } from './Icons.jsx'
+import { Check, Chevron, ChevDown, Clock, ArrowRight, Plus, Minus, Doc, ExtLink } from './Icons.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
 
@@ -207,17 +207,17 @@ export function GpCard({ entry }) {
   // pending amount are separated in the table; the trust note explains it once.
   const drivers = countClosed
     ? [
-      { driver: 'Milk and oat milk costs increased', evidence: 'Confirmed Bidfood price changes', impact: '−1.2 pts' },
-      { driver: 'Muffin waste increased by 7', evidence: '12 binned this week · typical week 5', impact: '−0.9 pts' },
-      { driver: 'Sales mix shifted toward Deliveroo', evidence: 'Higher share of lower-margin channel sales', impact: '−0.5 pts' },
-      { driver: 'Real waste', evidence: 'Confirmed by the closed Hub kitchen count', impact: '−0.5 pts' },
-      { driver: 'Counting slip — corrected at source', evidence: 'A 12 L crate logged as single litres', impact: '−0.2 pts' }
+      { driver: 'Milk and oat milk costs increased', evidence: 'Confirmed Bidfood price changes', impact: '−1.2 pts', w: 78 },
+      { driver: 'Muffin waste increased by 7', evidence: '12 binned this week · typical week 5', impact: '−0.9 pts', w: 58 },
+      { driver: 'Sales mix shifted toward Deliveroo', evidence: 'Higher share of lower-margin channel sales', impact: '−0.5 pts', w: 32 },
+      { driver: 'Real waste', evidence: 'Confirmed by the closed Hub kitchen count', impact: '−0.5 pts', w: 32 },
+      { driver: 'Counting slip — corrected at source', evidence: 'A 12 L crate logged as single litres', impact: '−0.2 pts', w: 14 }
     ]
     : [
-      { driver: 'Milk and oat milk costs increased', evidence: 'Confirmed Bidfood price changes', impact: '−1.2 pts' },
-      { driver: 'Muffin waste increased by 7', evidence: '12 binned this week · typical week 5', impact: '−0.9 pts' },
-      { driver: 'Sales mix shifted toward Deliveroo', evidence: 'Higher share of lower-margin channel sales', impact: '−0.5 pts' },
-      { driver: 'Pending stocktake reconciliation', evidence: 'Waste vs count error not yet confirmed', impact: '−0.7 pts pending', pending: true }
+      { driver: 'Milk and oat milk costs increased', evidence: 'Confirmed Bidfood price changes', impact: '−1.2 pts', w: 78 },
+      { driver: 'Muffin waste increased by 7', evidence: '12 binned this week · typical week 5', impact: '−0.9 pts', w: 58 },
+      { driver: 'Sales mix shifted toward Deliveroo', evidence: 'Higher share of lower-margin channel sales', impact: '−0.5 pts', w: 32 },
+      { driver: 'Pending stocktake reconciliation', evidence: 'Waste vs count error not yet confirmed', impact: '−0.7 pts', w: 45, pending: true }
     ]
   return (
     <Card>
@@ -234,26 +234,17 @@ export function GpCard({ entry }) {
             <div key={d.driver} className={`gp-row ${d.pending ? 'pending' : ''}`}>
               <span className="gp-driver">{d.driver}</span>
               <span className="gp-evidence">{d.evidence}</span>
-              <span className="gp-impact">{d.impact}</span>
+              <span className="gp-impact-cell">
+                <span className="gp-impact">{d.impact}</span>
+                <span className="gp-bar-track"><span className={`gp-bar ${d.pending ? 'pending' : ''}`} style={{ width: `${d.w}%` }} /></span>
+              </span>
             </div>
           ))}
         </div>
         {countClosed ? (
-          <div className="gp-trust resolved">
-            <span className="gp-trust-ico"><CheckCircle size={16} /></span>
-            <div>
-              <div className="gp-trust-title">Nothing here is pending now</div>
-              <div className="gp-trust-body">Marco closed the Hub kitchen stocktake at 18:05. The pending 0.7 pts split into real waste (−0.5) and a counting slip (−0.2), corrected at source.</div>
-            </div>
-          </div>
+          <div className="card-helper">Marco closed the Hub kitchen stocktake at 18:05 — the pending 0.7 pts split into real waste (−0.5) and a counting slip (−0.2), corrected at source.</div>
         ) : (
-          <div className="gp-trust">
-            <span className="gp-trust-ico"><AlertCircle size={16} /></span>
-            <div>
-              <div className="gp-trust-title">0.7 pts is still pending verification</div>
-              <div className="gp-trust-body">Thursday's Hub kitchen stocktake is still open, so Edify cannot yet separate actual waste from a count error. This will update when the stocktake closes.</div>
-            </div>
-          </div>
+          <div className="card-helper">The −0.7 pts stays pending until Thursday's Hub kitchen stocktake closes — Edify can't yet separate real waste from a count error.</div>
         )}
       </div>
     </Card>

@@ -7,7 +7,7 @@ import {
   SupplierAddCard, SupplierDraftCard, SupplierUpdateCard, MuffinCard
 } from './Cards.jsx'
 import Composer from './Composer.jsx'
-import { Check, Clock, Chevron, ChevDown, Spinner, Notes, ExtLink } from './Icons.jsx'
+import { Check, Clock, Chevron, ChevDown, Spinner, ExtLink } from './Icons.jsx'
 import { BackIconButton, DeadlineChip } from './Controls.jsx'
 import {
   getSupplier, detectSupplierIntent, detectSupplierSwitch, existingSupplierNames,
@@ -149,7 +149,7 @@ function WorkingSteps({ steps, done, label, card, sc }) {
         ) : (
           <motion.button key="fold" className="wfold-chip" onClick={() => setOpen(o => !o)}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.22 }}>
-            <Notes size={16} />{label || 'How Edify worked this out'}
+            {label || 'How Edify worked this out'}
             <Chevron size={16} className={`wf-chev ${open ? 'open' : ''}`} />
           </motion.button>
         )}
