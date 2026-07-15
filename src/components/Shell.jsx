@@ -1,26 +1,18 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Home, Journal as JournalIcon, Search, ChevDown, Chevron, Cart, Truck, Book, Box, BarChart, Star, Clipboard, Building, Gear, Check, X, Clock, Alert, Doc } from './Icons.jsx'
+import { Home, Journal as JournalIcon, ChatIcon, Search, ChevDown, Chevron, Cart, Truck, Box, Building, Check, X, Clock, Alert, Doc } from './Icons.jsx'
 import { GrainSwatch } from './Recipes.jsx'
 
-// Day-to-day operational reference pages
+// Spaces hold persistent business objects — destinations, not actions.
 export const SPACES = [
   { id: 'orders', name: 'Orders', icon: Cart },
   { id: 'deliveries', name: 'Deliveries', icon: Truck },
   { id: 'inventory', name: 'Inventory', icon: Box },
-  { id: 'reports', name: 'Reports', icon: BarChart }
+  { id: 'invoices', name: 'Invoices', icon: Doc },
+  { id: 'suppliers', name: 'Suppliers', icon: Building }
 ]
 
-// Library / setup pages — reached from the mini icon nav at the bottom,
-// not as another row of menu items.
-export const SETUP = [
-  { id: 'recipes', name: 'Recipes', icon: Book },
-  { id: 'suppliers', name: 'Suppliers', icon: Building },
-  { id: 'checklists', name: 'Checklists', icon: Clipboard },
-  { id: 'settings', name: 'Settings', icon: Gear }
-]
-
-export const ALL_PAGES = [...SPACES, ...SETUP]
+export const ALL_PAGES = [...SPACES]
 
 function NavGroup({ title, items, view, space, openSpace }) {
   const [open, setOpen] = useState(true)
@@ -45,6 +37,9 @@ function NavGroup({ title, items, view, space, openSpace }) {
   )
 }
 
+// Only persistent destinations live here — never actions or commands. Home is
+// what needs attention now, Chats is what we discussed, Journal is what
+// happened, Spaces are the business objects.
 export function Sidebar({ view, space, setView, openSpace, needsCount }) {
   return (
     <div className="sidebar">
@@ -54,6 +49,9 @@ export function Sidebar({ view, space, setView, openSpace, needsCount }) {
         <Home size={16} /> <span className="label">Home</span>
         {needsCount > 0 && <span className="badge">{needsCount}</span>}
       </button>
+      <button className={`nav-item ${view === 'chats' ? 'active' : ''}`} onClick={() => setView('chats')}>
+        <ChatIcon size={16} /> <span className="label">Chats</span>
+      </button>
       <button className={`nav-item ${view === 'journal' ? 'active' : ''}`} onClick={() => setView('journal')}>
         <JournalIcon size={16} /> <span className="label">Journal</span>
       </button>
@@ -62,17 +60,6 @@ export function Sidebar({ view, space, setView, openSpace, needsCount }) {
 
       <div className="spacer" />
 
-      {/* Mini nav — the library/setup pages, not another menu list */}
-      <div className="mini-nav">
-        {SETUP.map(s => (
-          <button key={s.id} className={`mini-btn ${view === 'space' && space === s.id ? 'active' : ''}`}
-            onClick={() => openSpace(s.id)} aria-label={s.name}>
-            <s.icon size={16} />
-            <span className="mini-tip">{s.name}</span>
-          </button>
-        ))}
-      </div>
-
       <div className="user">
         <span className="u-hit">
           <span className="avatar"><GrainSwatch palette="fruit" seed="Priya Naidoo" /></span>
@@ -80,6 +67,55 @@ export function Sidebar({ view, space, setView, openSpace, needsCount }) {
           <ChevDown size={16} className="u-chev" />
         </span>
       </div>
+    </div>
+  )
+}
+
+// Chats — every conversational thread, recoverable. A thread started by a
+// command (/add-supplier) lives here even before it has structured data, so
+// leaving mid-conversation never loses it.
+const relTime = (ts) => {
+  if (!ts) return ''
+  const m = Math.round((Date.now() - ts) / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m} min ago`
+  const h = Math.round(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.round(h / 24)}d ago`
+}
+
+const chatTitle = (t) => {
+  if (t.scenarioId === 'supplier') return (t.supplierFlow?.action === 'update' ? 'Update supplier' : 'Add supplier')
+  return t.title || 'New chat'
+}
+const chatSub = (t) => {
+  if (t.scenarioId === 'supplier') {
+    const name = t.supplierFlow?.supplierName
+    return name ? `${name}${t.supplierFlow?.phase === 'done' ? '' : ' · draft'}` : 'No supplier selected'
+  }
+  return t.userText || t.sub || 'Conversation'
+}
+
+export function ChatsPage({ threads, onOpen }) {
+  return (
+    <div className="journal dir-page">
+      <div className="dir-head"><h1>Chats</h1></div>
+      {threads.length === 0 ? (
+        <div className="space-hint spaced">No chats yet. Ask Edify anything, or start one with a slash command — it stays here so you can pick it up later.</div>
+      ) : (
+        <div className="chats-list">
+          {threads.map(t => (
+            <button key={t.id} className="chat-row" onClick={() => onOpen(t.id)}>
+              <span className="chat-row-ico"><ChatIcon size={16} /></span>
+              <span className="chat-row-main">
+                <span className="chat-row-title">{chatTitle(t)}</span>
+                <span className="chat-row-sub">{chatSub(t)} · {relTime(t.ts)}</span>
+              </span>
+              <Chevron size={16} className="chev-quiet" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -126,19 +162,62 @@ export function SuppliersPage({ onAdd }) {
   )
 }
 
+// Simple object lists — persistent business objects, not task lists. Rows
+// reflect confirmed state; live cases surface extra rows so the demo shows a
+// confirmed object landing in its Space.
+const SPACE_LISTS = {
+  orders: {
+    cols: ['Order', 'Supplier', 'Delivery', 'Status'],
+    rows: [
+      { c: ['#2231', 'Bidfood', 'Sat 07:30', 'Confirmed'], tone: 'ok' },
+      { c: ['#2208', 'Bidfood', 'Thu 07:30', 'Completed'], tone: 'muted' },
+      { c: ['#5117', 'Estate Dairy', 'Today 14:30', 'Due'], tone: 'due' }
+    ]
+  },
+  deliveries: {
+    cols: ['Delivery', 'Supplier', 'Arrived', 'Status'],
+    rows: [
+      { c: ['#912', 'Bidfood', 'Sat 07:42', 'Received'], tone: 'ok' },
+      { c: ['#5117', 'Estate Dairy', '—', 'Due today'], tone: 'due' },
+      { c: ['#889', 'Fitzroy Bakehouse', 'Fri 06:20', 'Received'], tone: 'muted' }
+    ]
+  },
+  inventory: {
+    cols: ['Item', 'On hand', 'Count', 'Variance'],
+    rows: [
+      { c: ['Whole milk', '8 L', 'Corrected', '—'], tone: 'ok' },
+      { c: ['Oatly Barista oat milk', '78 L', 'Received', '2 L short'], tone: 'due' },
+      { c: ['Espresso blend', '12 kg', 'Matched', '—'], tone: 'muted' }
+    ]
+  },
+  invoices: {
+    cols: ['Invoice', 'Supplier', 'Amount', 'Status'],
+    rows: [
+      { c: ['#4902', 'Bidfood', '£1,269.00', 'Waiting for supplier'], tone: 'due' },
+      { c: ['#4821', 'Bidfood', '£1,249.60', 'Waiting for supplier'], tone: 'due' },
+      { c: ['#4790', 'Fitzroy Bakehouse', '£212.40', 'Matched'], tone: 'ok' }
+    ]
+  }
+}
+
 export function SpacePage({ spaceId }) {
   const s = ALL_PAGES.find(x => x.id === spaceId) || SPACES[0]
-  const Icon = s.icon
+  const list = SPACE_LISTS[spaceId]
+  if (!list) return null
   return (
-    <div className="journal space-page">
-      <div className="space-icon"><Icon size={16} /></div>
-      <h1>{s.name}</h1>
-      <div className="j-sub">For Fitzroy Espresso.</div>
-      <div className="space-body">
-        <p>This is where the full {s.name} screen lives — the tables, filters and forms for working manually, exactly as before.</p>
-        <p>The Command Centre (Home) sits alongside it: instead of clicking through here, you ask Edify — “<i>why is GP% down?</i>”, “<i>add 20 L oat milk to Saturday's order</i>”, “<i>set up a supplier</i>” — and it does the work, showing its reasoning and asking you to confirm.</p>
-        <div className="space-hint">Static reference page in this prototype — the interactive flows live on Home.</div>
+    <div className="journal dir-page">
+      <div className="dir-head"><h1>{s.name}</h1></div>
+      <div className="obj-table">
+        <div className="obj-thead">{list.cols.map(c => <span key={c}>{c}</span>)}</div>
+        {list.rows.map((r, i) => (
+          <div key={i} className={`obj-row ${r.tone}`}>
+            {r.c.map((cell, j) => (
+              <span key={j} className={j === 0 ? 'obj-c-name' : j === r.c.length - 1 ? `obj-c-status ${r.tone}` : 'obj-c-mut'}>{cell}</span>
+            ))}
+          </div>
+        ))}
       </div>
+      <div className="space-hint spaced">Objects live here once confirmed. Changes happen through Edify — from Home, the command bar, or free text.</div>
     </div>
   )
 }

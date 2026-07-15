@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { SCENARIOS, JOURNAL_SEED, BRIEF, cutoffLabel, DAY, RECEIVE_LINES, RECEIVE_MORE } from './data.js'
-import { Sidebar, Toasts, Interrupt, SpacePage, SuppliersPage } from './components/Shell.jsx'
+import { Sidebar, Toasts, Interrupt, SpacePage, SuppliersPage, ChatsPage } from './components/Shell.jsx'
 import RecipesPage from './components/Recipes.jsx'
 import Home from './components/Today.jsx'
 import Chat, { matchScenario } from './components/Chat.jsx'
@@ -44,7 +44,7 @@ export default function App() {
     const existing = threads.find(t => t.scenarioId === scId || (isOrder({ scenarioId: scId }) && isOrder(t)))
     if (existing && scId !== 'supplier') { setActiveId(existing.id); setView('chat'); return }
     const sc = SCENARIOS[scId]
-    const t = { id: uid('th'), scenarioId: scId, title: sc.title, time: now(), entries: [], queue: [], started: false, userText, caseState: null }
+    const t = { id: uid('th'), scenarioId: scId, title: sc.title, time: now(), ts: Date.now(), entries: [], queue: [], started: false, userText, caseState: null }
     setThreads(ts => [t, ...ts])
     setActiveId(t.id)
     setView('chat')
@@ -355,14 +355,25 @@ export default function App() {
     ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'sat', name: 'Saturday order — Bidfood', when: 'Sat 07:30' }] : [])
   ]
 
-  const inProgress = [
-    { id: 'ip-today-delivery', title: `${DAY.supplier} delivery ${DAY.orderNo}`, sub: `Fitzroy Espresso · ${DAY.items} items · ${DAY.value}`, helper: 'Next step: receive delivery', status: 'Due today', chip: DAY.nextDelivery },
-    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Bidfood delivery #2231', sub: `Fitzroy Espresso · 8 items · £${(1240.6 + (orderThread.orderAdd ?? 20) * 1.42).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, helper: 'Next step: receive delivery', status: 'Confirmed', chip: 'Sat 07:30' }] : []),
-    ...(orderThread && orderThread.caseState === 'awaiting_invoice' ? [{ id: 'ip-order', threadId: orderThread.id, title: 'Bidfood order #2231', sub: orderThread.creditPath === 'hold' ? `Fitzroy Espresso · delivered · ${orderThread.shortUnits || 1} L short recorded` : 'Fitzroy Espresso · delivered · all quantities matched', helper: 'Next step: invoice matching', status: 'Watching', chip: 'Mon 06:40' }] : []),
-    ...watching
-  ]
+  // Continue — recently started structured drafts the user can resume. A
+  // supplier draft counts once it has a name; before that it lives only in
+  // Chats. Confirmed (phase 'done') drops off this list.
+  const continueItems = threads
+    .filter(t => t.scenarioId === 'supplier' && t.supplierFlow?.supplierName && t.supplierFlow?.phase !== 'done')
+    .map(t => ({
+      id: 'cont-' + t.id, threadId: t.id,
+      title: `${t.supplierFlow.action === 'update' ? 'Update' : 'Add'} ${t.supplierFlow.supplierName}${t.supplierFlow.action === 'update' ? '' : ' to Fitzroy Espresso'}`,
+      sub: 'Draft · pick up where you left off'
+    }))
 
-  const doneToday = journal.filter(e => (e.kind === 'action' || e.kind === 'auto') && !e.quiet).slice(0, 5).map(e => ({ id: 'd' + e.id, title: e.title, detail: e.detail, time: e.time, by: e.by }))
+  // Running in background — waiting states. None of these count toward the
+  // Home badge; they are collapsed into one compact summary.
+  const backgroundItems = [
+    { id: 'bg-estate', label: `${DAY.supplier} ${DAY.orderNo}`, wait: 'waiting for delivery' },
+    ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'bg-order', threadId: orderThread.id, label: 'Order #2231', wait: 'waiting for delivery' }] : []),
+    ...(orderThread && orderThread.caseState === 'awaiting_invoice' ? [{ id: 'bg-order', threadId: orderThread.id, label: 'Order #2231', wait: 'waiting for invoice' }] : []),
+    ...watching.map(w => ({ id: w.id, threadId: w.threadId, label: w.title, wait: (w.helper || w.status || 'in progress').replace(/^Waiting for/i, 'waiting for').toLowerCase() }))
+  ]
 
   const activeThread = threads.find(t => t.id === activeId)
   const needsCount = needsItems.length
@@ -371,13 +382,14 @@ export default function App() {
     <div className="app">
       <Sidebar view={view} space={space} setView={setView} openSpace={(id) => { setSpace(id); setView('space') }} needsCount={needsCount} />
       <div className="main">
-        <motion.div key={view + (view === 'chat' ? activeId : '') + (view === 'space' ? space : '')} className={view === 'journal' || view === 'space' ? 'scroll-area' : 'view-wrap'}
-          style={view !== 'journal' && view !== 'space' ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : {}}
+        <motion.div key={view + (view === 'chat' ? activeId : '') + (view === 'space' ? space : '')} className={['journal', 'space', 'chats'].includes(view) ? 'scroll-area' : 'view-wrap'}
+          style={!['journal', 'space', 'chats'].includes(view) ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : {}}
           initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
           {view === 'today' && (
-            <Home needsItems={needsItems} inProgress={inProgress} doneToday={doneToday} deliveries={deliveries}
+            <Home needsItems={needsItems} continueItems={continueItems} backgroundItems={backgroundItems} deliveries={deliveries}
               onOpen={handleHomeOpen} onSend={handleSend} onSpace={(id) => { setSpace(id); setView('space') }} />
           )}
+          {view === 'chats' && <ChatsPage threads={threads} onOpen={openThread} />}
           {view === 'chat' && activeThread && (
             <Chat key={activeThread.id} thread={activeThread} persist={persistThread(activeThread.id)}
               onEvent={handleChatEvent} onBack={() => setView('today')}

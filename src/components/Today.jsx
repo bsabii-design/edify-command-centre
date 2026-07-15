@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PROMISE, cutoffLabel, DAY } from '../data.js'
 import { RecipeCover } from './Recipes.jsx'
 import Composer from './Composer.jsx'
-import { CheckCircle, Bot, Chevron, Clock, Truck, Sun, TrendDown } from './Icons.jsx'
+import { Chevron, Clock, Truck, Sun, TrendDown } from './Icons.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
 
@@ -50,34 +50,49 @@ function NeedsRow({ item, onOpen }) {
   )
 }
 
-function ProgressRow({ item, onOpen }) {
+// Continue — a structured draft the user can resume. The whole row opens it.
+function ContinueRow({ item, onOpen }) {
   return (
     <motion.div layout className="progress-row" onClick={() => item.threadId && onOpen(item)}
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}
-      style={{ cursor: item.threadId ? 'pointer' : 'default' }}>
-      <span className="progress-pulse" />
+      style={{ cursor: 'pointer' }}>
+      <span className="progress-pulse draft" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="q-title">{item.title}</div>
         {item.sub && <div className="q-sub">{item.sub}</div>}
-        {item.helper && <div className="q-next">{item.helper}</div>}
       </div>
-      <div className="q-right">
-        {item.status && <span className="q-status">{item.status}</span>}
-        <span className="case-chip">{item.chip}</span>
-      </div>
-      {item.threadId && <Chevron size={16} className="chev-quiet" />}
+      <span className="case-chip">Resume</span>
+      <Chevron size={16} className="chev-quiet" />
     </motion.div>
   )
 }
 
-function DoneRow({ item }) {
+// Running in background — one compact summary, expandable into quiet
+// one-liners. Never large cards, never a badge on Home.
+function BackgroundSummary({ items, onOpen }) {
+  const [open, setOpen] = useState(false)
   return (
-    <motion.div layout className={`done-row ${item.by === 'you' ? 'you' : ''}`}
-      initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-      <span className="done-icon">{item.by === 'edify' ? <Bot size={16} /> : <CheckCircle size={16} />}</span>
-      <span className="done-title">{item.title}</span>
-      <span className="done-time">{item.time}</span>
-    </motion.div>
+    <div className="bg-summary">
+      <button className="bg-head" onClick={() => setOpen(o => !o)}>
+        <span className="progress-pulse" />
+        <span className="bg-count">{items.length} running in background</span>
+        <Chevron size={16} className={`chev-quiet ${open ? 'open' : ''}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div className="bg-list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
+            {items.map(it => (
+              <button key={it.id} className="bg-item" onClick={() => it.threadId && onOpen(it)}
+                style={{ cursor: it.threadId ? 'pointer' : 'default' }}>
+                <span className="bg-label">{it.label}</span>
+                <span className="bg-wait">{it.wait}</span>
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -146,7 +161,7 @@ function DayBar({ deliveries }) {
   )
 }
 
-export default function Home({ needsItems, inProgress, doneToday, deliveries, onOpen, onSend }) {
+export default function Home({ needsItems, continueItems, backgroundItems, deliveries, onOpen, onSend }) {
   return (
     <div className="home-layout">
       {/* pinned above the scroll, like the menu bar it borrows from */}
@@ -166,28 +181,28 @@ export default function Home({ needsItems, inProgress, doneToday, deliveries, on
               <div className="empty-art"><RecipeCover color="blue" label="All clear" /></div>
               <div>
                 <div className="empty-title">All clear</div>
-                Nothing needs your review. Edify is watching {inProgress.length > 0 ? `${inProgress.length} live case${inProgress.length === 1 ? '' : 's'}` : 'the operation'} and will surface anything that needs you.
+                Nothing needs your review. Edify is watching {backgroundItems.length > 0 ? `${backgroundItems.length} case${backgroundItems.length === 1 ? '' : 's'} in the background` : 'the operation'} and will surface anything that needs you.
               </div>
             </div>
           )}
 
-          {inProgress.length > 0 && (
+          {continueItems.length > 0 && (
             <div className="brief-section spaced">
-              <div className="block-title">In progress</div>
+              <div className="block-title">Continue</div>
               <div className="watch-list">
                 <AnimatePresence initial={false}>
-                  {inProgress.map(item => <ProgressRow key={item.id} item={item} onOpen={onOpen} />)}
+                  {continueItems.map(item => <ContinueRow key={item.id} item={item} onOpen={onOpen} />)}
                 </AnimatePresence>
               </div>
             </div>
           )}
 
-          <div className="brief-section spaced">
-            <div className="block-title">Done today</div>
-            <div className="brief-block quiet">
-              {doneToday.map(item => <DoneRow key={item.id} item={item} />)}
+          {backgroundItems.length > 0 && (
+            <div className="brief-section spaced">
+              <div className="block-title">Running in background</div>
+              <BackgroundSummary items={backgroundItems} onOpen={onOpen} />
             </div>
-          </div>
+          )}
         </div>
       </div>
 

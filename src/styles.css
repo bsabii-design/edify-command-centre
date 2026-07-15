@@ -2146,3 +2146,42 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
    keeps it reachable by keyboard; hovering back reveals the collapse. */
 .head-action { opacity: 0; transition: opacity 0.15s; }
 .action-card:hover .head-action, .action-card:focus-within .head-action { opacity: 1; }
+
+/* ==== Chats — recoverable conversation threads ======================= */
+.chats-list { display: flex; flex-direction: column; margin-top: var(--sp-5); }
+.chat-row { display: flex; align-items: center; gap: var(--sp-3); width: 100%; text-align: left; padding: var(--sp-3) var(--sp-2); border-top: 1px solid var(--border); border-radius: var(--r-md); transition: background 0.13s; }
+.chat-row:first-child { border-top: none; }
+.chat-row:hover { background: var(--hover); }
+.chat-row-ico { color: var(--text-3); flex-shrink: 0; display: flex; }
+.chat-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.chat-row-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.chat-row-sub { font-size: 11px; color: var(--text-2); }
+
+/* ==== Continue — draft pulse and Resume chip ========================== */
+.progress-pulse.draft { background: var(--text-3); animation: none; }
+.progress-row .case-chip { flex-shrink: 0; }
+
+/* ==== Running in background — one compact, expandable summary ========= */
+.bg-summary { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.bg-head { display: flex; align-items: center; gap: var(--sp-3); width: 100%; padding: var(--sp-3) var(--sp-4); text-align: left; transition: background 0.13s; }
+.bg-head:hover { background: var(--hover); }
+.bg-count { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.bg-head .chev-quiet { transition: transform 0.18s; }
+.bg-head .chev-quiet.open { transform: rotate(90deg); }
+.bg-list { border-top: 1px solid var(--border); }
+.bg-item { display: flex; align-items: baseline; gap: var(--sp-3); width: 100%; text-align: left; padding: var(--sp-2) var(--sp-4) var(--sp-2) calc(var(--sp-4) + 14px); transition: background 0.13s; }
+.bg-item:hover { background: var(--hover); }
+.bg-label { font-size: 13px; color: var(--text); flex-shrink: 0; }
+.bg-wait { font-size: 13px; color: var(--text-2); }
+
+/* ==== Space object lists ============================================== */
+.obj-table { margin-top: var(--sp-5); }
+.obj-thead, .obj-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-4); align-items: center; }
+.obj-thead { font-size: 11px; color: var(--text-2); padding: var(--sp-2) var(--sp-2); }
+.obj-row { padding: var(--sp-4) var(--sp-2); border-top: 1px solid var(--border); border-radius: var(--r-md); transition: background 0.13s; }
+.obj-row:hover { background: var(--hover); }
+.obj-c-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.obj-c-mut { font-size: 13px; color: var(--text-2); }
+.obj-c-status { font-size: 13px; color: var(--text-2); }
+.obj-c-status.due { color: var(--accent); }
+.obj-c-status.ok { color: var(--text); }

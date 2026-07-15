@@ -15,6 +15,21 @@ state of every flow. Updated 15 Jul 2026 after the case-unification pass.
 | Weights | Regular 400 / Medium 500 | Medium only: card titles, changed values, new totals, statuses, discrepancy lines, clickable doc names. Chat prose 100 % Regular |
 | Circles | 16 px everywhere (discs, avatar, badges); glyph 12 px, check stroke 1.9 | |
 
+## Navigation (destinations, never actions)
+
+Sidebar holds only persistent destinations. Actions (add supplier, receive delivery, review invoice, fix count…) start from Home cards, the command bar, free text or slash commands — never a sidebar row.
+
+- **Primary**: Home `[count]` · Chats · Journal.
+- **Spaces**: Orders · Deliveries · Inventory · Invoices · Suppliers. (Reports and the setup mini-nav removed.)
+- One badge only — Home, counting items needing a decision now. Background/waiting states never inflate it.
+
+Mental model: **Home** = what needs attention now · **Chats** = what we discussed · **Journal** = what happened · **Spaces** = business objects.
+
+- **Home** three sections: *Needs your review* (action now) · *Continue* (resumable structured drafts, e.g. a supplier draft once it has a name) · *Running in background* (one compact, expandable summary of waiting states). Done-today moved off Home into Journal.
+- **Chats** (`ChatsPage`) lists every thread, recoverable. A command-started thread (`/add-supplier`) persists here even before it has structured data — leaving mid-conversation never loses it. Supplier rows read `Add/Update supplier · <name|No supplier selected> · <relative time>`.
+- **Spaces** (`SpacePage`) render simple confirmed-object lists (Orders/Deliveries/Inventory/Invoices); Suppliers is its own directory (`SuppliersPage`).
+- **Supplier lifecycle**: `/add-supplier` → Chats only → name entered → Home → Continue (`Add <name> to Fitzroy Espresso`) → confirmed → Suppliers + Journal, dropped from Continue (filter on `supplierFlow.phase !== 'done'`).
+
 ## Laws
 
 - **Edify proposes, the operator confirms.** Facts read-only; proposals editable inline; nothing sends without a labelled tap.
