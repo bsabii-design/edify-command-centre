@@ -43,6 +43,7 @@
   --blue: #2563eb;   /* THE blue — one value everywhere */
   --blue-soft: #2563eb; /* retired: same as --blue, kept for old references */
   --blue-bg: #eef1fa;
+  --blue-bg-hover: #e3e8f7;
   --blue-border: #d8def2;
   --scroll: #d8d7d1;
   --scroll-hover: #c4c3bc;
@@ -2320,8 +2321,13 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
   padding: var(--sp-2) var(--sp-3); text-align: left;
   background: var(--sidebar); border: 1px solid var(--border-strong); border-radius: var(--r-md);
 }
-.demo-scn.action { cursor: pointer; transition: background 0.13s, border-color 0.13s; }
-.demo-scn.action:hover { background: var(--hover); border-color: var(--text-3); }
+/* The step you can act on now reads as active at rest — blue fill, blue text
+   and arrow — so it's obvious where to click to walk through the demo. Passive
+   steps keep the quiet Search-style look. */
+.demo-scn.action { cursor: pointer; background: var(--blue-bg); border-color: var(--blue-border); transition: background 0.13s, border-color 0.13s; }
+.demo-scn.action:hover { background: var(--blue-bg-hover); border-color: var(--blue); }
+.demo-scn.action .demo-step { color: var(--blue); font-weight: 500; }
+.demo-scn.action .demo-arrow { color: var(--blue); }
 .demo-scenario { font-size: 11px; font-weight: 500; color: var(--text-3); }
 .demo-step { width: 100%; font-size: 11px; color: var(--text); line-height: 1.35; }
 .demo-arrow { color: var(--text-2); }
