@@ -114,12 +114,12 @@ input, textarea { font-family: inherit; font-size: 13px; color: var(--text); }
   display: flex; align-items: center; gap: var(--sp-2); width: 100%;
   height: 28px; padding: 0 var(--sp-3); border-radius: var(--r-full);
   background: var(--sidebar); border: 1px solid var(--border-strong);
-  color: var(--text-2); font-size: 13px; font-weight: 400;
+  color: var(--text-2); font-size: 11px; font-weight: 400;
   transition: border-color 0.13s; margin-bottom: var(--sp-4);
 }
 .search-box:hover { background: rgba(0,0,0,0.05); }
 .search-box svg { flex-shrink: 0; color: var(--text-3); }
-.search-box .kbd { margin-left: auto; font-size: 13px; color: var(--text-3); font-weight: 400; }
+.search-box .kbd { margin-left: auto; font-size: 11px; color: var(--text-3); font-weight: 400; }
 
 .nav-item {
   /* The pill reaches to 8px from the sidebar walls; content stays put. */
@@ -1564,8 +1564,8 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .lib-toolbar { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-5) 0 var(--sp-3); flex-wrap: wrap; }
 .scope-tabs { display: flex; align-items: center; gap: var(--sp-2); flex: 1; flex-wrap: wrap; }
 .lib-tools { display: flex; align-items: center; gap: var(--sp-2); }
-.lib-search { display: inline-flex; align-items: center; gap: var(--sp-2); height: 28px; padding: 0 var(--sp-3); border-radius: var(--r-full); background: var(--surface-2); color: var(--text-3); font-size: 13px; border: none; outline: none; }
-.lib-search input { border: none; outline: none; background: transparent; font-size: 13px; width: 90px; }
+.lib-search { display: inline-flex; align-items: center; gap: var(--sp-2); height: 28px; padding: 0 var(--sp-3); border-radius: var(--r-full); background: var(--surface-2); color: var(--text-3); font-size: 11px; border: none; outline: none; }
+.lib-search input { border: none; outline: none; background: transparent; font-size: 11px; width: 90px; }
 .lib-icon-btn { width: 28px; height: 28px; border-radius: var(--r-md); display: grid; place-items: center; color: var(--text-2); border: 1px solid var(--border); background: transparent; transition: background 0.13s; }
 .lib-icon-btn:hover { background: var(--surface-2); }
 .lib-filter { display: inline-flex; align-items: center; gap: var(--sp-1); height: 28px; padding: 0 var(--sp-3); border-radius: var(--r-full); border: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--text-2); background: transparent; transition: background 0.13s; }
@@ -1606,7 +1606,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .dir-page { }
 .dir-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-5); }
 .dir-tabs { display: flex; align-items: center; gap: var(--sp-2); }
-.pill-tab { height: 28px; padding: 0 var(--sp-3); border-radius: var(--r-full); font-size: 13px; font-weight: 500; color: var(--text-2); border: 1px solid transparent; background: transparent; transition: background 0.13s, color 0.13s, border-color 0.13s; }
+.pill-tab { height: 28px; padding: 0 var(--sp-3); border-radius: var(--r-full); font-size: 11px; font-weight: 500; color: var(--text-2); border: 1px solid transparent; background: transparent; transition: background 0.13s, color 0.13s, border-color 0.13s; }
 .pill-tab:hover { color: var(--text); }
 .pill-tab.active { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
 .dir-add { margin-left: var(--sp-2); }
@@ -1829,7 +1829,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 @keyframes wspin { to { transform: rotate(360deg); } }
 .wspin { animation: wspin 0.9s linear infinite; }
 .wlive { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 13px; color: var(--text-2); padding: var(--sp-1) 0; }
-.wfold-chip { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 13px; color: var(--text-2); background: var(--hover); border-radius: var(--r-md); padding: var(--sp-1) var(--sp-2); transition: color 0.13s; }
+.wfold-chip { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: 11px; color: var(--text-2); background: var(--hover); border-radius: var(--r-md); padding: var(--sp-1) var(--sp-2); transition: color 0.13s; }
 .wfold-chip:hover { color: var(--text); }
 .wfold-chip .wf-chev { transition: transform 0.18s; }
 .wfold-chip .wf-chev.open { transform: rotate(90deg); }
@@ -2215,11 +2215,11 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 
 .page-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-4); margin-top: var(--sp-5); }
 .page-tabs { display: flex; gap: var(--sp-1); }
-.ptab { font-size: 13px; color: var(--text-2); padding: var(--sp-1) var(--sp-3); border-radius: var(--r-full); transition: background 0.13s, color 0.13s; }
+.ptab { font-size: 11px; color: var(--text-2); padding: var(--sp-1) var(--sp-3); border-radius: var(--r-full); transition: background 0.13s, color 0.13s; }
 .ptab:hover { color: var(--text); }
 .ptab.active { color: var(--text); font-weight: 500; background: var(--surface-2); }
 .search-inline { display: inline-flex; align-items: center; gap: var(--sp-2); height: 30px; padding: 0 var(--sp-3); border: 1px solid var(--border-strong); border-radius: var(--r-full); color: var(--text-3); }
-.search-inline input { border: none; background: none; outline: none; font-size: 13px; color: var(--text); width: 120px; }
+.search-inline input { border: none; background: none; outline: none; font-size: 11px; color: var(--text); width: 120px; }
 .search-inline input::placeholder { color: var(--text-3); }
 
 .dtable { margin-top: var(--sp-4); }
@@ -2468,7 +2468,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .chip-attention { background: var(--red-bg); color: var(--chip-red-text); }
 
 /* ==== Page controls — one shared text style + control height ========== */
-.page-action { height: var(--ctl-h); font-size: 13px; font-weight: 500; }
+.page-action { height: var(--ctl-h); font-size: 11px; font-weight: 500; }
 .search-inline { height: var(--ctl-h); }
 .search-inline input { font-weight: 400; color: var(--text); }
 .search-inline input::placeholder { color: var(--text-3); font-weight: 400; }
@@ -2588,7 +2588,7 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .continue-row .q-sub { font-size: 13px; color: var(--text-3); margin-top: 0; }
 .continue-actions { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; opacity: 0; transition: opacity 0.13s; }
 .continue-row:hover .continue-actions, .continue-row:focus-within .continue-actions { opacity: 1; }
-.continue-resume { font-size: 13px; font-weight: 500; color: var(--text-2); white-space: nowrap; padding: var(--sp-1) var(--sp-2); border-radius: var(--r-full); transition: background 0.13s, color 0.13s; }
+.continue-resume { font-size: 11px; font-weight: 500; color: var(--text-2); white-space: nowrap; padding: var(--sp-1) var(--sp-2); border-radius: var(--r-full); transition: background 0.13s, color 0.13s; }
 .continue-resume:hover { background: var(--surf-continue-hover); color: var(--text); }
 .continue-more { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--r-sm); color: var(--text-3); transition: background 0.13s, color 0.13s; }
 .continue-more:hover { background: var(--surf-continue-hover); color: var(--text); }
