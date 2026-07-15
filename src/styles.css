@@ -28,7 +28,6 @@
   --surface: #ffffff;
   --surface-2: #f2f1ec;
   /* Home work-section surfaces — barely-there tints per semantic layer */
-  --surf-bg: #f8faff;      --surf-bg-hover: #eef2fc;   /* running in background — cool */
   --surf-continue: #f7f6f2; --surf-continue-hover: #efece5; /* continue — warm neutral */
   --hover: #f8f7f4;       /* lighter than surface-2 — a wash, not a fill */
   --border: rgba(60, 58, 48, 0.055);
@@ -2567,8 +2566,10 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
  * Review = pure white (highest priority); Running in background = barely
  * cool; Continue = barely warm neutral. One shared neutral border. */
 .brief-block { background: var(--surface); }
-.bg-summary { background: var(--surf-bg); }
-.bg-head:hover { background: var(--surf-bg-hover); }
-.bg-item:hover { background: var(--surf-bg-hover); }
+/* Background tasks read as waiting, not active — the beige Search surface,
+   not a cool blue tint. The blue lives only on the pulsing dot. */
+.bg-summary { background: var(--sidebar); }
+.bg-head:hover { background: var(--surface-2); }
+.bg-item:hover { background: var(--surface-2); }
 .continue-section .progress-row { background: var(--surf-continue); }
 .continue-section .progress-row:hover { background: var(--surf-continue-hover); }
