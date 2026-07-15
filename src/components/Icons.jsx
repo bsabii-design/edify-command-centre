@@ -9,7 +9,8 @@ import {
   IconAlertCircle, IconClock, IconArrowBackUp, IconX, IconSparkles, IconSend,
   IconArrowLeft, IconArrowUp, IconShoppingCart, IconFileText, IconArrowNarrowDownDashed,
   IconInfoCircle, IconPlus, IconMinus, IconEye, IconEyeOff,
-  IconMicrophone, IconPaperclip, IconSlash, IconCamera, IconLoader2, IconNotes, IconArrowUpRight
+  IconMicrophone, IconPaperclip, IconSlash, IconCamera, IconLoader2, IconNotes, IconArrowUpRight,
+  IconDots
 } from '@tabler/icons-react'
 
 const wrap = (C) => (p) => <C size={16} stroke={1.75} {...p} />
@@ -60,3 +61,4 @@ export const Camera = wrap(IconCamera)
 export const Spinner = wrap(IconLoader2)
 export const Notes = wrap(IconNotes)
 export const ExtLink = wrap(IconArrowUpRight)
+export const Dots = wrap(IconDots)

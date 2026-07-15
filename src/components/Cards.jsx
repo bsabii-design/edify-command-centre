@@ -756,7 +756,6 @@ export function SupplierAddCard({ entry, patch, resolve }) {
     <Card>
       <CardHead title={`Add ${supplier.name} to ${CURRENT_SITE}`} sub="Existing supplier · ready to review" />
       <div className="ac-body"><SupplierRows rows={rows} /></div>
-      <div className="card-helper">Nothing is created until you confirm.</div>
       <div className="ac-footer">
         <button className="btn btn-primary" onClick={() => resolve('supplierAddConfirm')}>Add to {CURRENT_SITE}</button>
         <button className="btn btn-secondary" onClick={() => resolve('supplierChooseAnother')}>Choose another supplier</button>

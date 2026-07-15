@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PROMISE, cutoffLabel, DAY } from '../data.js'
 import { RecipeCover } from './Recipes.jsx'
 import Composer from './Composer.jsx'
-import { Chevron, ChevDown, Clock, Truck, Sun, TrendDown } from './Icons.jsx'
+import { Chevron, ChevDown, Clock, Truck, Sun, TrendDown, Dots } from './Icons.jsx'
 import { DeadlineChip } from './Controls.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
@@ -52,19 +52,25 @@ function NeedsRow({ item, onOpen }) {
   )
 }
 
-// Continue — a structured draft the user can resume. The whole row opens it.
+// Continue — a structured draft the user can resume. A quiet list row: the
+// whole row opens it, and on hover it tints and reveals its actions (Resume,
+// and a ⋯ menu that will hold delete etc.) — Granola's row pattern.
 function ContinueRow({ item, onOpen }) {
   return (
-    <motion.div layout className="progress-row" onClick={() => item.threadId && onOpen(item)}
-      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}
-      style={{ cursor: 'pointer' }}>
+    <motion.div layout className="continue-row" onClick={() => item.threadId && onOpen(item)}
+      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={spring}>
       <span className="progress-pulse draft" />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="continue-main">
         <div className="q-title">{item.title}</div>
         {item.sub && <div className="q-sub">{item.sub}</div>}
       </div>
-      <span className="case-chip">Resume</span>
-      <Chevron size={16} className="chev-quiet" />
+      {/* Revealed on hover. The ⋯ is a placeholder for now — no menu wired up. */}
+      <div className="continue-actions">
+        <span className="continue-resume">Resume <Chevron size={16} /></span>
+        <button className="continue-more" aria-label="More" onClick={e => e.stopPropagation()}>
+          <Dots size={16} />
+        </button>
+      </div>
     </motion.div>
   )
 }
