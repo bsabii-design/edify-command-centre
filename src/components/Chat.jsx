@@ -66,14 +66,22 @@ const WORKING_STEPS = {
     { t: 'Current order', r: '60 L' }
   ],
   gpBreakdown: [
-    { t: 'Pulling POS sales for the week', r: '4,182 sales' },
-    { t: 'Recosting recipes against invoices', r: 'version 214' },
-    { t: 'Splitting the drivers apart', r: '4 found' }
+    { t: 'Sales period', r: '29 Jun – 5 Jul' },
+    { t: 'Compared with', r: '4-week average' },
+    { t: 'Recipe costs', r: 'version 214' },
+    { t: 'Confirmed Bidfood prices', r: '3 invoices' },
+    { t: 'Waste records', r: '12 muffins binned' },
+    { t: 'Sales-channel mix', r: 'POS + Deliveroo' },
+    { t: 'Pending stocktake', r: 'Hub kitchen — open' },
+    { t: 'Channel fees', r: 'included in GP' }
   ],
   muffinPlan: [
-    { t: "Reading Monday's production plan", r: '12 baked' },
-    { t: 'Checking muffin sell-through, last 4 Mondays', r: '6–7 sold' },
-    { t: 'Drafting the change' }
+    { t: 'Current request', r: '12' },
+    { t: 'Last four Mondays sold', r: '6–7' },
+    { t: 'Recorded waste', r: '12 binned' },
+    { t: 'Proposed buffer', r: '1–2 above sales' },
+    { t: 'Estimated unit cost', r: '~£0.75' },
+    { t: 'Estimated weekly saving', r: '~£3' }
   ],
   countFix: [
     { t: "Reading yesterday's count", r: '22 L' },

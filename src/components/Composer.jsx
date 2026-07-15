@@ -2,14 +2,11 @@ import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUp, Plus, Mic, SlashSq, Camera, X, Doc } from './Icons.jsx'
 
+// Only two commands: starting a supplier setup, and asking for a GP
+// explanation. Order/invoice/count work is surfaced proactively on Home.
 const COMMANDS = [
   { cmd: '/add-supplier', desc: 'Set up a new supplier', maps: 'Add supplier' },
-  { cmd: '/update-supplier', desc: 'Change a supplier’s details', maps: 'Update supplier' },
-  { cmd: '/delete-supplier', desc: 'Remove a supplier from this site', maps: 'Delete supplier' },
-  { cmd: '/order', desc: 'Change or review an order', maps: "Add 20 litres of oat milk to Saturday's order" },
-  { cmd: '/gp', desc: 'Margin breakdown for this site', maps: 'Why is GP% down at this site this week?' },
-  { cmd: '/invoice', desc: 'Review a flagged invoice', maps: 'Review Bidfood invoice #4821' },
-  { cmd: '/count', desc: 'Check or fix a stock count', maps: "Check yesterday's whole milk count" }
+  { cmd: '/gp', desc: 'Explain GP changes for this site', maps: 'Why is GP% down at this site this week?' }
 ]
 
 const DICTATION = "Add 20 litres of oat milk to Saturday's order"

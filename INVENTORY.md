@@ -91,6 +91,7 @@ Prompt (short): "Which supplier are you adding? / I'll first check whether they'
 - **Evidence fold** (Granola): spinner «Working…» → chip «How Edify worked this out» → three lines: sources (clickable doc names + ↗), one calculation sentence, one result sentence.
 - **Buttons**: primary (navy pill) / secondary / tertiary (`.done-action`, 11 px). One primary per card.
 - **Dropdown**: `.ir-select` only — custom 16 px chevron, one-line consequence under it.
+- **Command menu**: only two — `/add-supplier` (Set up a new supplier) and `/gp` (Explain GP changes for this site). Order/invoice/count work is surfaced on Home, not duplicated as commands.
 - **Document control**: doc icon + name + ↗, hover/focus turns blue with underline (invoice header).
 
 ## Cards (src/components/Cards.jsx)
@@ -102,8 +103,8 @@ Prompt (short): "Which supplier are you adding? / I'll first check whether they'
 | `ReceivingCard` | order case | proposed (8 lines, steppers) · confirmed |
 | `InvoiceCloseCard` | **both** invoice cases (#4902 from the order case, #4821 standalone) | proposed (tiles, Item/Mismatch/Action, dropdowns) · confirmed (Unresolved/Status tiles, line statuses, strip) — parametrised by `num`, `noteLabel`, `expLabel`, `lines`, `matched`, `invoiced` |
 | `CountFixCard` | count case | proposed (`.cnt-row` facts, red delta, stepper, 3-level footer, accept guard) · confirmed (header + View details + footer summary, per choice) |
-| `GpCard` | GP question | unverified → verified after count closes; drivers with one actionable handle |
-| `MuffinCard` | GP follow-up | proposed · applied · declined |
+| `GpCard` | GP question | Same table system as other cards — **no status chip, no progress bars**. Header (title + "Recomputed 13:58", nothing on the right) · summary row (68.1% Medium · −3.3 pts Medium red, no pill · 4-week avg muted) · driver table (Driver \| Evidence \| Impact, quiet header, full-bleed dividers, impact red for verified / grey for the one **pending** reconciliation row) · one compact neutral trust note ("0.7 pts is still pending verification"). Verified drivers reconcile to −2.6, pending −0.7, total −3.3. countClosed swaps to a resolved note. |
+| `MuffinCard` | GP-linked task "Update Monday's blueberry muffin request" | Production review table (Plan \| Muffins \| Basis: Current plan 12 · Typical 6–7 · Proposed 8 "1–2 above typical sales") + buffer/`Estimated saving · ~£3/week` (not blue) + sell-out note; CTA **Request 8 muffins** / **Keep 12** (request model — Priya requests, Hub kitchen receives). Confirmed → same card, read-only "Production change requested", expandable snapshot + footer "…request changed 12 → 8 / Sent to Hub kitchen at 14:06". Journal: "Monday blueberry muffin request changed / Hub kitchen · 12 → 8". |
 | `SupplierAddCard` / `SupplierDraftCard` / `SupplierUpdateCard` | supplier flows | draft → applied/cancelled |
 
 Removed: legacy `InvoiceCard` (#4821 old layout), `PriceReplyCard`, seg-btn resolution picker, «View original» head action, intermediate «Checked in» status card, «Not arrived» branch.

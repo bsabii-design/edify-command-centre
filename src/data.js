@@ -124,28 +124,28 @@ export const SCENARIOS = {
     sub: 'Computed from POS, invoices & counts',
     userText: 'Why is GP% down at this site this week?',
     steps: [
-      { type: 'assistant', text: "Fitzroy Espresso is running **68.1% GP** this week against your four-week average of 71.4%. Three drivers explain most of the 3.3-point gap — and one part I can't verify yet, which I've marked rather than guessed:" },
+      { type: 'assistant', text: "Fitzroy Espresso is running at 68.1% GP this week, compared with a four-week average of 71.4%.\n\nThree verified drivers explain 2.6 pts of the 3.3-point gap. The remaining 0.7 pts is pending the Hub kitchen stocktake." },
       { type: 'card', card: 'gpBreakdown' },
-      // The answer doesn't dead-end: the waste driver is a handle Priya can
-      // pull. Tapping it starts a real case — proposed, confirmed, recorded.
-      { type: 'followups', label: 'The muffin waste is the one I can fix today:', options: ["Trim Monday's muffin bake"] }
+      // The answer doesn't dead-end: it names the most actionable verified
+      // driver and offers a suggested next step — a separate, reviewable task.
+      { type: 'followups', label: 'Muffin waste is the most actionable verified driver.', options: ["Review Monday's muffin plan"] }
     ],
     resolutions: {}
   },
 
-  // Born from the GP% answer — a question turning into a case.
+  // Born from the GP% answer — the suggested action becomes a linked task.
   muffins: {
     id: 'muffins',
-    title: "Monday's muffin bake — Hub kitchen",
+    title: "Update Monday's blueberry muffin request",
     sub: 'Production planning',
     userText: null,
     steps: [
-      { type: 'assistant', text: "Monday's plan bakes **12 blueberry muffins**, but the last four Mondays sold 6–7. Here's the change I'd send — nothing reaches the Hub kitchen until you confirm:" },
+      { type: 'assistant', text: "Monday's request is 12 blueberry muffins, but the last four Mondays sold 6–7. Here's the change I'd suggest — you request it, Hub kitchen receives it, and nothing changes until you confirm:" },
       { type: 'card', card: 'muffinPlan' }
     ],
     resolutions: {
-      muffinConfirm: [{ type: 'assistant', text: "Sent — Monday's bake is now **8**, and the Hub kitchen has the updated plan. I'll watch Monday's sell-through: if they're gone before 15:00, I'll suggest putting two back. Next week's GP% answer will show whether this recovers the **−0.9 pts**." }],
-      muffinKeep: [{ type: 'assistant', text: "Kept at **12** — nothing sent. The waste keeps showing in the weekly GP% answer, so you can change your mind any Monday." }]
+      muffinConfirm: [{ type: 'assistant', text: "Requested — Monday's blueberry muffin request is now 8, and Hub kitchen has received it. If muffins sell out before 15:00, I'll flag it and suggest restoring two next Monday. Next week's GP% answer will show whether this recovers the 0.9 pts." }],
+      muffinKeep: [{ type: 'assistant', text: "Kept at 12 — no change requested. The waste keeps showing in the weekly GP% answer, so you can change your mind any Monday." }]
     }
   },
 

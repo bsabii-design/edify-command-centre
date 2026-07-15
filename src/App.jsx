@@ -157,14 +157,14 @@ export default function App() {
         break
       case 'muffinConfirm':
         markResolved('muffins')
-        setWatching(w => [...w, { id: 'wmuffin', title: "Monday's muffin bake — Hub kitchen", sub: 'Plan updated to 8 — watching Monday sell-through', chip: 'Mon', threadId }])
-        J('action', 'you', "Monday's muffin bake trimmed 12 → 8", 'Proposed by Edify from the GP% breakdown, confirmed by you — Hub kitchen notified, ~£3/week less waste', 'Case — Production plan')
-        toast('Plan sent to Hub kitchen', "Monday's bake is now 8 — Edify watches the sell-through")
+        setWatching(w => [...w, { id: 'wmuffin', title: "Monday's muffin request — Hub kitchen", sub: 'Requested 8 — watching Monday sell-through', helper: 'Watching sell-through', chip: 'Mon', threadId }])
+        J('action', 'you', 'Monday blueberry muffin request changed', 'Hub kitchen · 12 → 8', 'Production')
+        toast('Production change requested', "Monday's blueberry muffin request is now 8")
         break
       case 'muffinKeep':
         markResolved('muffins')
-        J('action', 'you', "Monday's muffin bake kept at 12", "Reviewed Edify's proposal from the GP% breakdown and kept the plan — nothing sent", 'Case — Production plan')
-        toast('Kept at 12', 'No change sent to the Hub kitchen')
+        J('action', 'you', "Monday's muffin request kept at 12", 'Reviewed the proposal from the GP% breakdown and kept the request — nothing changed', 'Production')
+        toast('Kept at 12', 'No change requested from Hub kitchen')
         break
       case 'countCorrect': {
         const v = payload?.corrected ?? 8
@@ -403,7 +403,7 @@ export default function App() {
     if (t.scenarioId === 'invoice') return 'Review Bidfood invoice #4821'
     if (t.scenarioId === 'count') return 'Check whole milk count'
     if (t.scenarioId === 'gp') return 'Why is GP% down this week?'
-    if (t.scenarioId === 'muffins') return "Monday's muffin bake"
+    if (t.scenarioId === 'muffins') return "Update Monday's blueberry muffin request"
     if (t.scenarioId === 'supplier') {
       const f = t.supplierFlow || {}
       if (!f.supplierName) return f.action === 'update' ? 'Update supplier' : 'Add supplier'

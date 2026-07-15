@@ -2512,3 +2512,34 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .ptab { border: 1px solid var(--border-strong); background: transparent; color: var(--text-2); font-weight: 400; }
 .ptab:hover { background: var(--surface-2); color: var(--text); }
 .ptab.active { background: var(--surface-2); color: var(--text); font-weight: 500; }
+
+/* ==== GP breakdown — same table system as the other cards ============= */
+.gp-summary { display: flex; align-items: baseline; gap: var(--sp-3); }
+.gp-now { font-size: 20px; font-weight: 500; color: var(--text); }
+.gp-gap { font-size: 13px; font-weight: 500; color: var(--accent); }
+.gp-avg { font-size: 13px; color: var(--text-2); }
+
+.gp-table { margin-top: var(--sp-4); }
+.gp-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.3fr) minmax(0, 0.8fr); gap: var(--sp-4); align-items: baseline; padding: var(--sp-4) 0; border-top: 1px solid var(--border); }
+.gp-row.gp-head { padding: var(--sp-2) 0; border-top: none; }
+.gp-row.gp-head span { font-size: 11px; font-weight: 400; color: var(--text-2); }
+.gp-driver { font-size: 13px; font-weight: 400; color: var(--text); }
+.gp-evidence { font-size: 13px; font-weight: 400; color: var(--text-2); }
+.gp-impact { font-size: 13px; font-weight: 400; color: var(--accent); text-align: right; justify-self: end; white-space: nowrap; }
+.gp-row.pending .gp-driver, .gp-row.pending .gp-evidence { color: var(--text-2); }
+.gp-row.pending .gp-impact { color: var(--text-2); }
+
+.gp-trust { display: flex; gap: var(--sp-3); background: var(--surface-2); border-radius: var(--r-md); padding: var(--sp-3); margin-top: var(--sp-4); }
+.gp-trust-ico { color: var(--text-3); flex-shrink: 0; display: flex; margin-top: 1px; }
+.gp-trust.resolved .gp-trust-ico { color: var(--text-2); }
+.gp-trust-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.gp-trust-body { font-size: 13px; font-weight: 400; color: var(--text-2); line-height: 1.45; margin-top: var(--sp-0); }
+
+/* ==== Muffin production review ======================================= */
+.muf-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1.2fr); gap: var(--sp-4); align-items: baseline; padding: var(--sp-3) 0; border-top: 1px solid var(--border); font-size: 13px; color: var(--text); }
+.muf-row.muf-head { padding: var(--sp-2) 0; border-top: none; }
+.muf-row.muf-head span { font-size: 11px; font-weight: 400; color: var(--text-2); }
+.muf-num { text-align: right; justify-self: end; font-variant-numeric: tabular-nums; }
+.muf-basis { color: var(--text-2); }
+.muf-meta { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+.muf-save { color: var(--text); }

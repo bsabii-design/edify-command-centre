@@ -199,71 +199,57 @@ export function OrderDiffCard({ entry, patch, resolve }) {
 }
 
 // ---------- GP breakdown -------------------------------------------------
-export function GpCard({ entry, resolve }) {
-  const { status = 'proposed', countClosed = false } = entry.data || {}
-  // Store-manager words only. The muffin row carries a handle — it's the one
-  // driver Priya can act on today, and the chevron says so. Once the count
-  // closes, the hatched guess resolves into two solid, verified rows.
-  const drivers = [
-    { label: 'Milk & oat milk price up 8% since Monday', sub: 'Bidfood price change — hits every white-based drink', pts: 1.2, w: 78 },
-    { label: 'Muffin waste doubled', sub: '12 binned this week vs 5 in a normal week', pts: 0.9, w: 58, action: true },
-    { label: 'More sales went through Deliveroo', sub: 'Deliveroo keeps 30%, so those sales earn less', pts: 0.5, w: 32 },
-    ...(countClosed ? [
-      { label: 'Real waste', sub: 'Confirmed by the closed count', pts: 0.5, w: 32 },
-      { label: 'Counting slip — corrected', sub: 'A 12 L crate logged as single litres', pts: 0.2, w: 14 }
-    ] : [
-      { label: 'Unexplained difference', sub: 'Can’t split waste vs count error yet', pts: 0.7, w: 45, uncertain: true }
-    ])
-  ]
+export function GpCard({ entry }) {
+  const { countClosed = false } = entry.data || {}
+  // A question, not a proposal — no status chip. Verified drivers vs the one
+  // pending amount are separated in the table; the trust note explains it once.
+  const drivers = countClosed
+    ? [
+      { driver: 'Milk and oat milk costs increased', evidence: 'Confirmed Bidfood price changes', impact: '−1.2 pts' },
+      { driver: 'Muffin waste increased by 7', evidence: '12 binned this week · typical week 5', impact: '−0.9 pts' },
+      { driver: 'Sales mix shifted toward Deliveroo', evidence: 'Higher share of lower-margin channel sales', impact: '−0.5 pts' },
+      { driver: 'Real waste', evidence: 'Confirmed by the closed Hub kitchen count', impact: '−0.5 pts' },
+      { driver: 'Counting slip — corrected at source', evidence: 'A 12 L crate logged as single litres', impact: '−0.2 pts' }
+    ]
+    : [
+      { driver: 'Milk and oat milk costs increased', evidence: 'Confirmed Bidfood price changes', impact: '−1.2 pts' },
+      { driver: 'Muffin waste increased by 7', evidence: '12 binned this week · typical week 5', impact: '−0.9 pts' },
+      { driver: 'Sales mix shifted toward Deliveroo', evidence: 'Higher share of lower-margin channel sales', impact: '−0.5 pts' },
+      { driver: 'Pending stocktake reconciliation', evidence: 'Waste vs count error not yet confirmed', impact: '−0.7 pts pending', pending: true }
+    ]
   return (
     <Card>
-      {/* This card answers a question. It proposes no change, so it never says
-          "Awaiting your call" — it says which part of the answer it can't stand behind. */}
-      <CardHead title="GP% — week of 29 Jun" sub={countClosed ? 'Recomputed Thu 18:05 — count closed' : 'Recomputed 13:58'}
-        status={countClosed ? 'verified' : 'unverified'} />
+      <CardHead title="GP% — week of 29 Jun" sub={countClosed ? 'Recomputed Thu 18:05' : 'Recomputed 13:58'} />
       <div className="ac-body">
-        <div className="gp-headline">
-          <span className="big">68.1%</span>
-          <span className="delta-chip">−3.3 pts</span>
-          <span className="target">4-week average 71.4%</span>
+        <div className="gp-summary">
+          <span className="gp-now">68.1%</span>
+          <span className="gp-gap">−3.3 pts</span>
+          <span className="gp-avg">4-week average 71.4%</span>
         </div>
-        {drivers.map((d, i) => (
-          <motion.div key={d.label} className={`driver ${d.uncertain ? 'uncertain' : ''} ${d.action ? 'act' : ''}`}
-            onClick={d.action ? () => resolve('openMuffins') : undefined}
-            initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.12 }}>
-            <div className="d-label">{d.label}<div className="d-sub">{d.sub}</div></div>
-            <div className="d-bar-track">
-              <motion.div className="d-bar" initial={{ width: 0 }} animate={{ width: `${d.w}%` }}
-                transition={{ delay: 0.25 + i * 0.12, duration: 0.45, ease: 'easeOut' }} />
+        <div className="gp-table">
+          <div className="gp-row gp-head"><span>Driver</span><span>Evidence</span><span className="gp-impact">Impact</span></div>
+          {drivers.map(d => (
+            <div key={d.driver} className={`gp-row ${d.pending ? 'pending' : ''}`}>
+              <span className="gp-driver">{d.driver}</span>
+              <span className="gp-evidence">{d.evidence}</span>
+              <span className="gp-impact">{d.impact}</span>
             </div>
-            <div className="d-val">−{d.pts.toFixed(1)} pts</div>
-            <span className="d-slot">{d.action && <Chevron size={16} />}</span>
-          </motion.div>
-        ))}
+          ))}
+        </div>
         {countClosed ? (
-          /* The promise, paid: the range resolved itself the moment Marco closed
-             the count — no button was ever needed. */
-          <div className="uncertain-note resolved">
-            <CheckCircle size={16} />
+          <div className="gp-trust resolved">
+            <span className="gp-trust-ico"><CheckCircle size={16} /></span>
             <div>
-              <div className="un-title">Count closed — nothing here is a guess now</div>
-              <div className="un-body">Marco closed the Hub kitchen count at 18:05. The unexplained −0.7 pts split into real waste (−0.5) and a counting slip (−0.2), corrected at source.</div>
+              <div className="gp-trust-title">Nothing here is pending now</div>
+              <div className="gp-trust-body">Marco closed the Hub kitchen stocktake at 18:05. The pending 0.7 pts split into real waste (−0.5) and a counting slip (−0.2), corrected at source.</div>
             </div>
           </div>
         ) : (
-          <div className="uncertain-note">
-            <AlertCircle size={16} />
+          <div className="gp-trust">
+            <span className="gp-trust-ico"><AlertCircle size={16} /></span>
             <div>
-              <div className="un-title">One number here is a range, not a fact</div>
-              <div className="un-body">
-                Thursday's stocktake at Hub kitchen — our prep site — is still open, so I can't split the
-                unexplained −0.7 pts between real waste and a counting error. Until it closes, read it as −0.3 to −1.1 pts.
-              </div>
-              {/* No button: closing the count is the stocktake's job, not this
-                  answer's. Edify recomputes the moment it lands — nothing to press. */}
-              <div className="un-actions">
-                <span className="un-passive">This updates itself the moment the count closes.</span>
-              </div>
+              <div className="gp-trust-title">0.7 pts is still pending verification</div>
+              <div className="gp-trust-body">Thursday's Hub kitchen stocktake is still open, so Edify cannot yet separate actual waste from a count error. This will update when the stocktake closes.</div>
             </div>
           </div>
         )}
@@ -665,36 +651,51 @@ export function CountFixCard({ entry, resolve, patch }) {
  * A follow-up chip proposes this change; nothing reaches the Hub kitchen
  * until Priya confirms.
  */
-export function MuffinCard({ entry, resolve }) {
+export function MuffinCard({ entry, patch, resolve }) {
   const { status = 'proposed' } = entry.data || {}
+  const expanded = !!(entry.data || {}).expanded
+  const table = (
+    <div className="ac-body">
+      <div className="muf-row muf-head"><span>Plan</span><span className="muf-num">Muffins</span><span>Basis</span></div>
+      <div className="muf-row"><span>Current plan</span><span className="muf-num">12</span><span className="muf-basis">Current Monday request</span></div>
+      <div className="muf-row"><span>Typical Monday sales</span><span className="muf-num">6–7</span><span className="muf-basis">POS · last four Mondays</span></div>
+      <div className="muf-row"><span>Proposed plan</span><span className="muf-num">8</span><span className="muf-basis">1–2 above typical sales</span></div>
+    </div>
+  )
+  if (status === 'applied') return (
+    <Card>
+      <CardHead title="Production change requested" sub="Blueberry muffins · Hub kitchen"
+        action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div key="d" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }} style={{ overflow: 'hidden' }}>
+            {table}
+            <div className="ac-body muf-meta">Estimated saving · ~£3/week · Sent to Hub kitchen at 14:06.</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="ac-body confirmed-summary">
+        <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>Monday's blueberry muffin request changed 12 → 8</div>
+        <div className="sum-line quiet">Sent to Hub kitchen at 14:06 — Edify will flag an early sell-out before 15:00.</div>
+      </div>
+    </Card>
+  )
   return (
     <Card>
-      <CardHead title="Monday's production — blueberry muffins"
-        sub="Hub kitchen" status={status} />
-      <div className="ac-body">
-        <table className="diff-table fixed">
-          <colgroup><col style={{ width: '40%' }} /><col style={{ width: '22%' }} /><col style={{ width: '38%' }} /></colgroup>
-          <thead><tr><th>Plan</th><th className="num">Muffins</th><th>Basis</th></tr></thead>
-          <tbody>
-            <tr><td>Current plan</td><td className="num">12</td><td className="muted">Same as every Monday</td></tr>
-            <tr><td>Sold on a typical Monday</td><td className="num"><span className="em">6–7</span></td><td className="muted">POS, last 4 Mondays</td></tr>
-            <tr className="mismatch"><td><span className="em">Proposed plan</span></td><td className="num"><span className="em">8</span></td><td><span className="delta">Saves ~£3/week</span></td></tr>
-          </tbody>
-        </table>
-        <div className="ac-note">If Monday sells out before 15:00, I'll flag it and suggest putting two back — this isn't one-way.</div>
+      <CardHead title="Monday's production — blueberry muffins" sub="Hub kitchen" />
+      {table}
+      <div className="ac-body muf-meta">
+        Keeps a buffer of 1–2 muffins above typical Monday sales. <span className="muf-save">Estimated saving · ~£3/week.</span>
       </div>
+      <div className="ac-note">If muffins sell out before 15:00, Edify will flag it and suggest restoring two next Monday.</div>
       {status === 'proposed' && (
         <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('muffinConfirm')}>Send to Hub kitchen</button>
+          <button className="btn btn-primary" onClick={() => resolve('muffinConfirm')}>Request 8 muffins</button>
           <button className="btn btn-secondary" onClick={() => resolve('muffinKeep')}>Keep 12</button>
         </div>
       )}
-      {status === 'applied' && (
-        <ConfirmStrip label="Plan sent to Hub kitchen" sub="Monday's bake now 8 — Edify watches sell-through" />
-      )}
-      {status === 'declined' && (
-        <KeptStrip label="Kept at 12 — no change sent" />
-      )}
+      {status === 'declined' && <KeptStrip label="Kept at 12 — no change requested" />}
     </Card>
   )
 }
