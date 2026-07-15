@@ -57,6 +57,17 @@ export function emptyDraft(name) {
   return { name: formatSupplierName(name), site: CURRENT_SITE, deliveryDays: [] }
 }
 
+// Required to create: order email, at least one delivery day, a cut-off.
+// Minimum order is optional. Used for the live "N required details missing".
+export function requiredMissing(draft) {
+  let n = 0
+  if (!draft?.orderEmail) n++
+  if (!draft?.deliveryDays || draft.deliveryDays.length === 0) n++
+  if (!draft?.cutoff) n++
+  return n
+}
+export function draftReady(draft) { return requiredMissing(draft) === 0 }
+
 const DAYS_RE = 'mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?'
 export function parseDeliveryDays(text) {
   const map = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' }
@@ -87,6 +98,12 @@ export function detectSupplierIntent(text) {
 
   m = t.match(/^(?:add|new|set ?up)\s+(?:a\s+)?(?:new\s+)?supplier(?:\s+(.+?))?\.?$/i)
   if (m) return { action: 'add', name: m[1] ? formatSupplierName(m[1]) : null }
+  // Free-text phrasings: "I want to add Bidfood as a supplier",
+  // "set up Caravan Coffee as a new supplier", "add the supplier Bidfood".
+  m = t.match(/\b(?:add|set ?up|create|onboard)\s+(.+?)\s+as\s+(?:a\s+)?(?:new\s+)?supplier\b/i)
+  if (m) return { action: 'add', name: formatSupplierName(m[1]) }
+  m = t.match(/\badd\s+(?:the\s+)?(?:new\s+)?supplier\s+(.+?)\.?$/i)
+  if (m && !/^suppliers?$/i.test(m[1])) return { action: 'add', name: formatSupplierName(m[1]) }
   return { action: 'add', name: null }
 }
 

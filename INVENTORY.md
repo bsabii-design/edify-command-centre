@@ -28,7 +28,15 @@ Mental model: **Home** = what needs attention now · **Chats** = what we discuss
 - **Home** three sections: *Needs your review* (action now) · *Continue* (resumable structured drafts, e.g. a supplier draft once it has a name) · *Running in background* (one compact, expandable summary of waiting states). Done-today moved off Home into Journal.
 - **Chats** (`ChatsPage`) lists every thread, recoverable. A command-started thread (`/add-supplier`) persists here even before it has structured data — leaving mid-conversation never loses it. Supplier rows read `Add/Update supplier · <name|No supplier selected> · <relative time>`.
 - **Spaces** (`SpacePage`) render simple confirmed-object lists (Orders/Deliveries/Inventory/Invoices); Suppliers is its own directory (`SuppliersPage`).
-- **Supplier lifecycle**: `/add-supplier` → Chats only → name entered → Home → Continue (`Add <name> to Fitzroy Espresso`) → confirmed → Suppliers + Journal, dropped from Continue (filter on `supplierFlow.phase !== 'done'`).
+- **Supplier lifecycle**: `/add-supplier` (command, suggested action or free text — one workflow) → Chats only → name entered → Home → Continue (`Add <name> to Fitzroy Espresso`, sub = live "N required details missing" / "Ready to review") → confirmed → Suppliers + Journal, dropped from Continue. Continue is derived from the live supplier card in the thread (source of truth), not remembered chat.
+
+### Add-supplier flow (one card, changing states)
+
+Prompt (short): "Which supplier are you adding? / I'll first check whether they're already used at another Ferra site." Options: Caravan Coffee (New supplier) · Bidfood (Used at other sites).
+
+- **Path A — existing** (`SupplierAddCard`): narrative "<name> is already used at A, B and C. I found a complete setup you can reuse for <site>." → review card (title `Add <name> to <site>`, meta `Existing supplier · ready to review`, rows Used at/Order email/Cut-off/Delivery days/Minimum order, helper "Nothing is created until you confirm."). Primary **Add to Fitzroy Espresso**, secondary **Choose another supplier** (returns to selection in-place, no discarded card, no Journal). Confirm → same card flips to confirmed (title "Supplier added", meta `<name> · <site>`, footer check + "<name> added / Available for ordering…", expandable snapshot). One transition line only: "<name> will now appear in Suppliers."
+- **Path B — new** (`SupplierDraftCard`): narrative "I created a draft for <name>. Add the missing details below, paste them here, or attach a supplier document." → structured draft shown immediately (read-only Supplier/Site; required Order email, Delivery days, Cut-off; optional Minimum order). Meta counts down `N required details missing` → `Ready to review`. All input methods write the same draft: direct fields, chat sentence, or pasted email (`parseSupplierInput`). Composer placeholder: "Paste supplier details or attach a file — I'll fill the draft." Primary **Create supplier** disabled until required complete, with helper "Complete the required fields to create this supplier."; quiet **Discard draft** → one message "Supplier draft discarded.", card removed, thread kept. Confirm → confirmed card as Path A.
+- One card = all states; no separate proposal/cancelled/success cards. Required helper `requiredMissing()/draftReady()` live in suppliers.js.
 
 ## Laws
 

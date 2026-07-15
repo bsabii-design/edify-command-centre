@@ -2185,3 +2185,17 @@ button:focus:not(:focus-visible), textarea:focus, input:focus { outline: none; }
 .obj-c-status { font-size: 13px; color: var(--text-2); }
 .obj-c-status.due { color: var(--accent); }
 .obj-c-status.ok { color: var(--text); }
+
+/* ==== Supplier card — one card, changing states ====================== */
+.sup-rows, .sup-form { display: flex; flex-direction: column; }
+.sup-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: var(--sp-4); align-items: center; padding: var(--sp-3) 0; border-top: 1px solid var(--border); }
+.sup-row:first-child { border-top: none; }
+.sup-label { font-size: 13px; color: var(--text-2); }
+.sup-value { font-size: 13px; font-weight: 500; color: var(--text); }
+.sup-control { min-width: 0; }
+.sup-input { width: 100%; height: 30px; padding: 0 var(--sp-2); border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface); font-size: 13px; color: var(--text); outline: none; transition: border-color 0.13s; }
+.sup-input:focus { border-color: var(--blue); }
+.sup-input::placeholder { color: var(--text-3); }
+.sup-row.field .sup-control .day-chips { margin: 0; }
+.sup-discard { color: var(--text-2); }
+.sup-discard:hover { color: var(--text); }

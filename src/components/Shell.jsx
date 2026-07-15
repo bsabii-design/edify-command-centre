@@ -128,8 +128,10 @@ const SUPPLIER_ROWS = [
   { name: 'Fitzroy Bakehouse', domain: 'fitzroybakehouse.co.uk', last: 'Jun 29', orders: 18, sites: 'Fitzroy Espresso' }
 ]
 
-export function SuppliersPage({ onAdd }) {
+export function SuppliersPage({ onAdd, added = [] }) {
   const [tab, setTab] = useState('all')
+  const addedRows = added.map(s => ({ name: s.name, domain: (s.orderEmail || '').split('@')[1] || '', last: 'just now', orders: 0, sites: 'Fitzroy Espresso', isNew: true }))
+  const rows = [...addedRows, ...SUPPLIER_ROWS]
   return (
     <div className="journal dir-page">
       <div className="dir-head">
@@ -142,7 +144,7 @@ export function SuppliersPage({ onAdd }) {
       </div>
       <div className="dir-table">
         <div className="dir-thead"><span>Supplier</span><span className="dir-c2">Sites</span><span className="dir-c3">Last order</span><span className="dir-c4">Orders</span></div>
-        {SUPPLIER_ROWS.filter(r => tab === 'all' || /Fitzroy/.test(r.sites)).map(r => (
+        {rows.filter(r => tab === 'all' || /Fitzroy/.test(r.sites)).map(r => (
           <div key={r.name} className="dir-row">
             <div className="dir-main">
               <span className="dir-avatar">{r.name[0]}</span>

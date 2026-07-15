@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { SCENARIOS, JOURNAL_SEED, BRIEF, cutoffLabel, DAY, RECEIVE_LINES, RECEIVE_MORE } from './data.js'
+import { requiredMissing, CURRENT_SITE, formatDays } from './suppliers.js'
 import { Sidebar, Toasts, Interrupt, SpacePage, SuppliersPage, ChatsPage } from './components/Shell.jsx'
 import RecipesPage from './components/Recipes.jsx'
 import Home from './components/Today.jsx'
@@ -21,6 +22,7 @@ export default function App() {
   const [toasts, setToasts] = useState([])
   const [resolved, setResolved] = useState(new Set())
   const [watching, setWatching] = useState([])
+  const [addedSuppliers, setAddedSuppliers] = useState([])
   const [deferred, setDeferred] = useState({})
   const [dismissed, setDismissed] = useState(new Set())
   const [interrupt, setInterrupt] = useState(null)
@@ -183,16 +185,16 @@ export default function App() {
         break
       case 'supplierAddConfirm': {
         const s = entry.data.supplier
-        setWatching(w => [...w, { id: 'wsup-' + s.name, title: `${s.name} — new supplier`, sub: 'Set up and orderable — watching for the first order window', chip: 'ready', threadId }])
-        J('action', 'you', 'Supplier added to site', `${s.name} added to Fitzroy Espresso using ${s.usedBy[0]} setup — added by Priya`, 'Suppliers — Setup')
-        toast(`${s.name} added`, `Orders → ${s.orderEmail}, cut-off ${s.cutoff}`)
+        setAddedSuppliers(a => [{ name: s.name, orderEmail: s.orderEmail, cutoff: s.cutoff, deliveryDays: s.deliveryDays, minimumOrder: s.minimumOrder }, ...a])
+        J('action', 'you', `${s.name} added to Fitzroy Espresso`, `Reused the ${s.usedBy[0]} setup — orders to ${s.orderEmail}, cut-off ${s.cutoff}, added by Priya`, 'Suppliers')
+        toast(`${s.name} added`, `Available for ordering at ${CURRENT_SITE}`)
         break
       }
       case 'supplierCreateConfirm': {
         const s = entry.data.draft
-        setWatching(w => [...w, { id: 'wsup-' + s.name, title: `${s.name} — new supplier`, sub: 'Set up and orderable — watching for the first order window', chip: 'ready', threadId }])
-        J('action', 'you', 'Supplier created', `${s.name} created for Fitzroy Espresso — created by Priya`, 'Suppliers — Setup')
-        toast(`${s.name} created`, `Orders → ${s.orderEmail}, cut-off ${s.cutoff || '—'}`)
+        setAddedSuppliers(a => [{ name: s.name, orderEmail: s.orderEmail, cutoff: s.cutoff, deliveryDays: s.deliveryDays, minimumOrder: s.minimumOrder }, ...a])
+        J('action', 'you', `${s.name} added to Fitzroy Espresso`, `Created for Fitzroy Espresso — orders to ${s.orderEmail}, cut-off ${s.cutoff || '—'}, added by Priya`, 'Suppliers')
+        toast(`${s.name} added`, `Available for ordering at ${CURRENT_SITE}`)
         break
       }
       case 'supplierUpdateConfirm': {
@@ -355,16 +357,23 @@ export default function App() {
     ...(orderThread && orderThread.caseState === 'awaiting_delivery' ? [{ id: 'sat', name: 'Saturday order — Bidfood', when: 'Sat 07:30' }] : [])
   ]
 
-  // Continue — recently started structured drafts the user can resume. A
-  // supplier draft counts once it has a name; before that it lives only in
-  // Chats. Confirmed (phase 'done') drops off this list.
-  const continueItems = threads
-    .filter(t => t.scenarioId === 'supplier' && t.supplierFlow?.supplierName && t.supplierFlow?.phase !== 'done')
-    .map(t => ({
-      id: 'cont-' + t.id, threadId: t.id,
-      title: `${t.supplierFlow.action === 'update' ? 'Update' : 'Add'} ${t.supplierFlow.supplierName}${t.supplierFlow.action === 'update' ? '' : ' to Fitzroy Espresso'}`,
-      sub: 'Draft · pick up where you left off'
-    }))
+  // Continue — structured drafts the user can resume, derived from the live
+  // supplier card in each thread (source of truth). A draft appears once the
+  // card exists; it drops off the moment it's confirmed (applied) or removed.
+  const supplierDraftEntry = (t) => (t.entries || []).find(e =>
+    e.kind === 'card' && (e.card === 'supplierAdd' || e.card === 'supplierDraft') &&
+    !['applied', 'cancelled'].includes(e.data?.status))
+  const continueItems = threads.flatMap(t => {
+    if (t.scenarioId !== 'supplier') return []
+    const e = supplierDraftEntry(t)
+    if (!e) return []
+    if (e.card === 'supplierAdd') {
+      return [{ id: 'cont-' + t.id, threadId: t.id, title: `Add ${e.data.supplier.name} to ${CURRENT_SITE}`, sub: 'Ready to review' }]
+    }
+    const missing = requiredMissing(e.data.draft)
+    return [{ id: 'cont-' + t.id, threadId: t.id, title: `Add ${e.data.draft.name} to ${CURRENT_SITE}`,
+      sub: missing === 0 ? 'Ready to review' : `${missing} required detail${missing === 1 ? '' : 's'} missing` }]
+  })
 
   // Running in background — waiting states. None of these count toward the
   // Home badge; they are collapsed into one compact summary.
@@ -397,7 +406,7 @@ export default function App() {
           )}
           {view === 'journal' && <Journal entries={journal} onOpenChat={openThread} />}
           {view === 'space' && (space === 'suppliers'
-            ? <SuppliersPage onAdd={() => handleSend('Add supplier')} />
+            ? <SuppliersPage onAdd={() => handleSend('Add supplier')} added={addedSuppliers} />
             : space === 'recipes'
             ? <RecipesPage onCreate={() => handleSend('New recipe')} />
             : <SpacePage spaceId={space} />)}

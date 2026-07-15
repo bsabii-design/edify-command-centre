@@ -10,7 +10,7 @@ import Composer from './Composer.jsx'
 import { Back, Check, Clock, Chevron, ChevDown, Spinner, Notes, ExtLink } from './Icons.jsx'
 import {
   getSupplier, detectSupplierIntent, detectSupplierSwitch, existingSupplierNames,
-  parseSupplierInput, parseDeliveryDays, mergeSupplierDraft, emptyDraft, formatSupplierName, confirmationText
+  parseSupplierInput, parseDeliveryDays, mergeSupplierDraft, emptyDraft, formatSupplierName, CURRENT_SITE
 } from '../suppliers.js'
 
 let uid = 0
@@ -305,12 +305,18 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       setThinking(false)
       const found = getSupplier(formatted)
       if (found) {
-        pushAssistant(`**${found.name}** is already set up on ${found.usedBy.join(' and ')}. I can copy that setup here — nothing's missing:`)
+        const usedList = found.usedBy.length > 1
+          ? `${found.usedBy.slice(0, -1).join(', ')} and ${found.usedBy[found.usedBy.length - 1]}`
+          : found.usedBy[0]
+        pushAssistant(`${found.name} is already used at ${usedList}.\nI found a complete setup you can reuse for ${CURRENT_SITE}.`)
         pushCard('supplierAdd', { supplier: found })
         setSupplierFlow({ action: 'add', phase: 'review', path: 'existing', supplierName: found.name })
       } else {
-        pushAssistant(`I don't have **${formatted}** on any site yet — I can't invent their details. Tell me their **order email** and **delivery days** (add cut-off or minimum if you have them), or paste their order email, and I'll build the draft.`)
-        setSupplierFlow({ action: 'add', phase: 'awaiting_details', path: 'new', supplierName: formatted })
+        // A new supplier gets its structured draft immediately — never an
+        // empty chat asking for details first. The draft is the source of truth.
+        pushAssistant(`I created a draft for ${formatted}.\nAdd the missing details below, paste them here, or attach a supplier document.`)
+        pushCard('supplierDraft', { draft: emptyDraft(formatted) })
+        setSupplierFlow({ action: 'add', phase: 'review', path: 'new', supplierName: formatted, draft: emptyDraft(formatted) })
       }
     }, 1000)
   }, [])
@@ -339,9 +345,9 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
     } else {
       if (name) proposeAdd(name)
       else {
-        pushPick("Which supplier are you adding? Name anyone — I'll check your other sites first. Already set up somewhere → you just confirm. Brand new → one message with the details is enough.", [
-          { label: 'Caravan Coffee', hint: 'new — you add the details' },
-          { label: 'Bidfood', hint: 'already on other sites' }
+        pushPick("Which supplier are you adding?\n\nI'll first check whether they're already used at another Ferra site.", [
+          { label: 'Caravan Coffee', hint: 'New supplier' },
+          { label: 'Bidfood', hint: 'Used at other sites' }
         ])
         setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
       }
@@ -364,8 +370,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
     // "actually add X instead" — switch supplier while adding
     const switchName = detectSupplierSwitch(text)
     if (switchName && flow.phase !== 'awaiting_name' && flow.action === 'add') {
-      setEntries(es => es.map(e => e.kind === 'card' && SUPPLIER_CARD.has(e.card) && e.data?.status === 'proposed'
-        ? { ...e, data: { ...e.data, status: 'cancelled' } } : e))
+      setEntries(es => es.filter(e => !(e.kind === 'card' && SUPPLIER_CARD.has(e.card) && e.data?.status === 'proposed')))
       return proposeAdd(switchName)
     }
 
@@ -435,9 +440,10 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
       supplierUpdateConfirm: { status: 'applied' },
       supplierCancel: { status: 'cancelled' }
     }
-    // Checking in replaces the due prompt with the receiving form — the
-    // active flow only ever holds the current actionable object.
-    if (action === 'receiveStart') {
+    // Some actions remove the card from view rather than settle it: checking
+    // in swaps to the receiving form; choosing another supplier or discarding
+    // a draft clears the proposal without a discarded card.
+    if (action === 'receiveStart' || action === 'supplierChooseAnother' || action === 'supplierDiscard') {
       setEntries(es => es.filter(x => x.id !== entry.id))
     } else {
       const patch = { ...(statusByAction[action] || {}) }
@@ -447,9 +453,20 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
     onEvent(action, { scenarioId: entry.scenarioId, entry, payload })
 
     if (action === 'supplierAddConfirm' || action === 'supplierCreateConfirm') {
+      // The confirmed card carries the setup; chat says only what's next.
       const s = entry.data.supplier || entry.data.draft
-      pushAssistant(confirmationText(s, action === 'supplierCreateConfirm'))
+      pushAssistant(`${s.name} will now appear in Suppliers.`)
       setSupplierFlow({ phase: 'done', supplierName: s.name })
+    } else if (action === 'supplierChooseAnother') {
+      // Back to selection, still inside the same Add supplier conversation.
+      pushPick("Which supplier are you adding?\n\nI'll first check whether they're already used at another Ferra site.", [
+        { label: 'Caravan Coffee', hint: 'New supplier' },
+        { label: 'Bidfood', hint: 'Used at other sites' }
+      ])
+      setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
+    } else if (action === 'supplierDiscard') {
+      pushAssistant('Supplier draft discarded.')
+      setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
     } else if (action === 'supplierUpdateConfirm') {
       const s = entry.data.supplier
       const n = (payload?.changed || []).length
@@ -528,8 +545,8 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch }) {
   const composerPlaceholder = thread.scenarioId === 'supplier'
     ? (supplierFlow.phase === 'awaiting_name' || supplierFlow.phase === 'awaiting_pick'
         ? 'Type a supplier name, or tap one above…'
-        : supplierFlow.phase === 'awaiting_details'
-          ? 'e.g. orders@caravan.co.uk, delivery Mon & Thu, min £200'
+        : supplierFlow.action === 'add' && supplierFlow.path === 'new'
+          ? "Paste supplier details or attach a file — I'll fill the draft."
           : 'Reply, e.g. “delivery is Mon and Thu”…')
     : 'Reply, or type / for commands'
 

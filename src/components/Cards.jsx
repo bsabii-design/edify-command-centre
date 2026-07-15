@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { RECEIVE_LINES, RECEIVE_MORE, BASKET } from '../data.js'
-import { CURRENT_SITE, WEEK_DAYS, formatDays } from '../suppliers.js'
+import { CURRENT_SITE, WEEK_DAYS, formatDays, requiredMissing, draftReady } from '../suppliers.js'
 import { Check, CheckCircle, Chevron, Clock, Alert, AlertCircle, ArrowRight, Plus, Minus, Doc, ExtLink } from './Icons.jsx'
 
 const spring = { type: 'spring', stiffness: 420, damping: 34 }
@@ -700,11 +700,13 @@ export function MuffinCard({ entry, resolve }) {
 }
 
 // ---------- Supplier: shared bits -----------------------------------------
-function SupplierDetailRows({ rows }) {
+// One supplier setup = one card with changing states. These bits are shared
+// by the existing-supplier and new-supplier paths so both read identically.
+function SupplierRows({ rows }) {
   return (
-    <div className="supplier-details">
+    <div className="sup-rows">
       {rows.map(({ label, value }) => (
-        <div key={label} className="supplier-row"><span className="label">{label}</span><span className="value">{value}</span></div>
+        <div key={label} className="sup-row"><span className="sup-label">{label}</span><span className="sup-value">{value || '—'}</span></div>
       ))}
     </div>
   )
@@ -720,87 +722,113 @@ function DayChips({ value = [], onToggle }) {
   )
 }
 
-// Add existing supplier (copied from another site)
-export function SupplierAddCard({ entry, resolve }) {
+// The confirmed state — same card container, read-only, with the persistent
+// footer and an expandable snapshot. No second paragraph repeats the setup.
+function SupplierConfirmed({ entry, patch, name, rows }) {
+  const expanded = !!(entry.data || {}).expanded
+  return (
+    <Card>
+      <CardHead title="Supplier added" sub={`${name} · ${CURRENT_SITE}`}
+        action={{ label: expanded ? 'Hide details' : 'View details', fn: () => patch({ expanded: !expanded }) }} />
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div key="details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.25, 0.1, 0.25, 1] }} style={{ overflow: 'hidden' }}>
+            <div className="ac-body"><SupplierRows rows={rows} /></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="ac-body confirmed-summary">
+        <div className="sum-first"><span className="done-check"><Check size={12} stroke={1.9} /></span>{name} added</div>
+        <div className="sum-line quiet">Available for ordering at {CURRENT_SITE}.</div>
+      </div>
+    </Card>
+  )
+}
+
+// Path A — an existing supplier found on another site. Ready to review, then
+// confirmed. "Choose another supplier" returns to selection (handled in Chat).
+export function SupplierAddCard({ entry, patch, resolve }) {
   const { status = 'proposed', supplier } = entry.data || {}
   const rows = [
-    { label: 'Currently on', value: supplier.usedBy.join(', ') },
+    { label: 'Used at', value: supplier.usedBy.join(', ') },
     { label: 'Order email', value: supplier.orderEmail },
     { label: 'Cut-off', value: supplier.cutoff },
     { label: 'Delivery days', value: formatDays(supplier.deliveryDays) },
     { label: 'Minimum order', value: supplier.minimumOrder }
   ]
+  if (status === 'applied') return <SupplierConfirmed entry={entry} patch={patch} name={supplier.name} rows={rows} />
   return (
     <Card>
-      <CardHead title={`Add ${supplier.name} to ${CURRENT_SITE}`}
-        sub="Already set up on another site — nothing missing" status={status === 'proposed' ? 'draft' : status} />
-      {status === 'proposed' && <div className="supplier-draft"><SupplierDetailRows rows={rows} /></div>}
-      {status === 'applied' && <ConfirmStrip label={`${supplier.name} added`} sub={`Now orderable at ${CURRENT_SITE}`} />}
-      {status === 'cancelled' && <KeptStrip label="Discarded — no changes made" />}
-      {status === 'proposed' && (
-        <div className="ac-footer">
-          <button className="btn btn-primary" onClick={() => resolve('supplierAddConfirm')}>Add to {CURRENT_SITE}</button>
-          <button className="btn btn-secondary" onClick={() => resolve('supplierCancel')}>Cancel</button>
-        </div>
-      )}
+      <CardHead title={`Add ${supplier.name} to ${CURRENT_SITE}`} sub="Existing supplier · ready to review" />
+      <div className="ac-body"><SupplierRows rows={rows} /></div>
+      <div className="card-helper">Nothing is created until you confirm.</div>
+      <div className="ac-footer">
+        <button className="btn btn-primary" onClick={() => resolve('supplierAddConfirm')}>Add to {CURRENT_SITE}</button>
+        <button className="btn btn-secondary" onClick={() => resolve('supplierChooseAnother')}>Choose another supplier</button>
+      </div>
     </Card>
   )
 }
 
-// Add new supplier — the operator gives the details, Edify structures them.
-const CAPTURED_FIELDS = [['orderEmail', 'Order email'], ['cutoff', 'Cut-off'], ['minimumOrder', 'Minimum order']]
+// A labelled row whose value is an editable control.
+function SupplierField({ label, children }) {
+  return (
+    <div className="sup-row field">
+      <span className="sup-label">{label}</span>
+      <span className="sup-control">{children}</span>
+    </div>
+  )
+}
 
+// Path B — a brand-new supplier. The structured draft appears immediately;
+// chat, paste and direct edits all write to the same draft (source of truth).
 export function SupplierDraftCard({ entry, patch, resolve }) {
   const { status = 'proposed', draft } = entry.data || {}
   const d = { ...draft, site: draft.site || CURRENT_SITE, deliveryDays: draft.deliveryDays || [] }
-  const hasDays = d.deliveryDays.length > 0
-  const hasEmail = !!d.orderEmail
-  const canCreate = hasEmail && hasDays
-  const [showMore, setShowMore] = useState(false)
-
+  const missing = requiredMissing(d)
+  const ready = draftReady(d)
+  const set = (k, v) => patch({ draft: { ...d, [k]: v } })
   const toggleDay = (day) => {
     const next = d.deliveryDays.includes(day) ? d.deliveryDays.filter(x => x !== day) : WEEK_DAYS.filter(x => d.deliveryDays.includes(x) || x === day)
-    patch({ draft: { ...d, deliveryDays: next } })
+    set('deliveryDays', next)
   }
-  const setEmail = (v) => patch({ draft: { ...d, orderEmail: v } })
-
-  const capturedRows = [{ label: 'Supplier', value: d.name }, { label: 'Site', value: d.site }]
-  CAPTURED_FIELDS.forEach(([k, label]) => { if (d[k]) capturedRows.push({ label, value: d[k] }) })
-
-  const sub = canCreate
-    ? `Everything's set for ${d.name}. Create the supplier when you're ready.`
-    : `${d.name} isn't on file yet. Add their ordering details and I'll create it.`
-
+  const rows = [
+    { label: 'Order email', value: d.orderEmail },
+    { label: 'Delivery days', value: formatDays(d.deliveryDays) },
+    { label: 'Cut-off', value: d.cutoff },
+    { label: 'Minimum order', value: d.minimumOrder }
+  ]
+  if (status === 'applied') return <SupplierConfirmed entry={entry} patch={patch} name={d.name} rows={rows} />
+  const missLabel = ready ? 'Ready to review' : `${missing} required detail${missing === 1 ? '' : 's'} missing`
   return (
     <Card>
-      <CardHead title="New supplier" sub={sub} status={status === 'proposed' ? 'draft' : status} />
-      {status === 'proposed' && (
-        <div className="supplier-draft">
-          <div className="supplier-section-title">What you told me</div>
-          <SupplierDetailRows rows={capturedRows} />
-          <div className="supplier-section-title">Still needed</div>
-          {!hasEmail && (
-            <label className="supplier-row needs-input">
-              <span className="label">Order email</span>
-              <input className="supplier-inline-input" value={d.orderEmail || ''} placeholder="orders@…"
-                aria-label="Order email" onChange={e => setEmail(e.target.value)} />
-            </label>
-          )}
-          <div className="supplier-mini-label">Delivery days</div>
+      <CardHead title={`Add ${d.name} to ${CURRENT_SITE}`} sub={`New supplier · ${missLabel}`} />
+      <div className="ac-body sup-form">
+        <div className="sup-row"><span className="sup-label">Supplier</span><span className="sup-value">{d.name}</span></div>
+        <div className="sup-row"><span className="sup-label">Site</span><span className="sup-value">{d.site}</span></div>
+        <SupplierField label="Order email">
+          <input className="sup-input" value={d.orderEmail || ''} placeholder="Required — orders@…" aria-label="Order email"
+            onChange={e => set('orderEmail', e.target.value)} />
+        </SupplierField>
+        <SupplierField label="Delivery days">
           <DayChips value={d.deliveryDays} onToggle={toggleDay} />
-          <div className="supplier-later-note">Accounts email, phone and other details can be added later.</div>
-          <div className="card-helper">The supplier will not be created until you confirm.</div>
-        </div>
-      )}
-      {status === 'applied' && <ConfirmStrip label={`${d.name} created`} sub={`Now orderable at ${CURRENT_SITE}`} />}
-      {status === 'cancelled' && <KeptStrip label="Discarded — no changes made" />}
-      {status === 'proposed' && (
-        <div className="ac-footer supplier-create-footer">
-          <button className="btn btn-primary" disabled={!canCreate} onClick={() => resolve('supplierCreateConfirm')}>Create supplier</button>
-          {!canCreate && <div className="supplier-create-helper">{!hasEmail ? 'Add an order email and pick delivery days to create.' : 'Pick at least one delivery day to create.'}</div>}
-          <button className="btn btn-secondary" onClick={() => resolve('supplierCancel')}>Cancel</button>
-        </div>
-      )}
+        </SupplierField>
+        <SupplierField label="Cut-off">
+          <input className="sup-input" value={d.cutoff || ''} placeholder="Required — 16:00" aria-label="Cut-off"
+            onChange={e => set('cutoff', e.target.value)} />
+        </SupplierField>
+        <SupplierField label="Minimum order">
+          <input className="sup-input" value={d.minimumOrder || ''} placeholder="Optional — £200" aria-label="Minimum order"
+            onChange={e => set('minimumOrder', e.target.value)} />
+        </SupplierField>
+      </div>
+      <div className="card-helper">Nothing is created until you confirm.</div>
+      <div className="ac-footer supplier-create-footer">
+        <button className="btn btn-primary" disabled={!ready} onClick={() => resolve('supplierCreateConfirm')}>Create supplier</button>
+        {!ready && <div className="supplier-create-helper">Complete the required fields to create this supplier.</div>}
+        <button className="btn btn-ghost sup-discard" onClick={() => resolve('supplierDiscard')}>Discard draft</button>
+      </div>
     </Card>
   )
 }
