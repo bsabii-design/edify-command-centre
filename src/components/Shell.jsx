@@ -132,7 +132,8 @@ export function ChatsPage({ threads, onOpen }) {
 // only page action is Add supplier: a contextual shortcut into the same
 // Edify conversation that /add-supplier and free text use, site preselected.
 const SUPPLIER_ROWS = [
-  { name: 'Bidfood', domain: 'bidfood.co.uk', last: 'Thursday', orders: 24, sites: 'Holborn, Clapham, Hub kitchen' },
+  { name: 'Bidfood', domain: 'bidfood.co.uk', last: 'Thursday', orders: 24, sites: 'Fitzroy Espresso, Holborn, Clapham, Hub kitchen' },
+  { name: 'Harvest Provisions', domain: 'harvestprovisions.co.uk', last: 'Jul 2', orders: 11, sites: 'Holborn, Clapham, Hub kitchen' },
   { name: 'Bean Brothers', domain: 'beanbrothers.co.uk', last: 'Jul 2', orders: 9, sites: 'Holborn, Clapham' },
   { name: 'Estate Dairy', domain: 'estatedairy.co.uk', last: 'Jul 1', orders: 6, sites: 'Richmond' },
   { name: 'Fitzroy Bakehouse', domain: 'fitzroybakehouse.co.uk', last: 'Jun 29', orders: 18, sites: 'Fitzroy Espresso' }

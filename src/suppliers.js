@@ -5,9 +5,12 @@ export const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 // Suppliers already set up on other Ferra sites — full records, so they can be
 // copied (add), edited (update) or removed (delete).
 const FERRA_SUPPLIERS = {
-  bidfood: {
-    name: 'Bidfood', usedBy: ['Holborn', 'Clapham', 'Hub kitchen'],
-    orderEmail: 'orders@bidfood.co.uk', phone: '+44 20 7946 0102',
+  // Bidfood is deliberately absent here — Fitzroy already orders from them
+  // (the order / invoice / GP case), so they're not a "reuse from another
+  // site" candidate. Harvest Provisions is set up elsewhere but not here.
+  'harvest provisions': {
+    name: 'Harvest Provisions', usedBy: ['Holborn', 'Clapham', 'Hub kitchen'],
+    orderEmail: 'orders@harvestprovisions.co.uk', phone: '+44 20 7946 0148',
     cutoff: '16:00', leadTime: 'Next business day', minimumOrder: '£200',
     deliveryDays: ['Mon', 'Wed', 'Fri']
   },
@@ -98,8 +101,8 @@ export function detectSupplierIntent(text) {
 
   m = t.match(/^(?:add|new|set ?up)\s+(?:a\s+)?(?:new\s+)?supplier(?:\s+(.+?))?\.?$/i)
   if (m) return { action: 'add', name: m[1] ? formatSupplierName(m[1]) : null }
-  // Free-text phrasings: "I want to add Bidfood as a supplier",
-  // "set up Caravan Coffee as a new supplier", "add the supplier Bidfood".
+  // Free-text phrasings: "I want to add Harvest Provisions as a supplier",
+  // "set up Caravan Coffee as a new supplier", "add the supplier Harvest Provisions".
   m = t.match(/\b(?:add|set ?up|create|onboard)\s+(.+?)\s+as\s+(?:a\s+)?(?:new\s+)?supplier\b/i)
   if (m) return { action: 'add', name: formatSupplierName(m[1]) }
   m = t.match(/\badd\s+(?:the\s+)?(?:new\s+)?supplier\s+(.+?)\.?$/i)

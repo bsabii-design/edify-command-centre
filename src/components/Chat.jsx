@@ -356,7 +356,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title
       else {
         pushPick("Which supplier are you adding?\n\nI'll first check whether they're already used at another Ferra site.", [
           { label: 'Caravan Coffee', hint: 'New supplier' },
-          { label: 'Bidfood', hint: 'Used at 3 sites' }
+          { label: 'Harvest Provisions', hint: 'Used at 3 sites' }
         ])
         setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
       }
@@ -498,7 +498,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title
       // Back to selection, still inside the same Add supplier conversation.
       pushPick("Which supplier are you adding?\n\nI'll first check whether they're already used at another Ferra site.", [
         { label: 'Caravan Coffee', hint: 'New supplier' },
-        { label: 'Bidfood', hint: 'Used at 3 sites' }
+        { label: 'Harvest Provisions', hint: 'Used at 3 sites' }
       ])
       setSupplierFlow({ action: 'add', phase: 'awaiting_name' })
     } else if (action === 'supplierDiscard') {
