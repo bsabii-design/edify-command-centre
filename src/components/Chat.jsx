@@ -356,18 +356,41 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title
   }, [proposeAdd, proposeUpdate, declineDelete])
 
   const handleSupplierMessage = useCallback((text) => {
-    setEntries(es => [...es, { id: nid(), kind: 'user', text }])
     const flow = supplierFlow
+    const t = text.trim()
+    const isCommand = /^(update|change|edit|delete|remove|add|new|set ?up)\b/i.test(t)
+
+    // Task-scoped intent routing: while a NEW supplier draft is open, a message
+    // touches the draft only if it carries supplier info (or a command/switch).
+    // A clearly unrelated question branches to its own chat — draft preserved,
+    // and the question never appears below the supplier form.
+    if (flow.phase === 'review' && flow.action === 'add' && flow.path === 'new' && !isCommand && !detectSupplierSwitch(text)) {
+      const upd = parseSupplierInput(text, flow.supplierName)
+      const hasInfo = !!(upd.orderEmail || upd.cutoff || upd.minimumOrder || parseDeliveryDays(text).length)
+      if (!hasInfo) {
+        const target = matchScenario(text)
+        if (target !== 'supplier' && target !== 'fallback') {
+          pushAssistant("This looks like a separate question. I'll keep the supplier draft unchanged.")
+          setTimeout(() => onSwitch(target, text), 500)
+          return
+        }
+        // No readable detail and no other scenario — stay, ask for a field.
+        setEntries(es => [...es, { id: nid(), kind: 'user', text }])
+        pushAssistant("I couldn't read a supplier detail there. Add the order email, delivery days, cut-off or minimum — in the fields above or here.")
+        return
+      }
+    }
+
+    setEntries(es => [...es, { id: nid(), kind: 'user', text }])
 
     // explicit new command mid-thread re-routes
-    if (/^(update|change|edit|delete|remove|add|new|set ?up)\b/i.test(text.trim()) &&
-        !(flow.phase === 'awaiting_name' || flow.phase === 'awaiting_pick')) {
+    if (isCommand && !(flow.phase === 'awaiting_name' || flow.phase === 'awaiting_pick')) {
       return startSupplierFlow(text)
     }
 
     if (flow.phase === 'awaiting_name') return proposeAdd(text)
     if (flow.phase === 'awaiting_pick' && flow.action === 'update') return proposeUpdate(text)
-    
+
     // "actually add X instead" — switch supplier while adding
     const switchName = detectSupplierSwitch(text)
     if (switchName && flow.phase !== 'awaiting_name' && flow.action === 'add') {
@@ -384,7 +407,7 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title
       return
     }
 
-    // adding more details / delivery days by chat while a new-supplier draft is open
+    // supplier info by chat while a new-supplier draft is open → update + say what changed
     if (flow.phase === 'review' && flow.action === 'add' && flow.path === 'new') {
       const updates = parseSupplierInput(text, flow.supplierName)
       const days = parseDeliveryDays(text)
@@ -397,11 +420,16 @@ export default function Chat({ thread, persist, onEvent, onBack, onSwitch, title
         }
         return e
       }))
-      pushAssistant('Updated the draft.')
+      const changed = []
+      if (updates.orderEmail) changed.push(`Order email: ${updates.orderEmail}`)
+      if (days.length) changed.push(`Delivery days: ${days.join(', ')}`)
+      if (updates.cutoff) changed.push(`Cut-off: ${updates.cutoff}`)
+      if (updates.minimumOrder) changed.push(`Minimum order: ${updates.minimumOrder}`)
+      pushAssistant(changed.length ? `Updated the draft — ${changed.join(' · ')}.` : 'Updated the draft.')
       return
     }
     pushAssistant('Tell me the supplier name, or use the card above to finish this.')
-  }, [supplierFlow, proposeAdd, proposeUpdate, startSupplierFlow])
+  }, [supplierFlow, proposeAdd, proposeUpdate, startSupplierFlow, onSwitch])
 
   // ---- mount ---------------------------------------------------------------
   useEffect(() => {
