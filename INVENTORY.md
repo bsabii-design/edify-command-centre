@@ -28,6 +28,17 @@ Mental model: **Home** = what needs attention now · **Chats** = what we discuss
 - **Home** three sections: *Needs your review* (action now) · *Continue* (resumable structured drafts, e.g. a supplier draft once it has a name) · *Running in background* (one compact, expandable summary of waiting states). Done-today moved off Home into Journal.
 - **Chats** (`ChatsPage`) lists every thread, recoverable. A command-started thread (`/add-supplier`) persists here even before it has structured data — leaving mid-conversation never loses it. Supplier rows read `Add/Update supplier · <name|No supplier selected> · <relative time>`.
 - **Spaces** (`SpacePage`) render simple confirmed-object lists (Orders/Deliveries/Inventory/Invoices); Suppliers is its own directory (`SuppliersPage`).
+
+### One page system (`Page.jsx`)
+
+Every directory and history view (Suppliers, Orders, Deliveries, Inventory, Invoices, Chats, Journal) is built from shared primitives — pages define only column labels, widths and row content, never their own padding/type/borders:
+
+- `PageShell` · `PageHeader` (title + optional one-line description left; single black primary action top-right only when the page genuinely supports one) · `PageToolbar` (quiet text tabs left, inline Search right) · `DirectoryTable`/`DirectoryRow` · `PrimaryObjectCell` (compact initial + Medium name + muted sub) · `StatusCell` (tone `default`/`muted`/`alert`) · `DirectoryPage` (wires tab + text filtering).
+- The page is the surface: no outer card, no per-row rectangles, no separator after every row — one header divider, subtle full-row hover, `--cols` grid shared by header and rows so columns anchor identically. Gutters/width identical across pages (`.page`, 960px, `sp-8`).
+- Red (`alert`) only where attention is genuinely required — Orders "Due now", Deliveries "Needs check-in", Inventory non-zero variance, Invoices "Needs review". Passive waiting ("Waiting for supplier", "Confirmed", future deliveries) stays muted/default.
+- Contextual actions launch a pre-scoped Edify workflow, never a manual CRUD form: Suppliers' "Add supplier" → the same Add supplier conversation as `/add-supplier`. Orders/Deliveries/Inventory/Invoices/Reports have no create action in this prototype.
+- Journal keeps date grouping (Today/…) and filters All/Confirmed/System handled/Flagged/Dismissed; columns Event · Area · Time; icons only for meaningful states (flagged, dismissed).
+- All prototype-explanation banners removed — the model reads through page naming, row content, contextual actions and navigation.
 - **Supplier lifecycle**: `/add-supplier` (command, suggested action or free text — one workflow) → Chats only → name entered → Home → Continue (`Add <name> to Fitzroy Espresso`, sub = live "N required details missing" / "Ready to review") → confirmed → Suppliers + Journal, dropped from Continue. Continue is derived from the live supplier card in the thread (source of truth), not remembered chat.
 
 ### Add-supplier flow (one card, changing states)
