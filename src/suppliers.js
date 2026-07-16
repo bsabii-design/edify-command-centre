@@ -1,9 +1,27 @@
+export const COMPANY = 'Ferra Coffee'
 export const CURRENT_SITE = 'Fitzroy Espresso'
+
+// The 14 London sites Ferra Coffee runs — every one of them on Edify.
+// Hub kitchen is the shared prep site; the other thirteen are cafés.
+export const SITES = [
+  'Fitzroy Espresso', 'Holborn', 'Clapham', 'Richmond', 'Shoreditch',
+  'Islington', 'Soho', 'Borough', 'Canary Wharf', 'Hackney',
+  'Notting Hill', 'Greenwich', 'Peckham', 'Hub kitchen'
+]
+
+// A site list is only worth spelling out while it's short — past that the
+// count is what the operator actually reads.
+export function formatSites(sites) {
+  if (!sites || !sites.length) return '—'
+  if (sites.length === SITES.length) return `All ${SITES.length} sites`
+  if (sites.length <= 3) return sites.join(', ')
+  return `${sites.length} sites`
+}
 
 export const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-// Suppliers already set up on other Ferra sites — full records, so they can be
-// copied (add), edited (update) or removed (delete).
+// Suppliers already set up on other Ferra Coffee sites — full records, so they
+// can be copied (add), edited (update) or removed (delete).
 const FERRA_SUPPLIERS = {
   // Bidfood is deliberately absent here — Fitzroy already orders from them
   // (the order / invoice / GP case), so they're not a "reuse from another

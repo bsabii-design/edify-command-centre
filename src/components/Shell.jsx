@@ -4,6 +4,7 @@ import { Home, Journal as JournalIcon, ChatIcon, Search, ChevDown, Chevron, Cart
 import { GrainSwatch } from './Recipes.jsx'
 import { DirectoryPage, PrimaryObjectCell, StatusCell, StatusChip } from './Page.jsx'
 import { CloseIconButton } from './Controls.jsx'
+import { SITES, CURRENT_SITE, COMPANY, formatSites } from '../suppliers.js'
 
 // Spaces hold persistent business objects — destinations, not actions.
 export const SPACES = [
@@ -132,27 +133,28 @@ export function ChatsPage({ threads, onOpen }) {
 // only page action is Add supplier: a contextual shortcut into the same
 // Edify conversation that /add-supplier and free text use, site preselected.
 const SUPPLIER_ROWS = [
-  { name: 'Bidfood', domain: 'bidfood.co.uk', last: 'Thursday', orders: 24, sites: 'Fitzroy Espresso, Holborn, Clapham, Hub kitchen' },
-  { name: 'Harvest Provisions', domain: 'harvestprovisions.co.uk', last: 'Jul 2', orders: 11, sites: 'Holborn, Clapham, Hub kitchen' },
-  { name: 'Bean Brothers', domain: 'beanbrothers.co.uk', last: 'Jul 2', orders: 9, sites: 'Holborn, Clapham' },
-  { name: 'Estate Dairy', domain: 'estatedairy.co.uk', last: 'Jul 1', orders: 6, sites: 'Richmond' },
-  { name: 'Fitzroy Bakehouse', domain: 'fitzroybakehouse.co.uk', last: 'Jun 29', orders: 18, sites: 'Fitzroy Espresso' }
+  // Bidfood is the broadline distributor the whole estate orders from.
+  { name: 'Bidfood', domain: 'bidfood.co.uk', last: 'Thursday', orders: 24, sites: SITES },
+  { name: 'Harvest Provisions', domain: 'harvestprovisions.co.uk', last: 'Jul 2', orders: 11, sites: ['Holborn', 'Clapham', 'Hub kitchen'] },
+  { name: 'Bean Brothers', domain: 'beanbrothers.co.uk', last: 'Jul 2', orders: 9, sites: ['Holborn', 'Clapham'] },
+  { name: 'Estate Dairy', domain: 'estatedairy.co.uk', last: 'Jul 1', orders: 6, sites: ['Richmond'] },
+  { name: 'Fitzroy Bakehouse', domain: 'fitzroybakehouse.co.uk', last: 'Jun 29', orders: 18, sites: ['Fitzroy Espresso'] }
 ]
 const SUPPLIER_TABS = [{ key: 'all', label: 'All suppliers' }, { key: 'here', label: 'Used at this site' }]
 
 export function SuppliersPage({ onAdd, added = [] }) {
-  const addedRows = added.map(s => ({ name: s.name, domain: (s.orderEmail || '').split('@')[1] || '', last: 'just now', orders: 0, sites: 'Fitzroy Espresso' }))
+  const addedRows = added.map(s => ({ name: s.name, domain: (s.orderEmail || '').split('@')[1] || '', last: 'just now', orders: 0, sites: [CURRENT_SITE] }))
   const rows = [...addedRows, ...SUPPLIER_ROWS].map(r => ({
-    key: r.name, tags: /Fitzroy/.test(r.sites) ? ['here'] : [], search: `${r.name} ${r.domain} ${r.sites}`,
+    key: r.name, tags: r.sites.includes(CURRENT_SITE) ? ['here'] : [], search: `${r.name} ${r.domain} ${r.sites.join(' ')}`,
     cells: [
       <PrimaryObjectCell key="n" initial={r.name[0]} name={r.name} sub={r.domain} />,
-      <span key="s" className="dc-mut">{r.sites}</span>,
+      <span key="s" className="dc-mut">{formatSites(r.sites)}</span>,
       <span key="l" className="dc-mut">{r.last}</span>,
       <span key="o" className="dc-mut">{r.orders}</span>
     ]
   }))
   return (
-    <DirectoryPage title="Suppliers" description="Suppliers available across Ferra sites." tabs={SUPPLIER_TABS} rows={rows}
+    <DirectoryPage title="Suppliers" description={`Suppliers available across ${COMPANY}'s ${SITES.length} London sites.`} tabs={SUPPLIER_TABS} rows={rows}
       action={{ label: 'Add supplier', fn: onAdd }}
       template="minmax(0,1.6fr) minmax(0,1.4fr) minmax(0,0.8fr) minmax(0,0.5fr)"
       cols={[{ label: 'Supplier' }, { label: 'Sites' }, { label: 'Last order' }, { label: 'Orders', align: 'right' }]} />
